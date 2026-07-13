@@ -1,0 +1,17 @@
+:root {
+  --primary: #008080;
+  --primary-light: #e6f2f2;
+  --g50: #f9fafb;
+  --g100: #f3f4f6;
+  --g200: #e5e7eb;
+  --g400: #9ca3af;
+  --g500: #6b7280;
+  --g900: #111827;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font-raleway), system-ui, sans-serif;
+  color: var(--g900);
+  background: var(--g50);
+}
