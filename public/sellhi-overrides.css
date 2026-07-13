@@ -1,0 +1,26 @@
+/* ============================================================
+   SellHi app.sellhi.ai — UI refinements
+   Layered ON TOP of the exact live demo (demo.html is untouched,
+   so it stays byte-for-byte in sync with sellhi.ai). Only applied
+   on desktop (>1024px); the collapsed/mobile sidebars are left as-is.
+   ============================================================ */
+@media (min-width: 1025px) {
+
+  /* Tighter left pane — trims the empty gutter on the right */
+  .sidebar { width: 202px; }
+  .sidebar-nav { padding: 14px 10px; }
+
+  /* Section headers: keep on one line in the narrower pane */
+  .nav-label { letter-spacing: .5px; padding: 0 8px; }
+
+  /* Capsules hug their words instead of stretching full-width,
+     removing the large empty yellow area to the right of each label */
+  .sidebar-nav .nav-item {
+    width: fit-content;
+    max-width: 100%;
+    padding: 7px 13px;
+  }
+
+  /* Bottom workspace switcher + user bar sit flush with the tighter pane */
+  .ws-switcher, .ws-menu { left: 10px; right: 10px; }
+}

@@ -35,6 +35,14 @@ export async function GET(request: Request) {
   const filePath = path.join(process.cwd(), "public", "demo.html");
   let html = await readFile(filePath, "utf8");
 
+  // Layer app-only UI refinements without touching the exact demo markup.
+  if (html.includes("</head>")) {
+    html = html.replace(
+      "</head>",
+      `<link rel="stylesheet" href="/sellhi-overrides.css"></head>`
+    );
+  }
+
   const bootstrap =
     `<script>window.__SELLHI_USER__=${JSON.stringify(identity)};</script>` +
     `<script src="/sellhi-identity.js"></script>`;

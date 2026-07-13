@@ -9,6 +9,6 @@ export const config = {
   // Run on every route except Next internals and static assets
   // (the demo.html + time-invoicing.js are gated separately by the /workspace route).
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp3|js)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp3|js|css|woff|woff2|ttf)$).*)",
   ],
 };
