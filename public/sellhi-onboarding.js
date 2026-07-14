@@ -19,6 +19,29 @@
 
   function el(id) { return document.getElementById(id); }
 
+  // --- App-only polish: flip the red "· required" marker to a green "· ✓"
+  // once a required field is validly filled. Pure UI; the demo stays pristine.
+  var REQUIRED = ["p1-name", "p1-title", "p1-company-url"];
+  function markValid(id) {
+    var f = el(id);
+    if (!f) return;
+    var label = document.querySelector('label[for="' + id + '"]');
+    if (!label) return;
+    var span = label.querySelector("span");
+    if (!span) return;
+    if (!span.getAttribute("data-sh-req")) span.setAttribute("data-sh-req", span.innerHTML);
+    var v = (f.value || "").trim();
+    var ok = id === "p1-company-url" ? (v.length > 2 && v.indexOf(".") > -1) : v.length > 0;
+    if (ok) {
+      span.innerHTML = "&middot; &#10003;";
+      span.style.color = "var(--success)";
+    } else {
+      span.innerHTML = span.getAttribute("data-sh-req");
+      span.style.color = "var(--danger)";
+    }
+  }
+  function markAll() { REQUIRED.forEach(markValid); }
+
   function collect() {
     var out = {};
     Object.keys(MAP).forEach(function (id) {
@@ -58,6 +81,7 @@
     // nudge the demo's helpers if present
     try { if (typeof validateP1Step0 === "function") validateP1Step0(); } catch (x) {}
     try { if (typeof updateSidebarIdentity === "function") updateSidebarIdentity(); } catch (x) {}
+    markAll();
   }
 
   function wire() {
@@ -68,6 +92,11 @@
         e.addEventListener("change", saveDebounced);
       }
     });
+    // live green-check on the required fields as the user types
+    REQUIRED.forEach(function (id) {
+      var e = el(id);
+      if (e) e.addEventListener("input", function () { markValid(id); });
+    });
     // also save when they move on from step 0
     var next = el("p1-s0-next");
     if (next) next.addEventListener("click", save);
@@ -75,6 +104,7 @@
 
   function init() {
     wire();
+    markAll();
     fetch("/api/dossier", { credentials: "include" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { if (d && d.dossier) restore(d.dossier); })
