@@ -6,41 +6,44 @@
    ============================================================ */
 @media (min-width: 1025px) {
 
-  /* Left pane: comfortable, balanced width — no empty gutter, room for
-     a bigger brand and uniform capsules. */
-  .sidebar { width: 224px; }
-  .sidebar-nav { padding: 14px 12px; }
+  /* Slim left pane -> maximum real estate for the main workspace,
+     so the rest of the page never feels crowded. */
+  .sidebar { width: 210px; }
 
-  /* --- Brand: make SellHi the dominant, first-impression element --- */
+  /* Generous side padding = capsules sit inset with equal breathing
+     room on both edges (centered feel, not stretched edge-to-edge). */
+  .sidebar-nav { padding: 14px 15px; }
+
+  /* --- Brand: SellHi stays the dominant first-impression element --- */
   .sidebar-logo {
-    height: 76px;
-    gap: 12px;
-    padding: 0 18px;
+    height: 74px;
+    gap: 11px;
+    padding: 0 16px;
   }
   .sidebar-logo-mark {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 10px;
   }
   .sidebar-logo span {
-    font-size: 28px;
+    font-size: 27px;
     font-weight: 800;
     letter-spacing: -0.4px;
     line-height: 1;
   }
 
-  /* Section headers stay on one line in the pane */
-  .nav-label { letter-spacing: .5px; padding: 0 8px; }
+  /* Section headers stay on one line */
+  .nav-label { letter-spacing: .5px; padding: 0 7px; }
 
-  /* --- Capsules: ALL identical size (full column width, equal height) --- */
+  /* --- Capsules: every one identical size, inset with even gutters --- */
   .sidebar-nav .nav-item {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 8px 14px;
+    padding: 8px 13px;
     min-height: 36px;
   }
 
-  /* Bottom workspace switcher + user bar sit flush with the pane */
-  .ws-switcher, .ws-menu { left: 10px; right: 10px; }
+  /* Bottom workspace switcher + user bar align to the slim pane */
+  .ws-switcher, .ws-menu { left: 9px; right: 9px; }
 }
