@@ -11,6 +11,13 @@
   function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function setText(node, val) { if (node && typeof val === "string" && val.trim()) node.textContent = val; }
 
+  // dossierReal: true once the dossier shows REAL data (loaded from the account or
+  // freshly researched) rather than the demo's hardcoded mock. We only save on
+  // "deepen" when real, so a brand-new user can't persist the Acme mock.
+  var dossierReal = false;
+  // Guard so a slow saved-dossier load can't clobber a research run started this session.
+  var researchRanThisSession = false;
+
   function chipHTML(label) {
     var d = document.createElement("div");
     d.className = "dossier-chip";
@@ -22,6 +29,7 @@
     if (!d) return;
     var root = document.getElementById("p1-s1");
     if (!root) return;
+    dossierReal = true; // populate only ever runs with real (researched/saved) data
 
     // Headline (big AI summary at the top)
     try {
@@ -121,6 +129,7 @@
     var original = window.simulateP1Dossier;
 
     window.simulateP1Dossier = function () {
+      researchRanThisSession = true;
       var overlay = document.getElementById("p1-loading");
       var loadingText = document.getElementById("p1-loading-text");
 
@@ -285,14 +294,17 @@
     var orig = window.simulateP1Deepen;
     window.simulateP1Deepen = function () {
       try {
-        var d = collectDossier();
-        if (d) {
-          fetch("/api/dossier-edit", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({ dossier: d }),
-          }).catch(function () {});
+        // Only persist when the dossier holds real data — never save the mock.
+        if (dossierReal) {
+          var d = collectDossier();
+          if (d) {
+            fetch("/api/dossier-edit", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ dossier: d }),
+            }).catch(function () {});
+          }
         }
       } catch (e) {}
       return orig.apply(this, arguments);
@@ -301,9 +313,25 @@
     return true;
   }
 
+  // Load the user's SAVED dossier into Step 2 on open, so they see their real,
+  // previously-researched (and editable) data instead of the demo's mock — and so
+  // it persists across reloads. Skips if a research run has already started this
+  // session (don't overwrite fresh results).
+  function loadSavedDossier() {
+    fetch("/api/dossier", { credentials: "include" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (res) {
+        var saved = res && res.dossier && res.dossier.data && res.dossier.data.dossier;
+        if (!saved || researchRanThisSession) return;
+        populate(saved); // fills Step 2 + re-applies editability + sets dossierReal
+      })
+      .catch(function () {});
+  }
+
   function boot() {
     // The demo defines simulateP1Dossier / simulateP1Deepen on load; retry briefly
     // until they exist, and make the dossier editable as soon as it's in the DOM.
+    loadSavedDossier();
     var tries = 0;
     var t = setInterval(function () {
       tries++;
