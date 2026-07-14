@@ -13,8 +13,8 @@
   function tag() {
     var s = document.createElement("span");
     s.className = "sh-sample-tag";
-    s.textContent = "Sample";
-    s.setAttribute("aria-label", "Sample data — not yet live");
+    s.textContent = "WIP";
+    s.setAttribute("aria-label", "Work in progress — not yet live");
     s.style.cssText =
       "position:absolute;top:3px;right:6px;font-size:8px;font-weight:700;" +
       "letter-spacing:.3px;text-transform:uppercase;color:#92400E;background:#FEF3C7;" +
@@ -33,7 +33,7 @@
       "font-size:12px;color:#92400E;font-weight:600;";
     d.innerHTML =
       '<span aria-hidden="true">&#9888;</span>' +
-      "<span>Sample &middot; this section shows example data and isn't connected to your live account yet.</span>";
+      "<span>Work in progress &middot; this section shows example data and isn't connected to your live account yet.</span>";
     return d;
   }
 
