@@ -1,26 +1,46 @@
 /* ============================================================
    SellHi app.sellhi.ai — UI refinements
    Layered ON TOP of the exact live demo (demo.html is untouched,
-   so it stays byte-for-byte in sync with sellhi.ai). Only applied
-   on desktop (>1024px); the collapsed/mobile sidebars are left as-is.
+   so it stays byte-for-byte in sync with sellhi.ai). Applied on
+   desktop (>1024px); collapsed/mobile sidebars are left as-is.
    ============================================================ */
 @media (min-width: 1025px) {
 
-  /* Tighter left pane — trims the empty gutter on the right */
-  .sidebar { width: 202px; }
-  .sidebar-nav { padding: 14px 10px; }
+  /* Left pane: comfortable, balanced width — no empty gutter, room for
+     a bigger brand and uniform capsules. */
+  .sidebar { width: 224px; }
+  .sidebar-nav { padding: 14px 12px; }
 
-  /* Section headers: keep on one line in the narrower pane */
-  .nav-label { letter-spacing: .5px; padding: 0 8px; }
-
-  /* Capsules hug their words instead of stretching full-width,
-     removing the large empty yellow area to the right of each label */
-  .sidebar-nav .nav-item {
-    width: fit-content;
-    max-width: 100%;
-    padding: 7px 13px;
+  /* --- Brand: make SellHi the dominant, first-impression element --- */
+  .sidebar-logo {
+    height: 76px;
+    gap: 12px;
+    padding: 0 18px;
+  }
+  .sidebar-logo-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+  .sidebar-logo span {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1;
   }
 
-  /* Bottom workspace switcher + user bar sit flush with the tighter pane */
+  /* Section headers stay on one line in the pane */
+  .nav-label { letter-spacing: .5px; padding: 0 8px; }
+
+  /* --- Capsules: ALL identical size (full column width, equal height) --- */
+  .sidebar-nav .nav-item {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 8px 14px;
+    min-height: 36px;
+  }
+
+  /* Bottom workspace switcher + user bar sit flush with the pane */
   .ws-switcher, .ws-menu { left: 10px; right: 10px; }
 }
