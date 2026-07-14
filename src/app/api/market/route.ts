@@ -34,7 +34,14 @@ const SCHEMA = `{
       "stage": "funding stage, e.g. 'Series B', 'Seed', 'Bootstrapped', or 'Unknown'",
       "arr": "revenue/ARR if public, e.g. '$12M ARR', else 'Unknown'",
       "tier": 1,
-      "why": "one-sentence reason this company fits the ICP (a real, current signal if you found one)"
+      "why": "one-sentence reason this company fits the ICP (a real, current signal if you found one)",
+      "scores": {
+        "industry": 0,
+        "size": 0,
+        "growth": 0,
+        "pain": 0,
+        "funding": 0
+      }
     }
   ]
 }`;
@@ -120,6 +127,7 @@ Rules:
 - Prefer companies showing a current buying signal (recent funding, hiring a sales/revenue role, leadership change, market expansion).
 - Return 8-12 companies. If you genuinely cannot find that many real matches, return fewer rather than padding with invented ones.
 - Assign a tier: 1 = strong fit across size + industry + a live signal; 2 = partial fit; 3 = exploratory/weaker fit.
+- For each company, also give a "scores" object with five 0-100 sub-scores reflecting your honest per-criterion assessment: industry (vertical match to their targets), size (headcount fit to the band), growth (strength of current buying signals), pain (fit between the company's likely challenges and a fractional GTM leader's value), funding (how well the funding stage matches). These let the user re-weight the ranking.
 - Counts must reflect reality: "matchICP" = number of companies you return; "found" = roughly how many real candidates you evaluated; "activeSignals" = how many of the returned companies have a current public buying signal.
 - Keep every field tight and factual. No marketing fluff.
 - Respond with ONLY a single valid JSON object matching this schema exactly (no prose, no code fences):
@@ -197,6 +205,22 @@ Return the JSON object now.`;
   }
 
   // Normalise the companies list so the client can trust the shape.
+  const clamp = (n: unknown, fallback: number) => {
+    const v = Number(n);
+    return Number.isFinite(v) ? Math.max(0, Math.min(100, Math.round(v))) : fallback;
+  };
+  // Compute a size-fit score from the employee count vs the requested band, so
+  // "Company size fit" is real even if Claude omits it.
+  const sizeFit = (employees: string): number => {
+    const n = parseInt(employees.replace(/[^0-9]/g, ""), 10);
+    if (!n || !minEmp || !maxEmp || maxEmp <= minEmp) return 70;
+    if (n < minEmp) return Math.max(20, 70 - Math.round(((minEmp - n) / minEmp) * 60));
+    if (n > maxEmp) return Math.max(20, 70 - Math.round(((n - maxEmp) / maxEmp) * 60));
+    const center = (minEmp + maxEmp) / 2;
+    const half = (maxEmp - minEmp) / 2 || 1;
+    return Math.round(100 - (Math.abs(n - center) / half) * 20); // 80-100 inside band
+  };
+
   const rawCompanies = Array.isArray(parsed.companies) ? parsed.companies : [];
   const companies = rawCompanies
     .map((c) => {
@@ -208,15 +232,28 @@ Return the JSON object now.`;
       const initials =
         String(o.initials || "").trim().slice(0, 2).toUpperCase() ||
         name.slice(0, 2).toUpperCase();
+      const employees = String(o.employees || "").trim();
+      // Fallbacks scale with tier so recalculation still behaves sensibly if Claude
+      // returns no scores.
+      const tierBase = tier === 1 ? 85 : tier === 2 ? 68 : 48;
+      const s = (o.scores || {}) as Record<string, unknown>;
+      const scores = {
+        industry: clamp(s.industry, tierBase),
+        size: clamp(s.size, sizeFit(employees)),
+        growth: clamp(s.growth, tierBase),
+        pain: clamp(s.pain, tierBase),
+        funding: clamp(s.funding, tierBase),
+      };
       return {
         name,
         initials,
         industry: String(o.industry || "Other").trim(),
-        employees: String(o.employees || "").trim(),
+        employees,
         stage: String(o.stage || "").trim(),
         arr: String(o.arr || "").trim(),
         tier,
         why: String(o.why || "").trim(),
+        scores,
       };
     })
     .filter(Boolean) as Array<Record<string, unknown>>;

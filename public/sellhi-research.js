@@ -102,6 +102,9 @@
         if (label) label.textContent = c + "% dossier confidence";
       }
     } catch (e) {}
+
+    // Re-apply editability: populate() rewrote some nodes (chips, positioning).
+    try { makeEditable(); } catch (e) {}
   }
 
   var LOADING_STEPS = [
@@ -182,12 +185,132 @@
     return out;
   }
 
+  // ── Editable dossier (the "Everything below is editable" promise) ──────────
+  function txt(node) { return node ? (node.textContent || "").trim() : ""; }
+  function chipText(group) {
+    return $all(".dossier-chip", group).map(function (c) { return (c.textContent || "").trim(); }).filter(Boolean);
+  }
+
+  function injectEditableStyle() {
+    if (document.getElementById("sh-editable-style")) return;
+    var st = document.createElement("style");
+    st.id = "sh-editable-style";
+    st.textContent =
+      ".sh-editable{cursor:text;border-radius:4px;transition:background .1s,box-shadow .1s;}" +
+      ".sh-editable:hover{background:rgba(37,99,235,.05);box-shadow:inset 0 0 0 1px var(--g200);}" +
+      ".sh-editable:focus{outline:2px solid var(--primary);outline-offset:1px;background:#fff;}";
+    document.head.appendChild(st);
+  }
+
+  function editable(node) {
+    if (node && node.getAttribute && node.getAttribute("contenteditable") !== "true") {
+      node.setAttribute("contenteditable", "true");
+      node.setAttribute("spellcheck", "false");
+      node.classList.add("sh-editable");
+    }
+  }
+
+  function makeEditable() {
+    var root = document.getElementById("p1-s1");
+    if (!root) return;
+    injectEditableStyle();
+    try { editable($('div[style*="font-size:20px"][style*="font-weight:800"]', root)); } catch (e) {}
+    var sections = $all(".dossier-section", root);
+    sections.forEach(function (s) {
+      $all(".dossier-name", s).forEach(editable);
+      $all("p", s).forEach(editable);
+    });
+    try { if (sections[0]) $all('div[style*="font-size:12px"][style*="font-weight:600"]', sections[0]).forEach(editable); } catch (e) {}
+    try {
+      if (sections[2]) {
+        $all(".dossier-chip", sections[2]).forEach(editable);
+        editable($('div[style*="font-size:14px"][style*="font-weight:700"]', sections[2]));
+      }
+    } catch (e) {}
+    try { if (sections[4]) $all('span[style*="color:var(--primary)"]', sections[4]).forEach(editable); } catch (e) {}
+  }
+
+  function collectDossier() {
+    var root = document.getElementById("p1-s1");
+    if (!root) return null;
+    var d = { practice: {}, seat: {}, experience: {}, positioning: [] };
+    try { var h = $('div[style*="font-size:20px"][style*="font-weight:800"]', root); if (h) d.headline = txt(h); } catch (e) {}
+    var sections = $all(".dossier-section", root);
+    try {
+      var s0 = sections[0];
+      if (s0) {
+        d.practice.name = txt($(".dossier-name", s0));
+        d.practice.summary = txt($("p", s0));
+        var vals = $all('div[style*="font-size:12px"][style*="font-weight:600"]', s0);
+        d.practice.industry = txt(vals[0]);
+        d.practice.headcount = txt(vals[1]);
+        d.practice.funding = txt(vals[2]);
+        d.practice.hq = txt(vals[3]);
+        d.practice.founded = txt(vals[4]);
+      }
+    } catch (e) {}
+    try {
+      var s1 = sections[1];
+      if (s1) {
+        d.seat.initials = txt($(".dossier-avatar", s1));
+        d.seat.nameTitle = txt($(".dossier-name", s1));
+        d.seat.bio = txt($("p", s1));
+      }
+    } catch (e) {}
+    try {
+      var s2 = sections[2];
+      if (s2) {
+        var cg = $all(".dossier-chips", s2);
+        if (cg[0]) d.experience.industries = chipText(cg[0]);
+        if (cg[1]) d.experience.stages = chipText(cg[1]);
+        d.experience.dealSize = txt($('div[style*="font-size:14px"][style*="font-weight:700"]', s2));
+      }
+    } catch (e) {}
+    try { var s3 = sections[3]; if (s3) d.achievement = txt($("p", s3)); } catch (e) {}
+    try {
+      var s4 = sections[4];
+      if (s4) {
+        $all('div[style*="background:#fff"]', s4).forEach(function (card) {
+          d.positioning.push({ label: txt($('span[style*="color:var(--primary)"]', card)), text: txt($("p", card)) });
+        });
+      }
+    } catch (e) {}
+    return d;
+  }
+
+  // Save edits when the user advances from the dossier ("let me deepen").
+  function overrideDeepen() {
+    if (window.__sellhiDeepenWrapped) return true;
+    if (typeof window.simulateP1Deepen !== "function") return false;
+    var orig = window.simulateP1Deepen;
+    window.simulateP1Deepen = function () {
+      try {
+        var d = collectDossier();
+        if (d) {
+          fetch("/api/dossier-edit", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ dossier: d }),
+          }).catch(function () {});
+        }
+      } catch (e) {}
+      return orig.apply(this, arguments);
+    };
+    window.__sellhiDeepenWrapped = true;
+    return true;
+  }
+
   function boot() {
-    // The demo defines simulateP1Dossier on load; retry briefly until it exists.
+    // The demo defines simulateP1Dossier / simulateP1Deepen on load; retry briefly
+    // until they exist, and make the dossier editable as soon as it's in the DOM.
     var tries = 0;
     var t = setInterval(function () {
       tries++;
-      if (overrideDossier() || tries > 40) clearInterval(t);
+      var a = overrideDossier();
+      var b = overrideDeepen();
+      try { makeEditable(); } catch (e) {}
+      if ((a && b) || tries > 40) clearInterval(t);
     }, 150);
   }
   if (document.readyState === "complete") boot();
