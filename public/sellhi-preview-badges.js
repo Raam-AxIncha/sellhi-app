@@ -8,7 +8,7 @@
  */
 (function () {
   // Scripted/sample phases. Remove an entry when that phase goes live.
-  var NOT_LIVE = ["p2", "p3", "p4", "p5", "p6", "p7", "p8"];
+  var NOT_LIVE = ["p3", "p4", "p5", "p6", "p7", "p8"];
 
   function tag() {
     var s = document.createElement("span");

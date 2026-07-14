@@ -1,0 +1,255 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+// Market Intel (Phase 4). Mirrors /api/research: calls Claude with the web-search
+// tool to build a list of REAL companies that match the user's ICP, using their
+// saved dossier (Phase 3a) + the ICP criteria posted from the p2 wizard.
+// Can take 20-40s, so give it room and run on Node.
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+// Reuse the same daily-cap env var as research, but keep a SEPARATE counter
+// (data.market) so Market Intel and Dossier don't share the same budget.
+const DAILY_CAP = Number(process.env.RESEARCH_DAILY_CAP || "5");
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
+
+function today() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+}
+
+// The exact shape we ask Claude to return. Counts are DERIVED FROM REAL RESULTS
+// (no invented "247") to keep the honesty ethos of the pilot.
+const SCHEMA = `{
+  "counts": {
+    "found": 0,
+    "matchICP": 0,
+    "activeSignals": 0
+  },
+  "companies": [
+    {
+      "name": "real company name",
+      "initials": "2-letter monogram from the name",
+      "industry": "short vertical label, e.g. 'Fintech', 'Healthtech', 'AI/ML', 'DevTools', 'Cybersecurity', 'Cloud Infra', 'B2B SaaS'",
+      "employees": "approx headcount as a number-ish string, e.g. '120'; note if estimated",
+      "stage": "funding stage, e.g. 'Series B', 'Seed', 'Bootstrapped', or 'Unknown'",
+      "arr": "revenue/ARR if public, e.g. '$12M ARR', else 'Unknown'",
+      "tier": 1,
+      "why": "one-sentence reason this company fits the ICP (a real, current signal if you found one)"
+    }
+  ]
+}`;
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "not signed in" }, { status: 401 });
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: "Market Intel is not configured yet (missing API key)." },
+      { status: 503 }
+    );
+  }
+
+  // ICP criteria posted from the p2 wizard (these live only in the browser DOM).
+  let body: {
+    industries?: unknown;
+    minEmp?: unknown;
+    maxEmp?: unknown;
+    buyingAuth?: unknown;
+  } = {};
+  try {
+    body = await request.json();
+  } catch {
+    // Body is optional-ish; fall through with empties.
+  }
+  const industries = Array.isArray(body.industries)
+    ? (body.industries as unknown[]).filter((x) => typeof x === "string").slice(0, 12)
+    : [];
+  const minEmp = Number(body.minEmp) || 0;
+  const maxEmp = Number(body.maxEmp) || 0;
+  const buyingAuth =
+    typeof body.buyingAuth === "string" && body.buyingAuth.trim() &&
+    !/^select/i.test(body.buyingAuth)
+      ? body.buyingAuth
+      : "";
+
+  // Load the user's saved onboarding inputs + Phase 3a dossier for ICP grounding.
+  const { data: dossierRow } = await supabase
+    .from("dossiers")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  const savedData = (dossierRow?.data as Record<string, unknown> | undefined) || undefined;
+  const dossier = savedData?.dossier as Record<string, unknown> | undefined;
+
+  const inputs = {
+    name: dossierRow?.name || "",
+    title: dossierRow?.title || "",
+    company: dossierRow?.company || "",
+    industries: dossierRow?.industries || "",
+    deal_size: dossierRow?.deal_size || "",
+  };
+
+  // --- Per-user daily cap (cost seatbelt), separate from research ---
+  const meta = savedData?.market as { day?: string; count?: number } | undefined;
+  const usedToday = meta && meta.day === today() ? meta.count || 0 : 0;
+  if (usedToday >= DAILY_CAP) {
+    return NextResponse.json(
+      { error: `Daily Market Intel limit reached (${DAILY_CAP}/day). Try again tomorrow.` },
+      { status: 429 }
+    );
+  }
+
+  const dossierContext = dossier
+    ? `Their researched profile (use as ICP context):
+${JSON.stringify(dossier).slice(0, 2000)}`
+    : `No researched profile yet — infer the ICP from the criteria below.`;
+
+  const system = `You are a B2B go-to-market research analyst building a target-account long-list for a fractional sales/GTM leader.
+
+Task: using web search, return a list of REAL, currently-operating companies that fit the Ideal Customer Profile (ICP) below. These are prospects the user could sell into.
+
+Rules:
+- Use web search to find real companies. Every company must be a real, findable business — never invent names.
+- Respect the size band (employee count) and target industries as hard filters where possible.
+- Prefer companies showing a current buying signal (recent funding, hiring a sales/revenue role, leadership change, market expansion).
+- Return 8-12 companies. If you genuinely cannot find that many real matches, return fewer rather than padding with invented ones.
+- Assign a tier: 1 = strong fit across size + industry + a live signal; 2 = partial fit; 3 = exploratory/weaker fit.
+- Counts must reflect reality: "matchICP" = number of companies you return; "found" = roughly how many real candidates you evaluated; "activeSignals" = how many of the returned companies have a current public buying signal.
+- Keep every field tight and factual. No marketing fluff.
+- Respond with ONLY a single valid JSON object matching this schema exactly (no prose, no code fences):
+${SCHEMA}`;
+
+  const userMsg = `Build the target-account long-list.
+
+The user (fractional GTM leader):
+- Name: ${inputs.name || "(unknown)"}
+- Title: ${inputs.title || "(unknown)"}
+- Practice/company: ${inputs.company || "(unknown)"}
+- Industries they serve: ${inputs.industries || "(none stated)"}
+- Typical deal size: ${inputs.deal_size || "(none stated)"}
+
+${dossierContext}
+
+ICP criteria for the companies to find:
+- Target industries: ${industries.length ? industries.join(", ") : "(none selected — infer from their profile)"}
+- Company size: ${minEmp || "?"} to ${maxEmp || "?"} employees
+- Buying authority they want to reach: ${buyingAuth || "(unspecified)"}
+
+Return the JSON object now.`;
+
+  let anthropicJson: unknown;
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 4000,
+        system,
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 10 }],
+        messages: [{ role: "user", content: userMsg }],
+      }),
+    });
+    if (!resp.ok) {
+      const detail = await resp.text();
+      return NextResponse.json(
+        { error: "Market Intel service error", detail: detail.slice(0, 400) },
+        { status: 502 }
+      );
+    }
+    anthropicJson = await resp.json();
+  } catch (e) {
+    return NextResponse.json(
+      { error: "Could not reach Market Intel service", detail: String(e).slice(0, 200) },
+      { status: 502 }
+    );
+  }
+
+  // Pull the final text blocks and parse the JSON out of them.
+  const blocks =
+    (anthropicJson as { content?: Array<{ type: string; text?: string }> }).content || [];
+  const text = blocks
+    .filter((b) => b.type === "text" && b.text)
+    .map((b) => b.text as string)
+    .join("\n")
+    .trim();
+
+  let parsed: { counts?: unknown; companies?: unknown };
+  try {
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    parsed = JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return NextResponse.json(
+      { error: "Could not parse Market Intel result", raw: text.slice(0, 400) },
+      { status: 502 }
+    );
+  }
+
+  // Normalise the companies list so the client can trust the shape.
+  const rawCompanies = Array.isArray(parsed.companies) ? parsed.companies : [];
+  const companies = rawCompanies
+    .map((c) => {
+      const o = (c || {}) as Record<string, unknown>;
+      const name = String(o.name || "").trim();
+      if (!name) return null;
+      const tierNum = Number(o.tier);
+      const tier = tierNum === 1 || tierNum === 2 || tierNum === 3 ? tierNum : 3;
+      const initials =
+        String(o.initials || "").trim().slice(0, 2).toUpperCase() ||
+        name.slice(0, 2).toUpperCase();
+      return {
+        name,
+        initials,
+        industry: String(o.industry || "Other").trim(),
+        employees: String(o.employees || "").trim(),
+        stage: String(o.stage || "").trim(),
+        arr: String(o.arr || "").trim(),
+        tier,
+        why: String(o.why || "").trim(),
+      };
+    })
+    .filter(Boolean) as Array<Record<string, unknown>>;
+
+  const rawCounts = (parsed.counts || {}) as Record<string, unknown>;
+  const activeFromList = companies.filter(
+    (c) => typeof c.why === "string" && (c.why as string).length > 0
+  ).length;
+  const counts = {
+    matchICP: companies.length,
+    found: Number(rawCounts.found) > companies.length ? Number(rawCounts.found) : companies.length,
+    activeSignals:
+      Number(rawCounts.activeSignals) >= 0 && Number(rawCounts.activeSignals) <= companies.length
+        ? Number(rawCounts.activeSignals)
+        : activeFromList,
+  };
+
+  // Save the list + bump the daily counter.
+  const newData = {
+    ...(savedData || {}),
+    marketCompanies: { companies, counts, criteria: { industries, minEmp, maxEmp, buyingAuth } },
+    market: { day: today(), count: usedToday + 1, lastAt: new Date().toISOString() },
+  };
+  await supabase
+    .from("dossiers")
+    .update({ data: newData, updated_at: new Date().toISOString() })
+    .eq("id", user.id);
+
+  return NextResponse.json({
+    ok: true,
+    companies,
+    counts,
+    usedToday: usedToday + 1,
+    cap: DAILY_CAP,
+  });
+}
