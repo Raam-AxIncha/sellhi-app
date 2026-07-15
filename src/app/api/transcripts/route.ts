@@ -15,7 +15,9 @@ export async function GET(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "not signed in" }, { status: 401 });
 
-  const key = new URL(request.url).searchParams.get("key") || "";
+  const reqUrl = new URL(request.url);
+  const key = reqUrl.searchParams.get("key") || "";
+  const company = (reqUrl.searchParams.get("company") || "").trim();
 
   // 1) Already-saved transcript for this meeting?
   if (key) {
@@ -33,23 +35,35 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Fireflies not configured" }, { status: 503 });
   }
 
-  // 2) Pull the latest transcript from Fireflies as a starting point.
+  // 2) Find a Fireflies transcript that actually MATCHES this meeting/company.
+  // We do NOT return an unrelated "latest" transcript — if nothing matches, we
+  // return null so the UI shows a clean "no transcript yet" state.
   try {
-    const query = `query { transcripts(limit: 1) { id title summary { overview } dateString } }`;
+    const query = `query { transcripts(limit: 25) { id title summary { overview } dateString } }`;
     const resp = await fetch("https://api.fireflies.ai/graphql", {
       method: "POST",
       headers: { "content-type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({ query }),
     });
     const j = await resp.json();
-    const t = j?.data?.transcripts?.[0];
-    if (!t) return NextResponse.json({ ok: true, transcript: null });
-    const transcript = {
-      title: t.title || "Meeting",
-      summary: t.summary?.overview || "",
-      external_id: t.id,
-    };
-    return NextResponse.json({ ok: true, transcript });
+    const list: Array<{ id: string; title?: string; summary?: { overview?: string } }> =
+      j?.data?.transcripts || [];
+
+    let match: { id: string; title?: string; summary?: { overview?: string } } | undefined;
+    if (company) {
+      const c = company.toLowerCase();
+      // strip common company suffixes so "Acmeware Inc" still matches "Acmeware ..."
+      const core = c.replace(/\b(inc|llc|ltd|limited|corp|co|gmbh|plc|group)\b\.?/g, "").trim();
+      match = list.find((t) => {
+        const title = (t.title || "").toLowerCase();
+        return title.includes(c) || (core.length > 2 && title.includes(core));
+      });
+    }
+    if (!match) return NextResponse.json({ ok: true, transcript: null });
+    return NextResponse.json({
+      ok: true,
+      transcript: { title: match.title || "Meeting", summary: match.summary?.overview || "", external_id: match.id },
+    });
   } catch (e) {
     return NextResponse.json({ error: "Fireflies fetch failed", detail: String(e).slice(0, 200) }, { status: 502 });
   }

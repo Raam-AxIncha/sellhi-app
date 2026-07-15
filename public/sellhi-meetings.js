@@ -231,7 +231,7 @@
   function loadTranscript() {
     var host = $("#transcript-body");
     host.innerHTML = '<div class="muted">Checking…</div>';
-    fetch("/api/transcripts?key=" + encodeURIComponent(state.key), { credentials: "include" })
+    fetch("/api/transcripts?key=" + encodeURIComponent(state.key) + "&company=" + encodeURIComponent(state.company || ""), { credentials: "include" })
       .then(function (r) { return r.json().then(function (j) { return { status: r.status, j: j }; }); })
       .then(function (res) {
         if (res.status === 503) { host.innerHTML = '<div class="empty">Connect <b>Fireflies</b> to auto-capture this meeting\'s transcript &amp; summary. <span class="muted">(Set FIREFLIES_API_KEY.)</span></div>'; return; }
