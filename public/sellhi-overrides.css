@@ -47,3 +47,34 @@
   /* Bottom workspace switcher + user bar align to the slim pane */
   .ws-switcher, .ws-menu { left: 9px; right: 9px; }
 }
+
+/* ============================================================
+   Safe consistency pass (applies at all widths). Additive only —
+   nothing here changes layout or the demo's structure; it tightens
+   focus states, motion, and the injected app-layer elements so the
+   product feels of one piece. Font is already Raleway app-wide.
+   ============================================================ */
+
+/* Keyboard focus: a single consistent, on-brand focus ring everywhere. */
+.nav-item:focus-visible,
+.btn:focus-visible,
+.field-input:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* Nav items: consistent, smooth hover across mouse + keyboard. */
+.sidebar-nav .nav-item { transition: background .12s ease, color .12s ease; }
+
+/* The injected "Meeting Prep" link sits flush with the real nav items. */
+#sh-nav-meetings { text-decoration: none; }
+#sh-nav-meetings .nav-icon { opacity: .9; }
+
+/* Injected Market Intel tier legend: match the app's chip rhythm. */
+#p2-tier-legend { line-height: 1.5; }
+
+/* Editable dossier affordance stays subtle but discoverable. */
+.sh-editable { transition: background .1s ease, box-shadow .1s ease; }

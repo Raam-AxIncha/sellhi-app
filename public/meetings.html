@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SellHi — Meeting Prep</title>
+<link rel="icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#2563EB; --primary-light:#EFF4FF; --primary-dark:#1D4ED8;
+    --success:#1D9E75; --success-light:#E7F6F0; --warning:#D97706; --warning-light:#FEF3C7;
+    --purple:#7C3AED; --danger:#DC2626;
+    --g50:#F8FAFC; --g100:#F1F5F9; --g200:#E2E8F0; --g300:#CBD5E1; --g400:#94A3B8;
+    --g500:#64748B; --g600:#475569; --g700:#334155; --g800:#1E293B; --g900:#0F172A;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Raleway',sans-serif;margin:0;background:var(--g50);color:var(--g800);}
+  a{color:var(--primary);text-decoration:none;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#fff;border-bottom:1px solid var(--g200);position:sticky;top:0;z-index:10;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.4px;}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+  .topbar .sub{font-size:12px;color:var(--g500);font-weight:600;}
+  .btn{font-family:inherit;font-size:13px;font-weight:600;border-radius:8px;padding:9px 16px;border:1px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:all .12s;}
+  .btn:hover{border-color:var(--g300);background:var(--g50);}
+  .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);}
+  .btn-sm{padding:6px 12px;font-size:12px;}
+  .wrap{display:grid;grid-template-columns:320px 1fr;gap:20px;max-width:1240px;margin:0 auto;padding:22px 24px;}
+  @media (max-width:860px){.wrap{grid-template-columns:1fr;}}
+  .card{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px;margin-bottom:16px;}
+  .card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--g400);margin-bottom:12px;}
+  .muted{color:var(--g500);font-size:13px;line-height:1.6;}
+  /* meeting list */
+  .m-item{display:flex;flex-direction:column;gap:2px;padding:11px 13px;border:1px solid var(--g200);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .12s;background:#fff;}
+  .m-item:hover{border-color:var(--primary);background:var(--primary-light);}
+  .m-item.active{border-color:var(--primary);background:var(--primary-light);box-shadow:inset 0 0 0 1px var(--primary);}
+  .m-item .m-title{font-weight:600;font-size:14px;color:var(--g800);}
+  .m-item .m-meta{font-size:12px;color:var(--g500);}
+  .pill{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 8px;border-radius:999px;}
+  .pill-green{background:var(--success-light);color:var(--success);}
+  .pill-amber{background:var(--warning-light);color:var(--warning);}
+  .pill-gray{background:var(--g100);color:var(--g500);}
+  .connect-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .field-input{width:100%;font-family:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--g200);border-radius:8px;color:var(--g800);}
+  .field-input:focus{outline:2px solid var(--primary);outline-offset:1px;}
+  textarea.field-input{min-height:150px;resize:vertical;line-height:1.6;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .kv{font-size:12px;}
+  .kv .k{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g400);}
+  .kv .v{font-size:13px;font-weight:600;color:var(--g700);margin-top:2px;}
+  .chip{display:inline-flex;align-items:center;padding:5px 11px;border-radius:8px;font-size:12px;font-weight:500;background:#fff;border:1px solid var(--g200);color:var(--g700);margin:0 6px 6px 0;}
+  .empty{border:1px dashed var(--g300);border-radius:10px;padding:18px;text-align:center;color:var(--g500);font-size:13px;}
+  /* scribble */
+  .scribble-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .swatch{width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--g300);cursor:pointer;}
+  .swatch.active{box-shadow:0 0 0 2px var(--primary);}
+  #scribble{width:100%;height:280px;border:1px solid var(--g200);border-radius:10px;background:#fff;touch-action:none;cursor:crosshair;display:block;}
+  .savehint{font-size:11px;color:var(--g400);}
+  .tabbar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .tab{font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--g200);background:#fff;color:var(--g600);cursor:pointer;}
+  .tab.active{background:var(--primary-light);border-color:var(--primary);color:var(--primary);}
+  .hidden{display:none;}
+  .banner{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;background:#FFF7ED;border:1px solid #FED7AA;color:#92400E;}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="mark">S</span><span>SellHi</span><span class="sub" style="margin-left:8px;">Meeting Prep</span></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span id="who" class="sub"></span>
+      <a class="btn btn-sm" href="/">&#8592; Back to workspace</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- LEFT: meetings + connect -->
+    <div>
+      <div class="card">
+        <div class="card-title">Your calendar</div>
+        <div id="cal-status"></div>
+        <div class="connect-row" id="connect-row"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Upcoming &amp; prep</span>
+          <button class="btn btn-sm" id="add-manual">+ Prep a company</button>
+        </div>
+        <div id="meeting-list"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: prep workspace -->
+    <div>
+      <div id="prep-empty" class="card">
+        <div class="card-title">Meeting prep</div>
+        <div class="empty">Pick a meeting on the left, or click <b>+ Prep a company</b> to start a prep sheet for any prospect. Your notes and scribbles save automatically to your account.</div>
+      </div>
+
+      <div id="prep-panel" class="hidden">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <div id="prep-title" style="font-size:18px;font-weight:800;color:var(--g900);"></div>
+              <div id="prep-sub" class="muted"></div>
+            </div>
+            <span id="prep-save" class="savehint">Saved</span>
+          </div>
+        </div>
+
+        <div class="tabbar">
+          <button class="tab active" data-tab="dossier">TCP dossier</button>
+          <button class="tab" data-tab="notes">Prep notes</button>
+          <button class="tab" data-tab="scribble">Scribble</button>
+          <button class="tab" data-tab="transcript">Transcript</button>
+        </div>
+
+        <!-- Dossier / common connections -->
+        <div class="tabpane" id="pane-dossier">
+          <div class="card">
+            <div class="card-title">Who you are (from your dossier)</div>
+            <div id="me-context" class="muted">Loading…</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Common connections</div>
+            <div id="common-connections"></div>
+          </div>
+        </div>
+
+        <!-- Prep notes -->
+        <div class="tabpane hidden" id="pane-notes">
+          <div class="card">
+            <div class="card-title">Prep notes</div>
+            <div class="muted" style="margin-bottom:8px;">Jot talking points, questions, and objectives. Autosaves as you type.</div>
+            <textarea id="notes" class="field-input" placeholder="• Objective for this call…&#10;• Their likely pain…&#10;• Questions to ask…&#10;• Next step to land…"></textarea>
+          </div>
+        </div>
+
+        <!-- Scribble -->
+        <div class="tabpane hidden" id="pane-scribble">
+          <div class="card">
+            <div class="card-title">Scribble pad</div>
+            <div class="scribble-toolbar">
+              <span id="swatches"></span>
+              <label class="savehint">Pen <input type="range" id="pen-size" min="1" max="10" value="3" style="vertical-align:middle;"></label>
+              <button class="btn btn-sm" id="scribble-clear">Clear</button>
+              <span class="savehint" id="scribble-hint">Draw with a mouse, finger, or stylus.</span>
+            </div>
+            <canvas id="scribble"></canvas>
+          </div>
+        </div>
+
+        <!-- Transcript -->
+        <div class="tabpane hidden" id="pane-transcript">
+          <div class="card">
+            <div class="card-title">Meeting transcript</div>
+            <div id="transcript-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/sellhi-meetings.js"></script>
+</body>
+</html>
