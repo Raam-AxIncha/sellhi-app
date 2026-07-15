@@ -4,22 +4,24 @@
  */
 (function () {
   function addItem() {
+    if (document.getElementById("sh-nav-meetings")) return true;
     var nav = document.querySelector(".sidebar-nav");
-    if (!nav || document.getElementById("sh-nav-meetings")) return true;
+    if (!nav || !nav.firstElementChild) return false; // not ready yet -> retry
     var a = document.createElement("a");
     a.id = "sh-nav-meetings";
     a.className = "nav-item";
     a.href = "/meetings";
     a.setAttribute("role", "menuitem");
     a.style.textDecoration = "none";
+    a.style.marginBottom = "8px";
     a.innerHTML =
       '<span class="nav-icon" aria-hidden="true">&#128197;</span>' +
       '<span class="nav-text"> Meeting Prep</span>';
-    // Place it just under the brand/logo, above the phase sections.
-    var firstLabel = nav.querySelector(".nav-label");
-    if (firstLabel) nav.insertBefore(a, firstLabel);
-    else nav.insertBefore(a, nav.firstChild);
-    return true;
+    // Insert at the very top of the sidebar nav. Use firstElementChild (a real
+    // direct child) so insertBefore can't throw the way targeting a nested
+    // .nav-label did.
+    try { nav.insertBefore(a, nav.firstElementChild); return true; }
+    catch (e) { return false; }
   }
   function boot() {
     var n = 0;
