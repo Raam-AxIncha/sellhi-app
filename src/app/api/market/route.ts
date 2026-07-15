@@ -125,8 +125,9 @@ Rules:
 - Use web search to find real companies. Every company must be a real, findable business — never invent names.
 - Respect the size band (employee count) and target industries as hard filters where possible.
 - Prefer companies showing a current buying signal (recent funding, hiring a sales/revenue role, leadership change, market expansion).
-- Return 6-8 companies. Fewer real matches is fine — never pad with invented ones.
+- Return exactly 5-6 companies. Fewer real matches is fine — never pad with invented ones.
 - Work FAST: use at most ~4 web searches total, then answer. Do not exhaustively verify every field — a solid, well-sourced shortlist matters more than perfect completeness (this runs under a strict time limit).
+- Keep "why" to one short clause (<= 12 words). Output ONLY the JSON and make sure it is complete and valid.
 - Assign a tier: 1 = strong fit across size + industry + a live signal; 2 = partial fit; 3 = exploratory/weaker fit.
 - For each company, also give a "scores" object with five 0-100 sub-scores reflecting your honest per-criterion assessment: industry (vertical match to their targets), size (headcount fit to the band), growth (strength of current buying signals), pain (fit between the company's likely challenges and a fractional GTM leader's value), funding (how well the funding stage matches). These let the user re-weight the ranking.
 - Counts must reflect reality: "matchICP" = number of companies you return; "found" = roughly how many real candidates you evaluated; "activeSignals" = how many of the returned companies have a current public buying signal.
@@ -163,7 +164,7 @@ Return the JSON object now.`;
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 2600,
+        max_tokens: 3800,
         system,
         tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 4 }],
         messages: [{ role: "user", content: userMsg }],
@@ -193,14 +194,15 @@ Return the JSON object now.`;
     .join("\n")
     .trim();
 
+  const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
   let parsed: { counts?: unknown; companies?: unknown };
   try {
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    parsed = JSON.parse(text.slice(start, end + 1));
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    parsed = JSON.parse(cleaned.slice(start, end + 1));
   } catch {
     return NextResponse.json(
-      { error: "Could not parse Market Intel result", raw: text.slice(0, 400) },
+      { error: "Could not parse Market Intel result", raw: cleaned.slice(0, 400) },
       { status: 502 }
     );
   }
