@@ -16,7 +16,7 @@ const CFG: Record<string, { idEnv: string; authUrl: string; scope: string; extra
     idEnv: "GOOGLE_CLIENT_ID",
     authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
     scope: "openid email https://www.googleapis.com/auth/calendar.readonly",
-    extra: "access_type=offline&prompt=consent",
+    extra: "access_type=offline&prompt=select_account%20consent",
   },
   microsoft: {
     idEnv: "MICROSOFT_CLIENT_ID",

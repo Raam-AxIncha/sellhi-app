@@ -16,19 +16,32 @@
   var state = { key: null, company: null, dossier: null, canvasData: null };
 
   // ---- left column: calendar status + meeting list ------------------------
-  function providerBtn(provider, label, connected, email) {
-    if (connected) return '<span class="chip"><span class="pill pill-green" style="margin-right:6px;">Connected</span>' + esc(label) + (email ? " · " + esc(email) : "") + "</span>";
+  function providerBtn(provider, label, connected) {
+    if (connected) {
+      return '<span class="chip"><span class="pill pill-green" style="margin-right:6px;">Connected</span>' + esc(label) + "</span>" +
+        '<a class="btn btn-sm" href="/api/calendar/' + provider + '/start">Switch account</a>' +
+        '<a class="btn btn-sm sh-disconnect" data-provider="' + provider + '" style="cursor:pointer;color:var(--danger);border-color:var(--danger);">Disconnect</a>';
+    }
     return '<a class="btn btn-sm" href="/api/calendar/' + provider + '/start">Connect ' + esc(label) + "</a>";
   }
 
   function renderCalStatus(connected) {
     var any = connected && (connected.google || connected.microsoft);
     $("#cal-status").innerHTML = any
-      ? '<div class="muted">Calendar connected. Your upcoming meetings appear below.</div>'
+      ? '<div class="muted">Calendar connected. Your upcoming meetings appear below. Wrong account? Use "Switch account".</div>'
       : '<div class="muted">Connect a calendar to pull your real meetings in. You can still prep any company right now without it.</div>';
     $("#connect-row").innerHTML =
-      providerBtn("google", "Google", connected && connected.google, "") +
-      providerBtn("microsoft", "Microsoft", connected && connected.microsoft, "");
+      providerBtn("google", "Google", connected && connected.google) +
+      providerBtn("microsoft", "Microsoft", connected && connected.microsoft);
+    $all("#connect-row .sh-disconnect").forEach(function (el) {
+      el.addEventListener("click", function () {
+        var p = el.getAttribute("data-provider");
+        el.textContent = "Disconnecting…";
+        fetch("/api/calendar/" + p + "/disconnect", { method: "POST", credentials: "include" })
+          .then(function () { syncedOnce = false; loadMeetings(); })
+          .catch(function () { loadMeetings(); });
+      });
+    });
   }
 
   function localPreps() {
