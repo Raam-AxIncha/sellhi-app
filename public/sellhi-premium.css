@@ -126,3 +126,25 @@ body.dark #phase-p2 {
 
 /* ---- Search/filter bar breathing room ---- */
 #phase-p2 .search-filter-bar { gap: 10px; margin-bottom: 18px; }
+
+/* ---- Fixes from live review ---- */
+
+/* 1) Primary button ("Continue"): always-legible white label; dim when disabled
+   (was showing muted gray-on-teal in light mode). */
+#phase-p2 .btn-primary { color: #ffffff !important; }
+#phase-p2 .btn-primary:disabled { opacity: .5; }
+
+/* 3) Help-tip "?" aligns with its label text (Step 4 tier metric labels). */
+#phase-p2 .metric-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* 2 & 4) Dark mode: guarantee tier badge text stays legible (Steps 3 & 5). */
+body.dark #phase-p2 .badge-green { background: rgba(29,158,117,.22) !important; color: #8FE1D6 !important; }
+body.dark #phase-p2 .badge-amber { background: rgba(186,117,23,.24) !important; color: #F2C68A !important; }
+body.dark #phase-p2 .badge-gray  { background: rgba(160,176,173,.22) !important; color: #CBD8D5 !important; }
+
