@@ -155,10 +155,17 @@
   var canvas, ctx, drawing = false, penColor = "#0F172A", penSize = 3, dpr = 1, canvasSaveTimer = null;
   var COLORS = ["#0F172A", "#2563EB", "#DC2626", "#1D9E75", "#D97706"];
 
-  function setupCanvasSize() {
+  function setupCanvasSize(retries) {
     if (!canvas) return;
+    var pane = document.getElementById("pane-scribble");
+    if (!pane || pane.classList.contains("hidden")) return; // not visible yet
     var rect = canvas.getBoundingClientRect();
-    if (!rect.width) return; // pane hidden -> size later, when it's actually shown
+    // On the first open the pane may not be laid out yet (width 0). Wait for a
+    // real layout via rAF instead of a fixed delay, then size + repaint.
+    if (!rect.width) {
+      if ((retries || 0) < 15) requestAnimationFrame(function () { setupCanvasSize((retries || 0) + 1); });
+      return;
+    }
     dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);

@@ -29,7 +29,7 @@ const SCHEMA = `{
     {
       "name": "real company name",
       "initials": "2-letter monogram from the name",
-      "industry": "short vertical label, e.g. 'Fintech', 'Healthtech', 'AI/ML', 'DevTools', 'Cybersecurity', 'Cloud Infra', 'B2B SaaS'",
+      "industry": "ONE short vertical label, 1-2 words max, no slashes or sub-categories, e.g. 'Fintech', 'AI/ML', 'B2B SaaS', 'Cybersecurity', 'DevTools', 'Healthtech'",
       "employees": "approx headcount as a number-ish string, e.g. '120'; note if estimated",
       "stage": "funding stage, e.g. 'Series B', 'Seed', 'Bootstrapped', or 'Unknown'",
       "arr": "revenue/ARR if public, e.g. '$12M ARR', else 'Unknown'",
@@ -128,6 +128,7 @@ Rules:
 - Return exactly 5-6 companies. Fewer real matches is fine — never pad with invented ones.
 - Work FAST: use at most ~4 web searches total, then answer. Do not exhaustively verify every field — a solid, well-sourced shortlist matters more than perfect completeness (this runs under a strict time limit).
 - Keep "why" to one short clause (<= 12 words). Output ONLY the JSON and make sure it is complete and valid.
+- Each "industry" must be a single short vertical (1-2 words, no "/" and no sub-category), so filters and segments read cleanly.
 - Assign a tier: 1 = strong fit across size + industry + a live signal; 2 = partial fit; 3 = exploratory/weaker fit.
 - For each company, also give a "scores" object with five 0-100 sub-scores reflecting your honest per-criterion assessment: industry (vertical match to their targets), size (headcount fit to the band), growth (strength of current buying signals), pain (fit between the company's likely challenges and a fractional GTM leader's value), funding (how well the funding stage matches). These let the user re-weight the ranking.
 - Counts must reflect reality: "matchICP" = number of companies you return; "found" = roughly how many real candidates you evaluated; "activeSignals" = how many of the returned companies have a current public buying signal.
