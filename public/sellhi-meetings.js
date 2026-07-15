@@ -13,7 +13,7 @@
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
   function slug(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"").slice(0,60); }
 
-  var state = { key: null, company: null, dossier: null };
+  var state = { key: null, company: null, dossier: null, canvasData: null };
 
   // ---- left column: calendar status + meeting list ------------------------
   function providerBtn(provider, label, connected, email) {
@@ -135,13 +135,18 @@
 
   function loadNote() {
     $("#notes").value = "";
+    state.canvasData = null;
     clearCanvas(true);
     fetch("/api/prep-notes?key=" + encodeURIComponent(state.key), { credentials: "include" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
         var n = j.note || {};
         $("#notes").value = n.notes || "";
-        if (n.canvas) loadCanvasImage(n.canvas);
+        // Keep the saved drawing in state; paint it now if the scribble pane is
+        // already visible, otherwise setupCanvasSize paints it when the tab opens.
+        state.canvasData = n.canvas || null;
+        var pane = document.getElementById("pane-scribble");
+        if (state.canvasData && pane && !pane.classList.contains("hidden")) { setupCanvasSize(); }
         markSaved();
       }).catch(function () {});
   }
@@ -153,15 +158,15 @@
   function setupCanvasSize() {
     if (!canvas) return;
     var rect = canvas.getBoundingClientRect();
+    if (!rect.width) return; // pane hidden -> size later, when it's actually shown
     dpr = window.devicePixelRatio || 1;
-    // preserve current drawing across resize
-    var prev = canvas.toDataURL();
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
     ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
     ctx.lineCap = "round"; ctx.lineJoin = "round";
-    if (prev && prev.length > 200) loadCanvasImage(prev, true);
+    // Repaint whatever drawing we're holding (saved from the DB or this session).
+    if (state.canvasData) loadCanvasImage(state.canvasData);
   }
   function pos(e) {
     var rect = canvas.getBoundingClientRect();
@@ -172,7 +177,7 @@
   function startDraw(e){ drawing = true; var p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }
   function moveDraw(e){ if(!drawing) return; var p = pos(e); ctx.strokeStyle = penColor; ctx.lineWidth = penSize; ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }
   function endDraw(){ if(!drawing) return; drawing = false; scheduleCanvasSave(); }
-  function scheduleCanvasSave(){ clearTimeout(canvasSaveTimer); canvasSaveTimer = setTimeout(function(){ try { persist({ canvas: canvas.toDataURL("image/png") }); } catch(e){} }, 900); }
+  function scheduleCanvasSave(){ clearTimeout(canvasSaveTimer); canvasSaveTimer = setTimeout(function(){ try { var d = canvas.toDataURL("image/png"); state.canvasData = d; persist({ canvas: d }); } catch(e){} }, 900); }
   function clearCanvas(skipSave){ if(!ctx) return; ctx.clearRect(0,0,canvas.width,canvas.height); if(!skipSave) scheduleCanvasSave(); }
   function loadCanvasImage(dataUrl, noScale){
     var img = new Image();
