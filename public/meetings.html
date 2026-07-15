@@ -16,10 +16,13 @@
   }
   *{box-sizing:border-box;}
   body{font-family:'Raleway',sans-serif;margin:0;background:var(--g50);color:var(--g800);}
+  /* Requested: no bold anywhere on the Meeting Prep page — all text regular weight. */
+  body, body * { font-weight: 400 !important; }
   a{color:var(--primary);text-decoration:none;}
   .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#fff;border-bottom:1px solid var(--g200);position:sticky;top:0;z-index:10;}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.4px;}
-  .brand .mark{width:34px;height:34px;border-radius:9px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+  .brand .mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;}
+  .brand .mark svg{display:block;}
   .topbar .sub{font-size:12px;color:var(--g500);font-weight:600;}
   .btn{font-family:inherit;font-size:13px;font-weight:600;border-radius:8px;padding:9px 16px;border:1px solid var(--g200);background:#fff;color:var(--g700);cursor:pointer;transition:all .12s;}
   .btn:hover{border-color:var(--g300);background:var(--g50);}
@@ -66,7 +69,7 @@
 </head>
 <body>
   <div class="topbar">
-    <div class="brand"><span class="mark">S</span><span>SellHi</span><span class="sub" style="margin-left:8px;">Meeting Prep</span></div>
+    <div class="brand"><span class="mark" aria-label="SellHi"><svg width="32" height="32" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="9" width="30" height="27" rx="5" fill="#ffffff" stroke="#008080" stroke-width="2.5"/><path d="M5 15 V14 A5 5 0 0 1 10 9 H30 A5 5 0 0 1 35 14 V15 Z" fill="#008080"/><rect x="12" y="4" width="3" height="9" rx="1.5" fill="#008080"/><rect x="25" y="4" width="3" height="9" rx="1.5" fill="#008080"/><text x="20" y="32" text-anchor="middle" font-family="Raleway,sans-serif" font-size="19" fill="#008080">S</text></svg></span><span>SellHi</span><span class="sub" style="margin-left:8px;">Meeting Prep</span></div>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="who" class="sub"></span>
       <a class="btn btn-sm" href="/">&#8592; Back to workspace</a>
