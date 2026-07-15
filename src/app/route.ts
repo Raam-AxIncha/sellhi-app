@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   if (html.includes("</head>")) {
     html = html.replace(
       "</head>",
-      `<link rel="stylesheet" href="/sellhi-overrides.css"></head>`
+      `<link rel="stylesheet" href="/sellhi-overrides.css"><link rel="stylesheet" href="/sellhi-premium.css"></head>`
     );
   }
 

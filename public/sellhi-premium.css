@@ -1,0 +1,128 @@
+/* ============================================================
+   SellHi — "Premium hybrid" theme  (PROTOTYPE)
+   Scoped to Market Intel (#phase-p2) only, so Identity Engine (p1)
+   stays untouched for side-by-side comparison. Light + dark via tokens.
+   Reversible: remove the <link> in src/app/route.ts to revert.
+   Principles: calm surfaces, soft grouping (not hard boxes), whitespace,
+   one accent (teal), two-weight type (400 body / 500 emphasis), strong
+   contrast in both modes.
+   ============================================================ */
+
+#phase-p2 {
+  --sh-surface: #ffffff;
+  --sh-line: #EAF0F0;
+  --sh-ink: #0F1F1E;
+  --sh-ink2: #607471;
+  --sh-teal: #008080;
+  --sh-teal-ink: #0F6E56;
+  --sh-teal-soft: #E1F5EE;
+  --sh-shadow: 0 1px 2px rgba(16,24,40,.04), 0 2px 8px rgba(16,24,40,.06);
+}
+body.dark #phase-p2 {
+  --sh-surface: #1B2430;
+  --sh-line: #2C3A44;
+  --sh-ink: #EEF3F2;
+  --sh-ink2: #9FB0AD;
+  --sh-teal: #37C3B4;
+  --sh-teal-ink: #8FE1D6;
+  --sh-teal-soft: rgba(0,128,128,.16);
+  --sh-shadow: 0 1px 2px rgba(0,0,0,.35), 0 2px 10px rgba(0,0,0,.30);
+}
+
+/* ---- Cards: soft grouped surfaces, generous padding ---- */
+#phase-p2 .card {
+  background: var(--sh-surface) !important;
+  border: 1px solid var(--sh-line) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--sh-shadow);
+  padding: 22px 24px;
+}
+#phase-p2 .card-title {
+  color: var(--sh-ink2);
+  font-weight: 500;
+  letter-spacing: .4px;
+}
+
+/* ---- Metric tiles: flatten to numbers on whitespace; one teal accent ---- */
+#phase-p2 .metric-row .metric {
+  border: none !important;
+  background: transparent !important;
+  padding: 6px 4px;
+}
+#phase-p2 .metric-value { font-weight: 500; color: var(--sh-ink) !important; }
+#phase-p2 .metric-label { color: var(--sh-ink2) !important; }
+/* the ICP-match number keeps the teal accent (was --primary inline) */
+#phase-p2 .metric-value[style*="var(--primary)"] { color: var(--sh-teal) !important; }
+/* neutralise the secondary (purple) accent so teal is the only hero color */
+#phase-p2 .metric-value[style*="var(--purple)"] { color: var(--sh-ink) !important; }
+#phase-p2 .metric-label[style*="var(--purple)"] { color: var(--sh-ink2) !important; }
+
+/* ---- Company list: clean rows, hairline separators, hover — no boxes ---- */
+#phase-p2 #p2-company-list .signal-card {
+  border: none;
+  border-bottom: 1px solid var(--sh-line);
+  border-radius: 0;
+  background: transparent;
+  padding: 13px 8px;
+  margin: 0;
+  transition: background .12s ease;
+}
+#phase-p2 #p2-company-list .signal-card:last-child { border-bottom: none; }
+#phase-p2 #p2-company-list .signal-card:hover { background: var(--sh-teal-soft); }
+#phase-p2 .signal-title { font-weight: 500; color: var(--sh-ink); }
+#phase-p2 .signal-sub { color: var(--sh-ink2); }
+
+/* ---- Avatar monogram: teal-tinted ---- */
+#phase-p2 .fb-avatar {
+  background: var(--sh-teal-soft) !important;
+  color: var(--sh-teal-ink) !important;
+  font-weight: 500;
+}
+
+/* ---- Badges → soft pills ---- */
+#phase-p2 .badge {
+  border: none !important;
+  border-radius: 999px;
+  font-weight: 500;
+  padding: 3px 11px;
+}
+
+/* ---- Inputs / filters: softer, teal focus ---- */
+#phase-p2 .field-input,
+#phase-p2 .filter-select,
+#phase-p2 .search-box input {
+  border: 1px solid var(--sh-line) !important;
+  border-radius: 10px !important;
+  background: var(--sh-surface) !important;
+  color: var(--sh-ink) !important;
+}
+#phase-p2 .field-input:focus,
+#phase-p2 .filter-select:focus,
+#phase-p2 .search-box input:focus {
+  outline: 2px solid var(--sh-teal);
+  outline-offset: 1px;
+}
+
+/* ---- Injected tier legend ---- */
+#phase-p2 #p2-tier-legend {
+  background: transparent !important;
+  border: 1px solid var(--sh-line) !important;
+  border-radius: 10px !important;
+  color: var(--sh-ink2) !important;
+}
+
+/* ---- Primary button: teal, softer corners ---- */
+#phase-p2 .btn-primary {
+  background: var(--sh-teal) !important;
+  border-color: var(--sh-teal) !important;
+  border-radius: 10px !important;
+  font-weight: 500;
+}
+#phase-p2 .btn-outline { border-radius: 10px !important; }
+
+/* ---- Wizard + sliders pick up teal ---- */
+#phase-p2 .step-dot.active { background: var(--sh-teal) !important; border-color: var(--sh-teal) !important; }
+#phase-p2 input[type=range] { accent-color: var(--sh-teal); }
+
+/* ---- Search/filter bar breathing room ---- */
+#phase-p2 .search-filter-bar { gap: 10px; margin-bottom: 18px; }
