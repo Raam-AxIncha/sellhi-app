@@ -136,3 +136,21 @@ body.dark .phase-section .badge-gray  { background: rgba(160,176,173,.22) !impor
   border-radius: 10px !important;
   color: var(--sh-ink2) !important;
 }
+
+/* ============================================================
+   Campaign Engine (p6) — clarity fixes
+   ============================================================ */
+
+/* Status pills (Live / Paused / Draft / Active / Warming): the demo keeps
+   their LIGHT backgrounds in dark mode while only dimming the text, so the
+   label goes invisible. Give each state a legible dark bg + text. */
+body.dark .camp-status.live   { background: rgba(29,158,117,.22) !important; color: #8FE1D6 !important; }
+body.dark .camp-status.paused { background: rgba(186,117,23,.24) !important; color: #F2C68A !important; }
+body.dark .camp-status.draft  { background: rgba(160,176,173,.22) !important; color: #CBD8D5 !important; }
+body.dark .camp-status.draft .status-dot { background: #CBD8D5 !important; }
+/* a touch larger so the tiny pills read clearly in both modes */
+.phase-section .camp-status { font-size: 11px; padding: 3px 9px; }
+
+/* "Add Action" palette capsules: the demo's dark rule set the surface but not
+   the text, leaving dark-grey text on a dark surface. Restore a light label. */
+body.dark .seq-palette-block { color: var(--g100) !important; }
