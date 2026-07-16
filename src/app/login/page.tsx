@@ -172,6 +172,4 @@ const styles: Record<string, React.CSSProperties> = {
   switch: { textAlign: "center", fontSize: 13, color: "#6b7280", marginTop: 18 },
   forgot: { textAlign: "center", marginTop: 12 },
   link: { border: "none", background: "none", color: teal, fontWeight: 700, cursor: "pointer", fontSize: 13, fontFamily: "inherit" },
-  error: { background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 10px", fontSize: 13, marginBottom: 14 },
-  notice: { background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0", borderRadius: 8, padding: "8px 10px", fontSize: 13, marginBottom: 14 },
-};
+  error: { background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 10px", fontSize: 13, marginBottom
