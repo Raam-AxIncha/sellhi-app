@@ -154,3 +154,11 @@ body.dark .camp-status.draft .status-dot { background: #CBD8D5 !important; }
 /* "Add Action" palette capsules: the demo's dark rule set the surface but not
    the text, leaving dark-grey text on a dark surface. Restore a light label. */
 body.dark .seq-palette-block { color: var(--g100) !important; }
+
+/* --- Dark-mode logo swap: navy mark is invisible on dark surfaces, so use the
+   light (white/orange/teal) version whenever the app is in dark mode.
+   Targets every place the mark is used (sidebar + login/preview cards). --- */
+body.dark img[src="/favicon-512.png"],
+body.dark img.sidebar-logo-mark {
+  content: url("/favicon-512-ondark.png");
+}
