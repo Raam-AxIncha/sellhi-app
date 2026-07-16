@@ -54,6 +54,7 @@ function LoginInner() {
   return (
     <div style={styles.wrap}>
       <div style={styles.card}>
+        <img src="/favicon-512.png" alt="SellHi" style={styles.logo} />
         <div style={styles.brand}>SellHi</div>
         <p style={styles.sub}>
           {mode === "signin"
@@ -157,6 +158,7 @@ const teal = "#008080";
 const styles: Record<string, React.CSSProperties> = {
   wrap: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb", padding: 20 },
   card: { width: "100%", maxWidth: 380, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "32px 28px", boxShadow: "0 10px 30px rgba(0,0,0,.06)" },
+  logo: { width: 56, height: 56, objectFit: "contain", display: "block", marginBottom: 10 },
   brand: { fontSize: 28, fontWeight: 800, color: teal, letterSpacing: -0.5 },
   sub: { margin: "4px 0 20px", color: "#6b7280", fontSize: 14 },
   oauth: { width: "100%", display: "flex", alignItems: "center", gap: 10, justifyContent: "center", padding: "10px 14px", marginBottom: 10, border: "1px solid #e5e7eb", borderRadius: 10, background: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" },

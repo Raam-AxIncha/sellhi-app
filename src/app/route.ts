@@ -45,6 +45,7 @@ export async function GET(request: Request) {
 
   const bootstrap =
     `<script>window.__SELLHI_USER__=${JSON.stringify(identity)};try{localStorage.setItem('sellhi_auth','1');}catch(e){}</script>` +
+    `<script src="/sellhi-fixes.js"></script>` +
     `<script src="/sellhi-identity.js"></script>` +
     `<script src="/sellhi-onboarding.js"></script>` +
     `<script src="/sellhi-research.js"></script>` +
