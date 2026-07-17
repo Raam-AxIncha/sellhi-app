@@ -57,4 +57,6 @@ export async function GET(request: Request) {
     : html + bootstrap;
 
   return new NextResponse(html, {
-    headers: { "cont
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
+}
