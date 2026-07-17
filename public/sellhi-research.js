@@ -9,7 +9,10 @@
 (function () {
   function $(sel, root) { return (root || document).querySelector(sel); }
   function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
-  function setText(node, val) { if (node && typeof val === "string" && val.trim()) node.textContent = val; }
+  // Strip AI source-citation markup (e.g. <cite index="2-6,2-7">…</cite>) that can
+  // leak from the research model into the dossier text.
+  function stripCite(s) { return typeof s === "string" ? s.replace(/<\/?cite[^>]*>/gi, "").replace(/[ \t]{2,}/g, " ").trim() : s; }
+  function setText(node, val) { val = stripCite(val); if (node && typeof val === "string" && val.trim()) node.textContent = val; }
 
   // dossierReal: true once the dossier shows REAL data (loaded from the account or
   // freshly researched) rather than the demo's hardcoded mock. We only save on
@@ -21,7 +24,7 @@
   function chipHTML(label) {
     var d = document.createElement("div");
     d.className = "dossier-chip";
-    d.textContent = label;
+    d.textContent = stripCite(label);
     return d.outerHTML;
   }
 
