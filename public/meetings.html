@@ -65,13 +65,38 @@
   .tab.active{background:var(--primary-light);border-color:var(--primary);color:var(--primary);}
   .hidden{display:none;}
   .banner{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;background:#FFF7ED;border:1px solid #FED7AA;color:#92400E;}
+  /* ---- Dark mode ---- */
+  body.dark{
+    --g50:#0f172a; --g100:#1e293b; --g200:#2c3a52; --g300:#3b4a63;
+    --g400:#94a3b8; --g500:#c3cede; --g600:#dfe6f0; --g700:#e6ecf5;
+    --g800:#f1f5f9; --g900:#ffffff;
+    --primary-light:#14233c; --success-light:rgba(29,158,117,.20); --warning-light:rgba(217,119,6,.20);
+    background:#0f172a;
+  }
+  body.dark .topbar{background:#111c30;border-bottom-color:#243044;}
+  body.dark .card{background:#16223c;border-color:#243044;box-shadow:none;}
+  body.dark .m-item{background:#16223c;border-color:#243044;}
+  body.dark .m-item:hover,body.dark .m-item.active{background:#14233c;border-color:var(--primary);}
+  body.dark .btn{background:#1b2740;border-color:#2c3a52;color:#e6ecf5;}
+  body.dark .btn:hover{background:#22314e;border-color:#3b4a63;}
+  body.dark .field-input{background:#0f1a2e;border-color:#2c3a52;color:#f1f5f9;}
+  body.dark #scribble{background:#0f1a2e;border-color:#2c3a52;}
+  body.dark .chip{background:#1b2740;border-color:#2c3a52;color:#e6ecf5;}
+  body.dark .empty{border-color:#3b4a63;color:#94a3b8;}
+  body.dark .tab{background:#1b2740;border-color:#2c3a52;color:#c3cede;}
+  body.dark .tab.active{background:#14233c;border-color:var(--primary);color:#fff;}
+  body.dark .swatch{box-shadow:0 0 0 1px #3b4a63;}
+  body.dark .banner{background:#3a2a12;border-color:#5a4520;color:#f2c68a;}
+  body.dark a{color:#7db3ff;}
 </style>
 </head>
 <body>
+  <script>try{if(localStorage.getItem('sellhi_dark')==='1')document.body.classList.add('dark');}catch(e){}</script>
   <div class="topbar">
     <div class="brand"><img class="mark" src="/favicon-512.png" alt="SellHi" style="object-fit:contain;"><span>SellHi</span><span class="sub" style="margin-left:8px;">Meeting Prep</span></div>
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="who" class="sub"></span>
+      <button class="btn btn-sm" id="darkToggle" title="Toggle dark mode" aria-label="Toggle dark mode">&#9790;</button>
       <a class="btn btn-sm" href="/">&#8592; Back to workspace</a>
     </div>
   </div>
@@ -166,6 +191,13 @@
   </div>
 
   <script src="/sellhi-meetings.js"></script>
+  <script>
+  (function(){
+    var t=document.getElementById('darkToggle');
+    function set(on){document.body.classList.toggle('dark',on);try{localStorage.setItem('sellhi_dark',on?'1':'0');}catch(e){}if(t)t.innerHTML=on?'☀':'☾';}
+    if(t){ set(document.body.classList.contains('dark')); t.addEventListener('click',function(){set(!document.body.classList.contains('dark'));}); }
+  })();
+  </script>
 </body>
 </html>
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
