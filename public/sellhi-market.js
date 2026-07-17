@@ -323,7 +323,19 @@
   }
   function renderSmartMatching(){
     var list=document.getElementById('p3-match-list');
-    if(!list||!S.companies.length) return;           // no real data yet -> leave page untouched
+    if(!list) return;
+    if(!S.companies.length){
+      // No real Market Intel data yet -> honest empty state instead of sample cards.
+      list.innerHTML='<div class="empty-state" style="text-align:center;padding:34px 20px;">'
+        +'<div style="font-size:15px;font-weight:600;color:var(--g700);margin-bottom:6px;">No matches yet</div>'
+        +'<div style="font-size:13px;color:var(--g500);line-height:1.6;margin-bottom:16px;max-width:420px;margin-left:auto;margin-right:auto;">'
+        +'Run Market Intel to research companies that fit your ICP. Your highest-fit matches will appear here automatically.</div>'
+        +'<button class="btn btn-primary btn-sm" onclick="try{showPhase(\'p2\')}catch(e){}">Go to Market Intel &#8594;</button>'
+        +'</div>';
+      var rc=document.getElementById('p3-result-count'); if(rc)rc.textContent='0 matches';
+      var empty=document.getElementById('p3-empty'); if(empty)empty.style.display='none';
+      return;
+    }
     list.innerHTML=S.companies.map(matchCardHTML).join('');
     applySmartFilters();
   }
