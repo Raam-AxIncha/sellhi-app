@@ -8,7 +8,7 @@
  */
 (function () {
   // Scripted/sample phases. Remove an entry when that phase goes live.
-  var NOT_LIVE = ["p3", "p4", "p5", "p6", "p7", "p8"];
+  var NOT_LIVE = ["p4", "p5", "p6", "p7", "p8"];  // p3 Smart Matching now live
 
   function tag() {
     var s = document.createElement("span");

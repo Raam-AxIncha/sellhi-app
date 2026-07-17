@@ -189,6 +189,7 @@
     updateStep3Counts();
     updateStep4Counts();
     renderStep5();
+    try { renderSmartMatching(); } catch (e) {}
   }
 
   // ── Step 4 slider wiring ───────────────────────────────────────────────────
@@ -291,12 +292,106 @@
     return true;
   }
 
+
+  // ── Phase 3: Smart Matching (reuses the real Market Intel companies) ────────
+  function scoreRingClass(sc){ return sc>=80?'score-high':sc>=60?'score-med':'score-low'; }
+  function matchCardHTML(c){
+    var score=(typeof c._score==='number')?c._score:weightedScore(c);
+    var tier=c._tier||tierForScore(score);
+    var bits=[];
+    if(c.industry)bits.push(esc(c.industry));
+    if(c.employees)bits.push(esc(c.employees)+' employees');
+    if(c.stage)bits.push(esc(c.stage));
+    if(c.arr)bits.push(esc(c.arr));
+    var sub=bits.join(' &middot; ');
+    var why=c.why?esc(c.why):'Matched to your ICP on industry, size, and growth-stage fit.';
+    var signal=c.why?'<span>&#9889; live signal</span>':'';
+    var nm=esc(c.name||'');
+    return '<div class="card p3-match" data-name="'+nm+'" data-score="'+score+'" data-industry="'+esc(c.industry||'')+'" data-tier="'+tier+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+      +'<div style="display:flex;gap:12px;align-items:flex-start;"><div class="fb-avatar">'+esc(c.initials||(c.name||'').slice(0,2).toUpperCase())+'</div>'
+      +'<div><div style="font-size:15px;font-weight:600;">'+nm+'</div><div style="font-size:12px;color:var(--g500);">'+sub+'</div></div></div>'
+      +'<div class="score-ring '+scoreRingClass(score)+'">'+score+'</div></div>'
+      +'<div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--g500);"><span>&#9673; Tier '+tier+' fit</span>'+signal+'</div>'
+      +'<div style="background:var(--g50);border-radius:6px;padding:10px 14px;margin-top:10px;">'
+      +'<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--g400);margin-bottom:4px;">Why this match</div>'
+      +'<div style="font-size:12px;color:var(--g700);line-height:1.5;">'+why+'</div></div>'
+      +'<div style="display:flex;gap:8px;margin-top:10px;">'
+      +'<button class="btn btn-sm" style="border:1px solid var(--success);color:var(--success);" data-accept="'+nm+'">Accept</button>'
+      +'<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger);" data-skip="'+nm+'">Skip</button></div>'
+      +'</div>';
+  }
+  function renderSmartMatching(){
+    var list=document.getElementById('p3-match-list');
+    if(!list||!S.companies.length) return;           // no real data yet -> leave page untouched
+    list.innerHTML=S.companies.map(matchCardHTML).join('');
+    applySmartFilters();
+  }
+  function applySmartFilters(){
+    var list=document.getElementById('p3-match-list');
+    if(!list) return;
+    var cards=$all('.p3-match', list);
+    var q=((document.getElementById('p3-search')||{}).value||'').toLowerCase();
+    var tf=((document.getElementById('p3-filter-tier')||{}).value||'');
+    var sf=((document.getElementById('p3-filter-sort')||{}).value||'');
+    if(sf){
+      cards.sort(function(a,b){
+        if(/name|alpha/i.test(sf)) return (a.dataset.name||'').localeCompare(b.dataset.name||'');
+        return (parseInt(b.dataset.score,10)||0)-(parseInt(a.dataset.score,10)||0);
+      });
+      cards.forEach(function(c){ list.appendChild(c); });
+    }
+    var tdig=(tf.match(/[0-9]/)||[''])[0];
+    var shown=0;
+    cards.forEach(function(c){
+      var okQ=!q||(c.dataset.name||'').toLowerCase().indexOf(q)!==-1||(c.dataset.industry||'').toLowerCase().indexOf(q)!==-1;
+      var okT=!tdig||/all/i.test(tf)||String(c.dataset.tier)===tdig;
+      var vis=okQ&&okT; c.style.display=vis?'':'none'; if(vis)shown++;
+    });
+    var rc=document.getElementById('p3-result-count'); if(rc)rc.textContent=shown+(shown===1?' match':' matches');
+    var empty=document.getElementById('p3-empty'); if(empty)empty.style.display=shown?'none':'';
+  }
+  function wireSmartFilters(){
+    ['p3-search','p3-filter-tier','p3-filter-sort'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&!el.__smWired){ el.__smWired=1; el.addEventListener('input',applySmartFilters); el.addEventListener('change',applySmartFilters); }
+    });
+    var list=document.getElementById('p3-match-list');
+    if(list&&!list.__smWired){ list.__smWired=1; list.addEventListener('click',function(e){
+      var a=e.target.closest?e.target.closest('[data-accept]'):null;
+      var sk=e.target.closest?e.target.closest('[data-skip]'):null;
+      if(a){ var card=a.closest('.p3-match'); if(card)card.style.display='none'; applySmartFilters(); try{toast('success',a.getAttribute('data-accept')+' added to your shortlist.');}catch(x){} }
+      else if(sk){ var card2=sk.closest('.p3-match'); if(card2)card2.style.display='none'; applySmartFilters(); try{toast('info',sk.getAttribute('data-skip')+' skipped.');}catch(x){} }
+    }); }
+  }
+  function ensureSmartData(cb){
+    if(S.companies.length){ cb&&cb(); return; }
+    fetch('/api/dossier',{credentials:'include'}).then(function(r){return r.json();}).then(function(j){
+      var d=j&&j.dossier&&j.dossier.data;
+      var arr=d&&(d.marketCompanies||d.companies);
+      if(Array.isArray(arr)&&arr.length){ S.companies=arr; applyScoring(); }
+      cb&&cb();
+    }).catch(function(){ cb&&cb(); });
+  }
+  function wrapShowPhase(){
+    if(window.__smShowPhaseWrapped) return true;
+    if(typeof window.showPhase!=='function') return false;
+    var orig=window.showPhase;
+    window.showPhase=function(p){
+      var r=orig.apply(this,arguments);
+      if(p==='p3'){ try{ wireSmartFilters(); ensureSmartData(renderSmartMatching); }catch(e){} }
+      return r;
+    };
+    window.__smShowPhaseWrapped=true; return true;
+  }
+
   function boot() {
     var tries = 0;
     var t = setInterval(function () {
       tries++;
       var ready = overrideResearch();
       if (tries === 1 || ready) { try { wireWeightSliders(); } catch (e) {} }
+      try { wireSmartFilters(); wrapShowPhase(); } catch (e) {}
       if (ready || tries > 40) clearInterval(t);
     }, 150);
   }
