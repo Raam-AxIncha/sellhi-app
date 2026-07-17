@@ -338,6 +338,31 @@
     }
     list.innerHTML=S.companies.map(matchCardHTML).join('');
     applySmartFilters();
+    renderPositionFit();
+  }
+
+  // Step 2: Position Fit — derive CRO/CSO/CMO fit for each real company from the
+  // same researched per-criterion sub-scores (transparent weighting model).
+  var ROLE_W = {
+    CRO: { growth:35, pain:25, funding:25, size:10, industry:5 },
+    CSO: { pain:35, size:30, growth:20, funding:10, industry:5 },
+    CMO: { industry:35, growth:30, size:15, funding:10, pain:10 }
+  };
+  function roleFit(c, w){ var sc=c.scores||{}, num=0, den=0; for(var k in w){ var s=typeof sc[k]==='number'?sc[k]:60; num+=w[k]*s; den+=w[k]; } return den?Math.round(num/den):60; }
+  function posCell(v, best){ var col=best?(v>=80?'var(--success)':v>=60?'var(--warning)':'var(--danger)'):'var(--g600)'; return '<td style="text-align:center;padding:10px;'+(best?'font-weight:700;':'')+'color:'+col+';">'+v+'%</td>'; }
+  function positionRowHTML(c){
+    var cro=roleFit(c,ROLE_W.CRO), cso=roleFit(c,ROLE_W.CSO), cmo=roleFit(c,ROLE_W.CMO);
+    var best=(cro>=cso&&cro>=cmo)?'CRO':((cso>=cmo)?'CSO':'CMO');
+    var tier=c._tier||tierForScore(c._score||Math.max(cro,cso,cmo));
+    var badge=TIER_BADGE[tier]||'badge-gray';
+    return '<tr style="border-bottom:1px solid var(--g100);"><td style="padding:10px 8px;font-weight:500;">'+esc(c.name)+'</td>'
+      +posCell(cro,best==='CRO')+posCell(cso,best==='CSO')+posCell(cmo,best==='CMO')
+      +'<td style="text-align:center;padding:10px;"><strong>'+best+'</strong><br><span class="badge '+badge+'">Tier '+tier+'</span></td></tr>';
+  }
+  function renderPositionFit(){
+    var tb=$('#p3-s1 table tbody');
+    if(!tb||!S.companies.length) return;
+    tb.innerHTML=S.companies.map(positionRowHTML).join('');
   }
   function applySmartFilters(){
     var list=document.getElementById('p3-match-list');
