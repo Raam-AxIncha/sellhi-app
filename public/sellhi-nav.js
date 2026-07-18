@@ -30,3 +30,91 @@
   if (document.readyState === "complete") boot();
   else window.addEventListener("load", boot);
 })();
+
+/* --- Back-button / browser-history support for the single-page phase flow ---
+ * The app navigates in-page (showPhase / pXStep / pXTab) without touching the URL,
+ * so Back/refresh dumped you at Identity Engine. We mirror the actual navigation
+ * path into history.pushState by wrapping those globals: Back/Forward now retrace
+ * the exact phases + steps visited, and a refresh restores the current view.
+ * demo.html stays pristine; wrappers chain safely with the other override scripts. */
+(function () {
+  var PHASES = ["p1","p2","p3","p4","p5","p6","p7","p8"];
+  var STEP_PHASES = { p1:1, p2:1, p3:1 };   // numbered wizard steps
+  var TAB_PHASES  = { p5:1, p6:1, p8:1 };   // string tab ids
+  var restoring = false;
+  var cur = { ph: null, sub: undefined };
+  var wrapped = {};
+
+  function samePos(a, b) { return a && b && a.ph === b.ph && String(a.sub) === String(b.sub); }
+  function encode(p) { var h = "#" + p.ph; if (p.sub !== undefined && p.sub !== null && p.sub !== "") h += "-" + p.sub; return h; }
+  function decode(hash) {
+    hash = (hash || "").replace(/^#/, "");
+    if (!hash) return null;
+    var parts = hash.split("-"), ph = parts[0];
+    if (PHASES.indexOf(ph) < 0) return null;
+    var sub = parts.length > 1 ? parts.slice(1).join("-") : undefined;
+    if (sub !== undefined && STEP_PHASES[ph]) sub = parseInt(sub, 10);
+    return { ph: ph, sub: sub };
+  }
+  function push(pos) {
+    if (restoring || samePos(cur, pos)) return;
+    cur = { ph: pos.ph, sub: pos.sub };
+    try { history.pushState({ sh: cur }, "", encode(cur)); } catch (e) {}
+  }
+  function wrap(name) {
+    if (wrapped[name]) return;
+    var orig = window[name];
+    if (typeof orig !== "function") return;
+    wrapped[name] = true;
+    window[name] = function () {
+      var r = orig.apply(this, arguments);
+      try {
+        if (name === "showPhase") push({ ph: arguments[0], sub: undefined });
+        else push({ ph: name.slice(0, 2), sub: arguments[0] }); // pXStep / pXTab
+      } catch (e) {}
+      return r;
+    };
+  }
+  function setTabActive(ph, id) {
+    var bar = document.getElementById(ph + "-tabs");
+    if (!bar) return;
+    Array.prototype.forEach.call(bar.querySelectorAll(".tab"), function (t) {
+      var oc = t.getAttribute("onclick") || "";
+      if (oc.indexOf("'" + id + "'") > -1) t.classList.add("active"); else t.classList.remove("active");
+    });
+  }
+  function restore(pos) {
+    if (!pos) return;
+    restoring = true;
+    try {
+      if (typeof window.showPhase === "function") window.showPhase(pos.ph);
+      if (pos.sub !== undefined && pos.sub !== null && pos.sub !== "") {
+        if (STEP_PHASES[pos.ph] && typeof window[pos.ph + "Step"] === "function") window[pos.ph + "Step"](pos.sub);
+        else if (TAB_PHASES[pos.ph] && typeof window[pos.ph + "Tab"] === "function") { window[pos.ph + "Tab"](pos.sub); setTabActive(pos.ph, pos.sub); }
+      }
+    } catch (e) {}
+    restoring = false;
+    cur = { ph: pos.ph, sub: pos.sub };
+  }
+  window.addEventListener("popstate", function (e) {
+    var pos = (e.state && e.state.sh) || decode(location.hash) || { ph: "p1", sub: undefined };
+    restore(pos);
+  });
+  function boot2() {
+    var tries = 0;
+    var t = setInterval(function () {
+      tries++;
+      ["showPhase","p1Step","p2Step","p3Step","p5Tab","p6Tab","p8Tab"].forEach(wrap);
+      if ((wrapped.showPhase && wrapped.p3Step) || tries > 60) clearInterval(t);
+    }, 120);
+    var init = decode(location.hash);
+    if (init) {
+      setTimeout(function () { restore(init); try { history.replaceState({ sh: init }, "", encode(init)); } catch (e) {} }, 450);
+    } else {
+      cur = { ph: "p1", sub: undefined };
+      try { history.replaceState({ sh: cur }, "", "#p1"); } catch (e) {}
+    }
+  }
+  if (document.readyState === "complete") boot2();
+  else window.addEventListener("load", boot2);
+})();
