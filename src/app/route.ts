@@ -35,24 +35,28 @@ export async function GET(request: Request) {
   const filePath = path.join(process.cwd(), "public", "demo.html");
   let html = await readFile(filePath, "utf8");
 
+  // Cache-buster: changes on every deploy (Vercel commit SHA), so browsers fetch
+  // the newest app-layer CSS/JS immediately without a manual hard refresh.
+  const v = "?v=" + (process.env.VERCEL_GIT_COMMIT_SHA || String(Date.now())).slice(0, 8);
+
   // Layer app-only UI refinements without touching the exact demo markup.
   if (html.includes("</head>")) {
     html = html.replace(
       "</head>",
-      `<link rel="stylesheet" href="/sellhi-overrides.css"><link rel="stylesheet" href="/sellhi-premium.css"></head>`
+      `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}"></head>`
     );
   }
 
   const bootstrap =
     `<script>window.__SELLHI_USER__=${JSON.stringify(identity)};try{localStorage.setItem('sellhi_auth','1');}catch(e){}</script>` +
     `<script>(function(){if(window.__SELLHI_FIXES__)return;window.__SELLHI_FIXES__=true;var o=window.fetch.bind(window),f=Object.create(null);window.fetch=function(i,n){try{var u=(typeof i==="string")?i:(i&&i.url)||"";var m=((n&&n.method)||(i&&i.method)||"GET").toUpperCase();if(m==="GET"&&u.indexOf("/api/dossier")!==-1&&u.indexOf("dossier-edit")===-1){var k=u;if(f[k])return f[k].then(function(r){return r.clone()});var p=o(i,n);f[k]=p;var c=function(){delete f[k]};p.then(c,c);return p.then(function(r){return r.clone()})}}catch(e){}return o(i,n)}})();</script>` +
-    `<script src="/sellhi-identity.js"></script>` +
-    `<script src="/sellhi-onboarding.js"></script>` +
-    `<script src="/sellhi-research.js"></script>` +
-    `<script src="/sellhi-market.js"></script>` +
-    `<script src="/sellhi-nav.js"></script>` +
-    `<script src="/sellhi-preview-badges.js"></script>` +
-    `<script src="/sellhi-content.js"></script>`;
+    `<script src="/sellhi-identity.js${v}"></script>` +
+    `<script src="/sellhi-onboarding.js${v}"></script>` +
+    `<script src="/sellhi-research.js${v}"></script>` +
+    `<script src="/sellhi-market.js${v}"></script>` +
+    `<script src="/sellhi-nav.js${v}"></script>` +
+    `<script src="/sellhi-preview-badges.js${v}"></script>` +
+    `<script src="/sellhi-content.js${v}"></script>`;
   html = html.includes("</body>")
     ? html.replace("</body>", `${bootstrap}</body>`)
     : html + bootstrap;
