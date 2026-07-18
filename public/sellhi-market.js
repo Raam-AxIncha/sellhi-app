@@ -401,12 +401,20 @@
       else if(sk){ var card2=sk.closest('.p3-match'); if(card2)card2.style.display='none'; applySmartFilters(); try{toast('info',sk.getAttribute('data-skip')+' skipped.');}catch(x){} }
     }); }
   }
+  // Saved shape is { companies:[...], counts, criteria }. Be tolerant of an array too.
+  function savedCompanies(d){
+    var mc=d&&d.marketCompanies;
+    if(mc&&Array.isArray(mc.companies)) return { arr:mc.companies, counts:mc.counts };
+    if(Array.isArray(mc)) return { arr:mc, counts:null };
+    if(d&&Array.isArray(d.companies)) return { arr:d.companies, counts:null };
+    return { arr:null, counts:null };
+  }
   function ensureSmartData(cb){
     if(S.companies.length){ cb&&cb(); return; }
     fetch('/api/dossier',{credentials:'include'}).then(function(r){return r.json();}).then(function(j){
       var d=j&&j.dossier&&j.dossier.data;
-      var arr=d&&(d.marketCompanies||d.companies);
-      if(Array.isArray(arr)&&arr.length){ S.companies=arr; applyScoring(); }
+      var sv=savedCompanies(d);
+      if(Array.isArray(sv.arr)&&sv.arr.length){ S.companies=sv.arr; if(sv.counts)S.counts=sv.counts; try{rebuildIndustryFilter();}catch(e){} applyScoring(); }
       cb&&cb();
     }).catch(function(){ cb&&cb(); });
   }
@@ -417,6 +425,7 @@
     window.showPhase=function(p){
       var r=orig.apply(this,arguments);
       if(p==='p3'){ try{ wireSmartFilters(); ensureSmartData(renderSmartMatching); }catch(e){} }
+      else if(p==='p2'){ try{ ensureSmartData(function(){}); }catch(e){} }
       return r;
     };
     window.__smShowPhaseWrapped=true; return true;
@@ -431,6 +440,9 @@
       try { wireSmartFilters(); wrapShowPhase(); } catch (e) {}
       if (ready || tries > 40) clearInterval(t);
     }, 150);
+    // Load any saved Market Intel companies on startup so Market Intel, Smart
+    // Matching and Position Fit all show REAL data on open (not just after a run).
+    try { ensureSmartData(function () {}); } catch (e) {}
   }
   if (document.readyState === "complete") boot();
   else window.addEventListener("load", boot);

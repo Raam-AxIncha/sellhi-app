@@ -147,7 +147,8 @@
       .then(function (r) { return r.json(); })
       .then(function (j) {
         var d = j && j.dossier && j.dossier.data;
-        var arr = d && d.marketCompanies;
+        var mc = d && d.marketCompanies;
+        var arr = (mc && Array.isArray(mc.companies)) ? mc.companies : (Array.isArray(mc) ? mc : (d && d.companies));
         if (Array.isArray(arr) && arr.length) COMPANIES = arr;
         cb && cb();
       })
