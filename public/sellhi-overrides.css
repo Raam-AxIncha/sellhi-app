@@ -79,11 +79,22 @@ textarea:focus-visible {
 /* Editable dossier affordance stays subtle but discoverable. */
 .sh-editable { transition: background .1s ease, box-shadow .1s ease; }
 
-/* ---- Brand loading spinner: the logo mark rolls CLOCKWISE while the app is
-   loading/working (initial page load + any research/generate overlay). Driven by
-   the .sh-spinning class toggled in sellhi-nav.js. Respects reduced-motion. ---- */
+/* ---- Brand loading indicator: the logo stays STILL (so the trending-up arrow
+   keeps its meaning + stays upright); the motion comes from a teal ring that
+   ORBITS the mark. The ring element is injected + positioned over the logo by
+   sellhi-nav.js while the app is loading. Respects reduced-motion. ---- */
 @keyframes sh-logo-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.sidebar-logo-mark.sh-spinning { animation: sh-logo-spin .9s linear infinite; transform-origin: 50% 50%; }
+.sh-logo-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid rgba(0,128,128,.16);
+  border-top-color: var(--sh-teal, #008080);
+  opacity: 0;
+  transition: opacity .15s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.sh-logo-ring.on { opacity: 1; animation: sh-logo-spin .9s linear infinite; transform-origin: 50% 50%; }
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-logo-mark.sh-spinning { animation: none; }
+  .sh-logo-ring.on { animation: none; }
 }

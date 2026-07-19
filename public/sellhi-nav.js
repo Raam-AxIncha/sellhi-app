@@ -229,21 +229,45 @@
   else window.addEventListener("load", boot2);
 })();
 
-/* --- Brand spinner: roll the sidebar logo mark CLOCKWISE while the app is loading
- * — during the initial page load, and whenever any research/generate overlay is
- * active. App-layer only; toggles the .sh-spinning class (animation in
- * sellhi-overrides.css). --- */
+/* --- Brand loading indicator: the sidebar logo stays STILL (trending-up arrow keeps
+ * its meaning + upright); a teal ring ORBITS the mark instead. We inject one ring
+ * element next to the logo and size/position it over the mark (via measured rects,
+ * so it adapts to any logo size), toggling it on during the initial page load and
+ * whenever any research/generate overlay is active. Ring styling in
+ * sellhi-overrides.css (.sh-logo-ring). --- */
 (function () {
-  var spinning = false, ready = false;
-  function mark() { return document.querySelector(".sidebar-logo-mark"); }
+  var ringOn = false, ready = false;
+  function markEl() { return document.querySelector(".sidebar-logo-mark"); }
   function loading() { try { return !!document.querySelector(".loading-overlay.active"); } catch (e) { return false; } }
-  function setSpin(on) {
-    var m = mark(); if (!m) return;               // logo not in DOM yet -> retry next tick
-    if (on === spinning) return;
-    spinning = on;
-    m.classList.toggle("sh-spinning", !!on);
+  function getRing(m) {
+    var parent = m && m.parentNode; if (!parent) return null;
+    var ring = parent.querySelector(".sh-logo-ring");
+    if (!ring) {
+      try { if (getComputedStyle(parent).position === "static") parent.style.position = "relative"; } catch (e) {}
+      ring = document.createElement("span");
+      ring.className = "sh-logo-ring";
+      ring.setAttribute("aria-hidden", "true");
+      parent.appendChild(ring);
+    }
+    return ring;
   }
-  // Spin from first paint until shortly after load; thereafter follow overlay state.
+  function positionRing(ring, m) {
+    try {
+      var parent = m.parentNode;
+      var pr = parent.getBoundingClientRect(), mr = m.getBoundingClientRect(), pad = 7;
+      ring.style.left = (mr.left - pr.left - pad) + "px";
+      ring.style.top = (mr.top - pr.top - pad) + "px";
+      ring.style.width = (mr.width + pad * 2) + "px";
+      ring.style.height = (mr.height + pad * 2) + "px";
+    } catch (e) {}
+  }
+  function setSpin(on) {
+    var m = markEl(); if (!m) return;               // logo not in DOM yet -> retry next tick
+    var ring = getRing(m); if (!ring) return;
+    if (on) { positionRing(ring, m); if (!ringOn) { ring.classList.add("on"); ringOn = true; } }
+    else if (ringOn) { ring.classList.remove("on"); ringOn = false; }
+  }
+  // Show from first paint until shortly after load; thereafter follow overlay state.
   window.addEventListener("load", function () { setTimeout(function () { ready = true; }, 500); });
   setInterval(function () { setSpin(!ready || loading()); }, 180);
 })();

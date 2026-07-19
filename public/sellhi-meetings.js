@@ -463,11 +463,8 @@
   // ---- boot ----------------------------------------------------------------
   function boot() {
     try { var u = window.__SELLHI_USER__; if (u) $("#who").textContent = (u.fullName || "") + (u.company ? " · " + u.company : ""); } catch (e) {}
-    // Brand loading spin: roll the logo clockwise while the page loads its data.
-    try {
-      var mk = document.querySelector(".brand .mark");
-      if (mk) { mk.classList.add("sh-spinning"); setTimeout(function () { mk.classList.remove("sh-spinning"); }, 1400); }
-    } catch (e) {}
+    // Logo stays static on Meeting Prep (consistent with the main app — the arrow
+    // mark no longer spins; motion lives in the loader ring, not the brand mark).
     // dossier context
     fetch("/api/dossier", { credentials: "include" })
       .then(function (r) { return r.ok ? r.json() : null; })

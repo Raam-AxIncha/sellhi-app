@@ -334,9 +334,18 @@ body.dark .sh-loader-halo { background: radial-gradient(closest-side, rgba(55,19
   width: 60px; height: 60px; border-radius: 13px;
   background: url("/favicon-512.png") center / contain no-repeat;
   filter: drop-shadow(0 6px 16px rgba(0,128,128,.28));
-  animation: sh-logo-spin .9s linear infinite;   /* clockwise (keyframe in sellhi-overrides.css) */
+  /* logo stays STILL — motion comes from the orbiting ring below */
 }
 body.dark .sh-loader-mark { background-image: url("/favicon-512-ondark.png"); }
+/* Teal ring orbits the still mark (keyframe in sellhi-overrides.css). */
+.sh-loader-mark::after {
+  content: ""; position: absolute; inset: -9px;
+  border-radius: 50%;
+  border: 3px solid rgba(0,128,128,.15);
+  border-top-color: var(--sh-teal);
+  animation: sh-logo-spin .9s linear infinite;
+}
+body.dark .sh-loader-mark::after { border-color: rgba(55,195,180,.16); border-top-color: var(--sh-teal); }
 
 .sh-loader-text {
   position: relative; z-index: 1;
