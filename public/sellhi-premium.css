@@ -261,3 +261,28 @@ body.dark .loading-overlay { background: rgba(17,24,39,.82) !important; }
   .phase-section .btn,
   .phase-section .score-ring { transition: none; }
 }
+
+/* ============================================================
+   Demo "prototype" annotation strip (.annotation): the stock demo pins it
+   center-bottom, where it overlaps real content on every phase and brands the
+   live app an "Interactive UI/UX Prototype". App-layer relocation (demo.html
+   untouched): hide the prototype text + pulsing dot, keep only the Keyboard
+   Shortcuts affordance, and tuck it into the bottom-right, clear of content and
+   above the Feedback widget. Shortcuts also open anytime with the "?" key.
+   ============================================================ */
+.annotation {
+  left: auto !important;
+  right: 20px !important;
+  bottom: 84px !important;
+  transform: none !important;
+  font-size: 0 !important;               /* hides the bare "…Prototype · Click sidebar…" text node */
+  padding: 7px 12px !important;
+  opacity: .72;
+  transition: opacity .15s ease;
+}
+.annotation:hover { opacity: 1; }
+.annotation .annotation-dot { display: none !important; }
+.annotation span {                        /* the "Keyboard shortcuts" link stays visible + clickable */
+  font-size: 11px !important;
+  opacity: 1 !important;
+}
