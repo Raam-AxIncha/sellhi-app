@@ -37,8 +37,14 @@
  * history.pushState by wrapping showPhase: Back/Forward move between MODULES
  * (Identity, Market Intel, …) — one press per module, not per wizard step (use the
  * in-page Back/Continue buttons to move between steps). A refresh reopens the module.
- * Loading screens are never recorded. demo.html stays pristine; wrappers chain
- * safely with the other override scripts. */
+ * Loading screens are never recorded.
+ *
+ * Result landmarks: history stays phase-level, but we remember the step where each
+ * generated output lives (dossier, positioning, market results). When Back returns
+ * the user to a module, restore() drops them on that latest result with their work
+ * intact — covering "the steps we need on Back" without step-by-step Back and without
+ * dead presses (no extra history entries, so every Back changes the screen).
+ * demo.html stays pristine; wrappers chain safely with the other override scripts. */
 (function () {
   var PHASES = ["p1","p2","p3","p4","p5","p6","p7","p8"];
   var STEP_PHASES = { p1:1, p2:1, p3:1 };   // numbered wizard steps
@@ -49,6 +55,31 @@
   var pollTimer = null;
   var waited = 0;
   var wrapped = {};
+
+  // "Result landmarks": when the user GENERATES something in a wizard (dossier,
+  // positioning, market results), we remember the step that output lives on. History
+  // stays phase-level (one Back press per module), but when Back RETURNS the user to a
+  // module, we drop them on its latest generated result — not step 1 — with their work
+  // intact. This covers "the steps we need to cover on Back" without step-by-step Back.
+  var RESULT_STEP = {};   // e.g. { p1: 3, p2: 2 }
+  // Which generate-globals map to which (phase, result-step). Higher step wins.
+  var RESULT_FNS = [
+    { fn: "simulateP1Dossier",     ph: "p1", step: 1 },  // dossier built
+    { fn: "simulateP1Positioning", ph: "p1", step: 3 },  // positioning generated
+    { fn: "simulateP2Research",    ph: "p2", step: 2 },  // market results returned
+  ];
+  function markResultFns() {
+    RESULT_FNS.forEach(function (m) {
+      var f = window[m.fn];
+      if (typeof f !== "function" || f.__shR) return; // re-wrap if a later script replaced it (e.g. market override)
+      var wrapped2 = function () {
+        try { var c = RESULT_STEP[m.ph]; if (c == null || m.step > c) RESULT_STEP[m.ph] = m.step; } catch (e) {}
+        return f.apply(this, arguments);
+      };
+      wrapped2.__shR = true;
+      window[m.fn] = wrapped2;
+    });
+  }
 
   function samePos(a, b) { return a && b && a.ph === b.ph && String(a.sub) === String(b.sub); }
   function encode(p) { var h = "#" + p.ph; if (p.sub !== undefined && p.sub !== null && p.sub !== "") h += "-" + p.sub; return h; }
@@ -129,8 +160,14 @@
     try {
       if (typeof window.showPhase === "function") window.showPhase(pos.ph);
       if (pos.sub !== undefined && pos.sub !== null && pos.sub !== "") {
+        // Explicit sub (legacy/deep-link) -> honor it exactly.
         if (STEP_PHASES[pos.ph] && typeof window[pos.ph + "Step"] === "function") window[pos.ph + "Step"](pos.sub);
         else if (TAB_PHASES[pos.ph] && typeof window[pos.ph + "Tab"] === "function") { window[pos.ph + "Tab"](pos.sub); setTabActive(pos.ph, pos.sub); }
+      } else {
+        // Phase-level entry -> land on this module's generated result, if any, so
+        // Back returns the user to their work rather than the empty first step.
+        var best = RESULT_STEP[pos.ph];
+        if (best != null && STEP_PHASES[pos.ph] && typeof window[pos.ph + "Step"] === "function") window[pos.ph + "Step"](best);
       }
     } catch (e) {}
     restoring = false;
@@ -147,6 +184,9 @@
       // Phase-level history only: wrap showPhase, NOT the per-step/tab globals, so
       // Back moves one module at a time instead of retracing every wizard step.
       ["showPhase"].forEach(wrap);
+      // Keep result landmarks current (re-wraps generate-globals if another script
+      // replaced them, e.g. the real Market Intel override).
+      markResultFns();
       if (wrapped.showPhase || tries > 60) clearInterval(t);
     }, 120);
     var init = decode(location.hash);
