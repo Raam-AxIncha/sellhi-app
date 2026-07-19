@@ -23,9 +23,37 @@
     try { nav.insertBefore(a, nav.firstElementChild); return true; }
     catch (e) { return false; }
   }
+  // Sidebar footer: a discreet "Shortcuts (?)" button that opens the demo's
+  // keyboard-shortcuts modal and visibly teaches the "?" key. Placed right after
+  // the dark-mode toggle so it's always visible (not in the scrollable phase list).
+  function addShortcuts() {
+    if (document.getElementById("sh-nav-shortcuts")) return true;
+    var dt = document.getElementById("darkToggle");
+    var container = dt && dt.parentNode;
+    if (!container || !container.parentNode) return false;
+    var wrap = document.createElement("div");
+    wrap.id = "sh-nav-shortcuts-wrap";
+    wrap.style.cssText = "padding:0 16px 8px;";
+    var b = document.createElement("button");
+    b.id = "sh-nav-shortcuts";
+    b.type = "button";
+    b.style.cssText = "background:none;border:none;cursor:pointer;font:inherit;font-size:11px;opacity:.6;display:inline-flex;align-items:center;gap:5px;padding:2px;transition:opacity .12s ease;";
+    b.setAttribute("title", "Open keyboard shortcuts (or press ?)");
+    b.innerHTML = '<span aria-hidden="true">&#9000;</span> Shortcuts ' +
+      '<kbd style="padding:0 5px;border:1px solid currentColor;border-radius:4px;font-size:10px;line-height:1.5;">?</kbd>';
+    b.addEventListener("mouseenter", function () { b.style.opacity = "1"; });
+    b.addEventListener("mouseleave", function () { b.style.opacity = ".6"; });
+    b.addEventListener("click", function () { try { if (typeof toggleShortcutsModal === "function") toggleShortcutsModal(); } catch (e) {} });
+    wrap.appendChild(b);
+    try { container.parentNode.insertBefore(wrap, container.nextSibling); return true; }
+    catch (e) { return false; }
+  }
   function boot() {
     var n = 0;
-    var t = setInterval(function () { if (addItem() || ++n > 20) clearInterval(t); }, 200);
+    var t = setInterval(function () {
+      var done = addItem() && addShortcuts();
+      if (done || ++n > 25) clearInterval(t);
+    }, 200);
   }
   if (document.readyState === "complete") boot();
   else window.addEventListener("load", boot);
