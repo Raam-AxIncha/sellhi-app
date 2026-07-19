@@ -135,7 +135,7 @@
     Array.prototype.forEach.call(els, function (el) {
       var target = parseFloat(el.getAttribute("data-count")) || 0;
       if (reduce || target <= 0) { el.textContent = String(target); return; }
-      var dur = 700, t0 = null;
+      var dur = 1500, t0 = null;
       function step(ts) {
         if (t0 == null) t0 = ts;
         var p = Math.min(1, (ts - t0) / dur);
