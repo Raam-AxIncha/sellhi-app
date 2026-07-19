@@ -154,7 +154,15 @@ ICP criteria for the companies to find:
 
 Return the JSON object now.`;
 
+  // Web-search round-trips are the main latency; fewer uses = faster, more reliable
+  // completion inside the function window. Abort a few seconds BEFORE the platform
+  // timeout so we return a clean "try again" instead of a raw 502.
+  const SEARCH_MAX_USES = Number(process.env.MARKET_SEARCH_MAX_USES || "3");
+  const TIME_BUDGET_MS = Number(process.env.MARKET_TIMEOUT_MS || "52000");
+
   let anthropicJson: unknown;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIME_BUDGET_MS);
   try {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -167,9 +175,10 @@ Return the JSON object now.`;
         model: MODEL,
         max_tokens: 3800,
         system,
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 4 }],
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: SEARCH_MAX_USES }],
         messages: [{ role: "user", content: userMsg }],
       }),
+      signal: controller.signal,
     });
     if (!resp.ok) {
       const detail = await resp.text();
@@ -180,10 +189,17 @@ Return the JSON object now.`;
     }
     anthropicJson = await resp.json();
   } catch (e) {
+    const aborted = !!e && typeof e === "object" && (e as { name?: string }).name === "AbortError";
+    // On our own timeout, return 200 with an empty list + friendly message so the
+    // client shows a clean "run it again" state (no scary 502 in the console).
     return NextResponse.json(
-      { error: "Could not reach Market Intel service", detail: String(e).slice(0, 200) },
-      { status: 502 }
+      aborted
+        ? { error: "Market Intel took longer than usual this time — please run it again.", companies: [], counts: null }
+        : { error: "Could not reach Market Intel service", detail: String(e).slice(0, 200) },
+      { status: aborted ? 200 : 502 }
     );
+  } finally {
+    clearTimeout(timer);
   }
 
   // Pull the final text blocks and parse the JSON out of them.
