@@ -86,6 +86,19 @@
       connRow({ name: "CRM (HubSpot)", state: "planned", detail: "Sync accounts, contacts & pipeline. On the roadmap.", unlocks: "Pipeline write-back" }) +
       '<div style="font-size:11px;color:var(--g400);margin-top:10px;">Manage calendars & Fireflies in Meeting Prep. Email sender + CRM connect here once wired.</div>';
     content.insertBefore(wrap, content.firstChild);
+
+    // Entry point to the two-dimensional Connect & Plan surface (/connect).
+    if (!document.getElementById("sh-p4-connect-cta")) {
+      var cta = document.createElement("div");
+      cta.id = "sh-p4-connect-cta";
+      cta.className = "card";
+      cta.style.cssText = "margin-bottom:14px;border:1px solid var(--primary);display:flex;align-items:center;gap:14px;flex-wrap:wrap;";
+      cta.innerHTML =
+        '<div style="flex:1;min-width:220px;"><div class="card-title" style="margin:0 0 4px;">Set up your plan &amp; channels</div>' +
+        '<div style="font-size:12.5px;color:var(--g500);line-height:1.5;">Pick your tier, then bring your own tools or let SellHi manage each channel. You’re billed on opportunities surfaced — never per tool or seat.</div></div>' +
+        '<a class="btn btn-primary btn-sm" href="/connect">Open Connect &amp; Plan &#8594;</a>';
+      content.insertBefore(cta, content.firstChild);
+    }
   }
 
   // ── PHASE 6: Campaign Engine — audience + staged-send (gated) ────────────────

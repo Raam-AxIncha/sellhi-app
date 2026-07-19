@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SellHi · Connect — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#008080; --teal-ink:#0F6E56; --teal-soft:#E1F5EE; --teal-line:#BFE6D9;
+    --ink:#111827; --ink2:#5b6875; --ink3:#8a95a1;
+    --line:#E6EDEC; --bg:#ffffff; --page:#f5f8f7;
+    --amber:#BA7517; --amber-soft:#FBF1E2; --lock:#94a3b8; --lock-soft:#EEF2F6;
+    --purple:#5b46b8; --purple-soft:#EFECFb;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  b{font-weight:400}
+  body{margin:0;font-family:'Raleway',system-ui,sans-serif;color:var(--ink);background:var(--page);line-height:1.5;}
+  .wrap{max-width:1080px;margin:0 auto;padding:26px 22px 170px;}
+  .badge-proto{display:inline-block;background:var(--amber-soft);color:var(--amber);font-weight:400;font-size:11px;letter-spacing:.4px;padding:3px 9px;border-radius:999px;text-transform:uppercase}
+
+  /* HERO tagline */
+  .hero{background:linear-gradient(135deg,#04302e 0%,#0b514b 60%,#0a6a61 100%);border-radius:20px;padding:34px 34px 30px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(4,48,46,.22)}
+  .hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:radial-gradient(closest-side,rgba(55,195,180,.35),transparent 70%)}
+  .hero .eb{font-size:12px;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:#7fded0;position:relative}
+  .hero .tag{font-size:38px;font-weight:400;letter-spacing:-1px;line-height:1.08;margin:8px 0 0;position:relative}
+  .hero .tag span{color:#4fe0cf}
+  .hero .sub{font-size:14.5px;color:#cfeee8;margin-top:12px;max-width:640px;position:relative}
+  @media(max-width:620px){.hero .tag{font-size:27px}}
+
+  /* Core AI Engine locked card */
+  .coreai{display:flex;gap:16px;align-items:center;background:transparent;border:1.5px solid #083656;border-radius:16px;padding:16px 20px;margin-top:16px;position:relative}
+  .coreai .cbrain{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--teal),#0aa89a);display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
+  .coreai .ctop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .coreai .ctop b{font-size:16px}
+  .coreai .lockpill{font-size:11px;font-weight:400;color:var(--ink2);background:var(--lock-soft);border-radius:999px;padding:3px 10px}
+  .coreai .powered{font-size:11px;font-weight:400;color:var(--teal-ink);background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:999px;padding:3px 10px}
+  .coreai .cbody{font-size:12.5px;color:var(--ink2);margin-top:4px;max-width:720px}
+  .coreai .alwayson{margin-left:auto;background:var(--teal);color:#fff;font-weight:400;font-size:11px;padding:5px 12px;border-radius:999px;white-space:nowrap;align-self:flex-start}
+  .byokey{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;font-weight:400;color:var(--purple);background:var(--purple-soft);border:1px solid #d9d1f2;border-radius:9px;padding:8px 11px}
+  .byokey span{font-weight:400;color:#6a5aa8}
+
+  .sec{font-size:12px;font-weight:400;text-transform:uppercase;letter-spacing:1px;color:var(--ink3);margin:24px 0 10px}
+
+  /* tiers */
+  .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}
+  .tier{position:relative;text-align:left;background:transparent;border:1.5px solid #083656;border-radius:14px;padding:14px 15px;cursor:pointer;transition:border-color .15s,box-shadow .15s;font-family:inherit;color:var(--ink)}
+  .tier:hover{border-color:var(--teal)}
+  .tier.on{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,128,128,.15)}
+  .tier .nm{font-weight:400;font-size:16px;color:var(--ink)}
+  .tier .pr{font-weight:400;font-size:19px;color:var(--teal-ink);margin-top:4px}
+  .tier .pr small{font-weight:400;font-size:12px;color:var(--ink2)}
+  .tier .ac{font-size:11.5px;color:var(--ink2);margin-top:5px}
+  .tier .free{color:var(--teal-ink)}
+
+  /* split */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+  @media(max-width:720px){.split{grid-template-columns:1fr}}
+  .col{background:transparent;border:1px solid #083656;border-radius:14px;padding:16px 18px}
+  .col h3{margin:0 0 10px;font-size:13px;font-weight:400;display:flex;align-items:center;gap:8px}
+  .col.provide h3{color:var(--teal-ink)} .col.bring h3{color:var(--amber)}
+  .col ul{margin:0;padding:0;list-style:none}
+  .col li{font-size:13px;padding:5px 0 5px 24px;position:relative;color:#2b3640}
+  .col.provide li:before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:400}
+  .col.bring li:before{content:"›";position:absolute;left:2px;color:var(--amber);font-weight:400;font-size:16px;line-height:1.1}
+
+  /* category cards */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.cards{grid-template-columns:1fr}}
+  .card{position:relative;background:transparent;border:1px solid #083656;border-radius:16px;padding:16px 18px;overflow:hidden}
+  .card .chead{display:flex;align-items:flex-start;gap:11px}
+  .card .cic{width:38px;height:38px;border-radius:10px;background:var(--teal-soft);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+  .card .cname{font-weight:400;font-size:15px}
+  .card .cdesc{font-size:12px;color:var(--ink2);margin-top:1px}
+  .opt{font-size:10px;font-weight:400;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:2px 8px;margin-left:auto;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 6px}
+  .mode{border:1.5px solid var(--line);border-radius:11px;padding:10px 12px;cursor:pointer;font-family:inherit;text-align:left;background:#fff;transition:border-color .12s,background .12s}
+  .mode:hover{border-color:#cfe0dc}
+  .mode.on{border-color:var(--teal);background:var(--teal-soft)}
+  .mode .ml{font-weight:400;font-size:12.5px;display:flex;align-items:center;gap:6px}
+  .mode .ms{font-size:11px;color:var(--ink2);margin-top:2px}
+  .mode .addon{color:var(--amber);font-weight:400}
+  select{width:100%;margin-top:9px;font-family:inherit;font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+  .req{display:inline-block;margin-top:11px;font-size:11.5px;color:var(--teal-ink);text-decoration:none;font-weight:400;cursor:pointer}
+  .req:hover{text-decoration:underline}
+  .must{margin-top:10px;font-size:11.5px;color:var(--amber);background:var(--amber-soft);border-radius:8px;padding:7px 10px;font-weight:400;display:flex;gap:6px;align-items:flex-start}
+  .lockwrap{position:absolute;inset:0;background:rgba(248,250,251,.8);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:2}
+  .lockwrap .lk{font-size:22px} .lockwrap .lt{font-size:12.5px;color:var(--ink2);font-weight:400}
+  .lockwrap .lb{background:var(--teal);color:#fff;border:none;font-family:inherit;font-weight:400;font-size:12px;padding:8px 14px;border-radius:9px;cursor:pointer}
+  .lockwrap .lb:hover{background:#0a6f66}
+
+  /* cost bar */
+  .costbar{position:fixed;left:0;right:0;bottom:0;background:#0b1f1d;color:#fff;z-index:40;box-shadow:0 -6px 24px rgba(0,0,0,.18)}
+  .costin{max-width:1080px;margin:0 auto;padding:11px 22px 4px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .costin .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:#8fbcb4}
+  .costin .big{font-size:25px;font-weight:400;color:#fff;line-height:1}
+  .costin .big small{font-size:13px;font-weight:400;color:#9fc7bf}
+  .costin .items{font-size:12px;color:#c7d7d3;flex:1;min-width:200px}
+  .costin .items span{white-space:nowrap}
+  .costin .dot{color:#4f7a73;margin:0 6px}
+  .costin .inc{color:#8fe1d6;font-weight:400}
+  .costin .bring{font-size:11.5px;color:#e8b877;background:rgba(186,117,23,.16);border:1px solid rgba(186,117,23,.4);padding:7px 12px;border-radius:10px}
+  .costin .seatbox{display:flex;align-items:center;gap:7px;font-size:12px;color:#c7d7d3}
+  .costin .seatbox button{width:24px;height:24px;border-radius:6px;border:1px solid #2f4a46;background:#12302c;color:#fff;font-size:15px;cursor:pointer;font-family:inherit}
+  .costin .save{background:var(--teal);color:#fff;border:none;font-family:inherit;font-weight:400;font-size:13px;padding:10px 18px;border-radius:10px;cursor:pointer}
+  .costin .save:hover{background:#0aa89a}
+  .costtag{max-width:1080px;margin:0 auto;padding:0 22px 9px;font-size:11.5px;color:#7fb8b0;font-style:italic}
+  .costtag b{color:#bfeae3;font-style:normal;font-weight:400}
+
+  .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);background:#0b1f1d;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:400;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .note{font-size:11.5px;color:var(--ink3);margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px">
+    <a href="/" style="text-decoration:none;color:var(--teal-ink);font-size:13px">&#8592; Back to SellHi</a>
+    <span id="saveState" style="margin-left:auto;font-size:12px;color:var(--ink3)">Loading your setup…</span>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eb">SellHi · Connect &amp; Pricing</div>
+    <div class="tag">You're paying for <span>opportunities surfaced</span>,<br>not software rented.</div>
+    <div class="sub">That's why your bill is set by signal accounts — real, workable opportunities — and never by how many seats you add or which tools you plug in.</div>
+  </div>
+
+  <!-- CORE AI ENGINE (locked, not connectable) -->
+  <div class="coreai">
+    <div class="cbrain">🧠</div>
+    <div style="flex:1">
+      <div class="ctop"><b>Core AI Engine</b><span class="lockpill">🔒 Included · nothing to connect</span><span class="powered">Powered by Claude</span></div>
+      <div class="cbody">ICP &amp; TCP modeling, fit-scoring, and message generation — the SellHi brain. Runs securely server-side on SellHi's own keys (never exposed to your browser). It isn't a connect / BYO / managed choice; it's simply on, in every tier.</div>
+      <div id="coreEnt"></div>
+    </div>
+    <div class="alwayson">Always on</div>
+  </div>
+
+  <div class="sec">1 · Your plan</div>
+  <div class="tiers" id="tiers"></div>
+
+  <div class="sec">2 · What SellHi provides vs what you bring</div>
+  <div class="split">
+    <div class="col provide"><h3>✓ SellHi provides</h3><ul id="provideList"></ul></div>
+    <div class="col bring"><h3>› You bring</h3><ul id="bringList"></ul></div>
+  </div>
+
+  <div class="sec">3 · Channels — bring your own, or let SellHi manage</div>
+  <div class="cards" id="cards"></div>
+
+  <div class="note">Your setup saves automatically to your SellHi account (secured so only you can see it) and follows you across devices. Scale is a flat $501 (bring your own) or $798 (fully-managed) — no per-seat charges.</div>
+</div>
+
+<!-- cost bar -->
+<div class="costbar">
+  <div class="costin">
+    <div>
+      <div class="lbl">Your effective cost</div>
+      <div class="big" id="costBig">$0<small>/mo</small></div>
+    </div>
+    <div class="items" id="costItems"></div>
+    <div class="bring" id="costBring"></div>
+    <button class="save" id="saveBtn">Save configuration</button>
+  </div>
+  <div class="costtag">💡 <b>You're paying for opportunities surfaced, not software rented.</b> The Core AI Engine is always included.</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // FIX 3 — single source of truth for every price. Tier cards AND the cost bar
+  // read from here, so nothing can drift.
+  // FIX 2 — flat prices only, one source of truth. No per-seat, no add-ons.
+  var PRICES = { seed:78, growth:204, scaleBYO:501, scaleManaged:798 };
+
+  var TIERS = [
+    {id:'scout', nm:'Scout', price:0, ac:'Preview only · no live sending'},
+    {id:'seed',  nm:'Seed',  price:PRICES.seed, ac:'25 signal accounts / mo'},
+    {id:'growth',nm:'Growth',price:PRICES.growth, ac:'100 signal accounts / mo'},
+    {id:'scale', nm:'Scale', price:PRICES.scaleBYO, ac:'300 signal accounts / mo · BYO stack'},
+    {id:'scaleManaged', nm:'Scale · Managed', price:PRICES.scaleManaged, ac:'300 signal accounts / mo · fully-managed'},
+    {id:'enterprise', nm:'Enterprise', custom:true, ac:'Custom volume · governance'}
+  ];
+
+  var CATS = [
+    {id:'crm', ic:'🗂️', nm:'CRM', desc:'Sync accounts & activity. Optional — Command Center is your CRM out of the box.',
+      optional:true, managedSub:'Use SellHi Command Center (built-in)', managedAddon:0,
+      byo:['HubSpot','Salesforce','Pipedrive','Zoho','Close'], fallback:'Other — CSV / API'},
+    {id:'email', ic:'✉️', nm:'Email', desc:'Cold + warm email sequences at deliverable volume.',
+      managedSub:'Smartlead (operated by SellHi)', managedAddon:0,
+      byo:['Instantly','Lemlist','Apollo','MailReef'], fallback:'Other — SMTP / API',
+      must:'Connect your own sending domain / mailbox (required for deliverability, every tier).'},
+    {id:'linkedin', ic:'💼', nm:'LinkedIn', desc:'Connection requests, InMails & follow-ups.',
+      managedSub:'HighReach (operated by SellHi)', managedAddon:0,
+      byo:['HeyReach','Dripify','Expandi','Waalaxy'], fallback:null,
+      must:'Requires your own LinkedIn Premium account — in BOTH modes. SellHi can never provide this.'},
+    {id:'calls', ic:'📞', nm:'Calls', desc:'Warm calls & voicemail drops from a real line.',
+      managedSub:'Aircall — includes a phone line', managedAddon:0,
+      byo:['Dialpad','RingCentral','JustCall','Kixie'], fallback:'Other — click-to-call / API'}
+  ];
+
+  var GATING = {
+    scout:  {crm:'preview', email:{lock:'Seed'}, linkedin:{lock:'Seed'}, calls:{lock:'Seed'}},
+    seed:   {crm:{native:true, byoLock:'Scale'}, email:'open', linkedin:{lock:'Growth'}, calls:{lock:'Scale'}},
+    growth: {crm:{native:true, byoLock:'Scale'}, email:'open', linkedin:'open', calls:{lock:'Scale'}},
+    scale:  {crm:'open', email:'open', linkedin:'open', calls:'open'},
+    scaleManaged:{crm:'open', email:'open', linkedin:'open', calls:'open'},
+    enterprise:{crm:'open', email:'open', linkedin:'open', calls:'open'}
+  };
+
+  var SPLIT = {
+    scout:{provide:['Claude brain: ICP, fit-scoring & message drafts','Live previews built on your own company','No sending — a full dry-run of the engine'],
+           bring:['Your company info / LinkedIn profile']},
+    seed:{provide:['Core AI Engine (ICP, scoring, content)','Managed email sending — Smartlead','Contact enrichment','Command Center (native CRM)'],
+          bring:['Your sending domain / mailbox']},
+    growth:{provide:['Everything in Seed','LinkedIn outreach','Campaign Engine + analytics','Command Center (native CRM)'],
+            bring:['Your sending domain / mailbox','Your LinkedIn Premium account','A LinkedIn tool you already use (bring your own)']},
+    scale:{provide:['Full orchestration across every channel','Unlimited seats','Bring your own CRM, LinkedIn tool & dialer','Warm calls via your own dialer','Priority support'],
+           bring:['Your sending domain(s)','Your LinkedIn Premium account','Your own CRM, LinkedIn tool & dialer (bring your own)']},
+    scaleManaged:{provide:['Everything in Scale','SellHi fronts HighReach (LinkedIn) + Aircall (calls)','Unlimited seats','Priority support'],
+           bring:['Your sending domain(s)','Your LinkedIn Premium account']},
+    enterprise:{provide:['Everything in Scale','Custom signal-account volume','Optional bring-your-own Anthropic (Claude) key','SSO, data residency & dedicated success'],
+           bring:['Your sending domain(s)','Your LinkedIn Premium account','Your own tools across every category']}
+  };
+
+  var state = {
+    tier:'seed',
+    mode:{ crm:'byo', email:'managed', linkedin:'byo', calls:'byo' },
+    tool:{ crm:'', email:'', linkedin:'', calls:'' },
+    byoKey:false
+  };
+
+  var elTiers=document.getElementById('tiers'), elCards=document.getElementById('cards'),
+      elProv=document.getElementById('provideList'), elBring=document.getElementById('bringList'),
+      elCoreEnt=document.getElementById('coreEnt');
+
+  function money(n){ return '$'+n.toLocaleString(); }
+
+  function renderTiers(){
+    elTiers.innerHTML='';
+    TIERS.forEach(function(t){
+      var on=state.tier===t.id;
+      var priceHtml = t.custom ? '<span class="free">Custom</span>'
+        : t.id==='scout' ? '<span class="free">Free</span>'
+        : money(t.price)+'<small>/mo</small>';
+      var b=document.createElement('button');
+      b.className='tier'+(on?' on':'');
+      b.innerHTML='<div class="nm">'+t.nm+'</div><div class="pr">'+priceHtml+'</div><div class="ac">'+t.ac+'</div>';
+      b.onclick=function(){ state.tier=t.id; reconcileModes(); renderAll(); };
+      elTiers.appendChild(b);
+    });
+  }
+
+  function renderCoreEnt(){
+    if(state.tier==='enterprise'){
+      elCoreEnt.innerHTML='<label class="byokey"><input type="checkbox" id="byoKey"'+(state.byoKey?' checked':'')+'> Bring your own Anthropic (Claude) key <span>— optional, Enterprise only · for data residency / governance</span></label>';
+      var cb=document.getElementById('byoKey');
+      cb.onchange=function(){ state.byoKey=cb.checked; toast(cb.checked?'Enterprise: you will supply your own Anthropic key':'Reverted to SellHi-provided Claude key'); scheduleSave(); };
+    } else { elCoreEnt.innerHTML=''; }
+  }
+
+  function renderSplit(){
+    var s=SPLIT[state.tier];
+    elProv.innerHTML=s.provide.map(function(x){return '<li>'+x+'</li>';}).join('');
+    elBring.innerHTML=s.bring.map(function(x){return '<li>'+x+'</li>';}).join('');
+  }
+
+  function renderCards(){
+    elCards.innerHTML='';
+    CATS.forEach(function(cat){
+      var g=GATING[state.tier][cat.id];
+      var card=document.createElement('div'); card.className='card';
+      var head='<div class="chead"><div class="cic">'+cat.ic+'</div>'+
+        '<div><div class="cname">'+cat.nm+'</div><div class="cdesc">'+cat.desc+'</div></div>'+
+        (cat.optional?'<span class="opt">Optional</span>':'')+'</div>';
+      var body='';
+      var fullyLocked=(typeof g==='object' && g.lock) || g==='preview';
+
+      if(!fullyLocked){
+        var m=state.mode[cat.id];
+        var tt=state.tier;
+        var byoLocked=(typeof g==='object' && g.native && g.byoLock);
+        var isPaid=(cat.id==='linkedin' || cat.id==='calls');
+        // Paid channels (LinkedIn/Calls) are fixed by the tier:
+        //  Growth & Scale -> Bring-your-own ; Scale · Managed -> SellHi-managed (included).
+        var paidFixed = isPaid && (tt==='growth' || tt==='scale' || tt==='scaleManaged');
+        var forced = paidFixed ? (tt==='scaleManaged' ? 'managed' : 'byo') : null;
+
+        body+='<div class="modes">';
+
+        // ---- BYO tile ----
+        var byoOff = byoLocked || (paidFixed && forced!=='byo');
+        if(byoOff){
+          var bsub = byoLocked ? 'Connect your own CRM — unlocks on Scale' : 'Bring-your-own is on the Scale plan';
+          body+='<div class="mode" data-nop="1" style="opacity:.55;cursor:default">'+
+            '<div class="ml">Bring your own 🔒</div><div class="ms">'+bsub+'</div></div>';
+        } else {
+          var onByo = paidFixed ? (forced==='byo') : (m==='byo');
+          body+='<button class="mode'+(onByo?' on':'')+'" data-cat="'+cat.id+'" data-mode="byo">'+
+            '<div class="ml">Bring your own</div><div class="ms">Connect a tool you already use</div></button>';
+        }
+
+        // ---- Managed tile ----
+        var mgdOff = paidFixed && forced!=='managed';
+        if(mgdOff){
+          var note = (tt==='growth') ? 'Available on Scale · Managed' : 'Included in the Scale · Managed plan';
+          body+='<div class="mode" data-nop="1" style="opacity:.55;cursor:default">'+
+            '<div class="ml">Let SellHi manage</div><div class="ms">'+note+'</div></div>';
+        } else {
+          var onMgd = paidFixed ? (forced==='managed') : (m==='managed');
+          var mSub = (isPaid && tt==='scaleManaged')
+            ? 'part of Fully-Managed · <span style="color:var(--teal-ink)">included</span>'
+            : cat.managedSub+' · <span style="color:var(--teal-ink)">included</span>';
+          body+='<button class="mode'+(onMgd?' on':'')+'" data-cat="'+cat.id+'" data-mode="managed">'+
+            '<div class="ml">Let SellHi manage</div><div class="ms">'+mSub+'</div></button>';
+        }
+
+        body+='</div>';
+
+        // ---- BYO tool dropdown (only when BYO is the active, selectable mode) ----
+        var byoActive = (paidFixed ? forced==='byo' : m==='byo') && !byoLocked;
+        if(byoActive){
+          var opts='<option value="">Select a tool…</option>'+
+            cat.byo.map(function(x){return '<option'+(state.tool[cat.id]===x?' selected':'')+'>'+x+'</option>';}).join('');
+          if(cat.fallback) opts+='<option'+(state.tool[cat.id]===cat.fallback?' selected':'')+'>'+cat.fallback+'</option>';
+          body+='<select data-cat="'+cat.id+'">'+opts+'</select>';
+        }
+        if(cat.must) body+='<div class="must">⚠︎ <span>'+cat.must+'</span></div>';
+        body+='<a class="req" data-req="'+cat.nm+'">＋ Request an integration</a>';
+      }
+      card.innerHTML=head+body;
+
+      if(fullyLocked){
+        var lockTo = g==='preview' ? 'Seed' : g.lock;
+        var msg = g==='preview' ? 'Scout is preview-only' : cat.nm+' unlocks on '+lockTo;
+        var ov=document.createElement('div'); ov.className='lockwrap';
+        ov.innerHTML='<div class="lk">🔒</div><div class="lt">'+msg+'</div>'+
+          '<button class="lb" data-goto="'+lockTo.toLowerCase()+'">Upgrade to '+lockTo+'</button>';
+        card.appendChild(ov);
+      }
+      elCards.appendChild(card);
+    });
+
+    Array.prototype.forEach.call(elCards.querySelectorAll('.mode'),function(btn){
+      btn.onclick=function(){
+        if(btn.getAttribute('data-nop')) return;
+        if(btn.getAttribute('data-lock')){ toast('Connect your own CRM unlocks on Scale'); return; }
+        var cat=btn.getAttribute('data-cat'), mode=btn.getAttribute('data-mode');
+        state.mode[cat]=mode;
+        renderAll();
+      };
+    });
+    Array.prototype.forEach.call(elCards.querySelectorAll('select'),function(sel){
+      sel.onchange=function(){ state.tool[sel.getAttribute('data-cat')]=sel.value; renderCost(); scheduleSave(); };
+    });
+    Array.prototype.forEach.call(elCards.querySelectorAll('[data-req]'),function(a){
+      a.onclick=function(){ toast('Logged your request for a '+a.getAttribute('data-req')+' integration — thanks!'); };
+    });
+    Array.prototype.forEach.call(elCards.querySelectorAll('[data-goto]'),function(b){
+      b.onclick=function(){ state.tier=b.getAttribute('data-goto'); reconcileModes(); renderAll(); };
+    });
+  }
+
+  // FIX 4 — on tier change, reset any now-locked channel's mode to its
+  // tier-appropriate default so no stale managed/BYO state lingers.
+  var DEFAULT_MODE = { crm:'managed', email:'managed', linkedin:'byo', calls:'byo' };
+  function reconcileModes(){
+    var g=GATING[state.tier];
+    CATS.forEach(function(cat){
+      var cg=g[cat.id];
+      var locked=(typeof cg==='object' && cg.lock) || cg==='preview';
+      if(locked){ state.mode[cat.id]=DEFAULT_MODE[cat.id]; state.tool[cat.id]=''; }
+    });
+    // CRM: BYO is locked below Scale -> force the built-in (managed) default.
+    if(g.crm && g.crm.native && g.crm.byoLock && state.mode.crm==='byo'){ state.mode.crm='managed'; }
+    // Growth: LinkedIn is BYO-only (managed tooling lives at Scale · Managed).
+    if(state.tier==='growth'){ state.mode.linkedin='byo'; }
+    // Scale = BYO stack; Scale · Managed = SellHi fronts the paid channels.
+    if(state.tier==='scale'){ state.mode.linkedin='byo'; state.mode.calls='byo'; }
+    if(state.tier==='scaleManaged'){ state.mode.linkedin='managed'; state.mode.calls='managed'; }
+  }
+
+  // FIX 5 — flat pricing only. The big total ALWAYS equals the sum of the visible
+  // line items; nothing is priced per seat.
+  function computeCost(){
+    var t=state.tier;
+    var items=[{k:'🧠 Core AI Engine', v:'included', inc:true}];
+
+    if(t==='scout'){ return {total:0, items:items.concat([{k:'SellHi Scout', v:'Free'}]), bring:[]}; }
+    if(t==='enterprise'){ return {total:null, custom:true,
+      items:items.concat([{k:'SellHi Enterprise', v:'Custom'},{k:state.byoKey?'BYO Anthropic key':'SellHi Claude key', v:'', inc:true}]),
+      bring:['Sending domain(s)','LinkedIn Premium','your own tools across every category']}; }
+
+    if(t==='seed'){
+      items.push({k:'SellHi Seed', v:money(PRICES.seed)});
+      return {total:PRICES.seed, items:items, bring:['Sending domain / mailbox']};
+    }
+
+    if(t==='growth'){
+      // Flat $204 regardless of channel choices (LinkedIn is BYO-only here).
+      items.push({k:'SellHi Growth', v:money(PRICES.growth)});
+      return {total:PRICES.growth, items:items, bring:['Sending domain / mailbox','LinkedIn Premium']};
+    }
+
+    // ---- Scale (BYO $501) ----
+    if(t==='scale'){
+      items.push({k:'SellHi Scale · BYO stack', v:money(PRICES.scaleBYO)});
+      return {total:PRICES.scaleBYO, items:items, bring:['Sending domain(s)','LinkedIn Premium']};
+    }
+    // ---- Scale · Managed ($798) ----
+    items.push({k:'SellHi Scale · Managed', v:money(PRICES.scaleManaged)});
+    items.push({k:'Fully-Managed: HighReach + Aircall', v:'included', inc:true});
+    return {total:PRICES.scaleManaged, items:items, bring:['Sending domain(s)','LinkedIn Premium']};
+  }
+
+  function renderCost(){
+    var c=computeCost();
+    document.getElementById('costBig').innerHTML = c.custom ? 'Custom<small> pricing</small>' : (c.total===0?'Free':money(c.total)+'<small>/mo</small>');
+    var parts=c.items.map(function(i){return '<span'+(i.inc?' class="inc"':'')+'>'+i.k+(i.v?' <span style="color:#fff">'+i.v+'</span>':'')+'</span>';});
+    document.getElementById('costItems').innerHTML=parts.join('<span class="dot">·</span>');
+    document.getElementById('costBring').innerHTML = c.bring.length ? ('You also bring · '+c.bring.join(' + ')) : 'Nothing else to bring at this tier';
+  }
+
+  var toastEl=document.getElementById('toast'), toastT;
+  function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){toastEl.classList.remove('show');},2400); }
+
+  // ---- Persistence: /api/connect (RLS-protected connect_config, per user) ----
+  var saveEl=document.getElementById('saveState'), saveT, hydrating=true;
+  function setSave(txt,color){ if(saveEl){ saveEl.textContent=txt; saveEl.style.color=color||'var(--ink3)'; } }
+  function payload(){ return { tier:state.tier, modes:state.mode, tools:state.tool, byoKey:state.byoKey }; }
+  function saveNow(){
+    setSave('Saving…');
+    fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(payload())})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+      .then(function(res){ if(res.ok && res.j && res.j.ok){ setSave('All changes saved ✓','var(--teal-ink)'); } else { setSave((res.j&&res.j.error)||'Save failed','#b4451f'); } })
+      .catch(function(){ setSave('Offline — changes not saved','#b4451f'); });
+  }
+  function scheduleSave(){ if(hydrating) return; setSave('Saving…'); clearTimeout(saveT); saveT=setTimeout(saveNow,700); }
+  function loadConfig(){
+    fetch('/api/connect',{credentials:'include'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){
+        if(j && j.ok && j.config){
+          var c=j.config;
+          if(c.tier) state.tier=c.tier;
+          if(c.modes) Object.keys(c.modes).forEach(function(k){ if(state.mode[k]!==undefined) state.mode[k]=c.modes[k]; });
+          if(c.tools) Object.keys(c.tools).forEach(function(k){ if(state.tool[k]!==undefined) state.tool[k]=c.tools[k]; });
+          state.byoKey=!!c.byoKey;
+        }
+      })
+      .catch(function(){})
+      .then(function(){ hydrating=false; reconcileModes(); renderAll(); setSave('All changes saved ✓','var(--teal-ink)'); });
+  }
+  document.getElementById('saveBtn').onclick=function(){ saveNow(); var c=computeCost(); toast(state.tier.toUpperCase()+' · '+(c.custom?'Custom':(c.total===0?'Free':money(c.total)+'/mo'))+' saved'); };
+
+  function renderAll(){ renderTiers(); renderCoreEnt(); renderSplit(); renderCards(); renderCost(); if(!hydrating) scheduleSave(); }
+  // First paint immediately (from defaults) so the UI isn't blank, then hydrate.
+  reconcileModes(); renderAll(); loadConfig();
+})();
+</script>
+</body>
+</html>
