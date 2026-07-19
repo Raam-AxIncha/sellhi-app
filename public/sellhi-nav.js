@@ -33,10 +33,12 @@
 
 /* --- Back-button / browser-history support for the single-page phase flow ---
  * The app navigates in-page (showPhase / pXStep / pXTab) without touching the URL,
- * so Back/refresh dumped you at Identity Engine. We mirror the actual navigation
- * path into history.pushState by wrapping those globals: Back/Forward now retrace
- * the exact phases + steps visited, and a refresh restores the current view.
- * demo.html stays pristine; wrappers chain safely with the other override scripts. */
+ * so Back/refresh dumped you at Identity Engine. We mirror navigation into
+ * history.pushState by wrapping showPhase: Back/Forward move between MODULES
+ * (Identity, Market Intel, …) — one press per module, not per wizard step (use the
+ * in-page Back/Continue buttons to move between steps). A refresh reopens the module.
+ * Loading screens are never recorded. demo.html stays pristine; wrappers chain
+ * safely with the other override scripts. */
 (function () {
   var PHASES = ["p1","p2","p3","p4","p5","p6","p7","p8"];
   var STEP_PHASES = { p1:1, p2:1, p3:1 };   // numbered wizard steps
@@ -142,8 +144,10 @@
     var tries = 0;
     var t = setInterval(function () {
       tries++;
-      ["showPhase","p1Step","p2Step","p3Step","p5Tab","p6Tab","p8Tab"].forEach(wrap);
-      if ((wrapped.showPhase && wrapped.p3Step) || tries > 60) clearInterval(t);
+      // Phase-level history only: wrap showPhase, NOT the per-step/tab globals, so
+      // Back moves one module at a time instead of retracing every wizard step.
+      ["showPhase"].forEach(wrap);
+      if (wrapped.showPhase || tries > 60) clearInterval(t);
     }, 120);
     var init = decode(location.hash);
     if (init) {
