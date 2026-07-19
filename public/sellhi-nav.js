@@ -4,24 +4,40 @@
  */
 (function () {
   function addItem() {
-    if (document.getElementById("sh-nav-meetings")) return true;
     var nav = document.querySelector(".sidebar-nav");
     if (!nav || !nav.firstElementChild) return false; // not ready yet -> retry
-    var a = document.createElement("a");
-    a.id = "sh-nav-meetings";
-    a.className = "nav-item";
-    a.href = "/meetings";
-    a.setAttribute("role", "menuitem");
-    a.style.textDecoration = "none";
-    a.style.marginBottom = "8px";
-    a.innerHTML =
-      '<span class="nav-icon" aria-hidden="true">&#128197;</span>' +
-      '<span class="nav-text"> Meeting Prep</span>';
-    // Insert at the very top of the sidebar nav. Use firstElementChild (a real
-    // direct child) so insertBefore can't throw the way targeting a nested
-    // .nav-label did.
-    try { nav.insertBefore(a, nav.firstElementChild); return true; }
-    catch (e) { return false; }
+
+    // "Plan & Connections" -> the two-dimensional Connect surface (/connect).
+    if (!document.getElementById("sh-nav-connect")) {
+      var cx = document.createElement("a");
+      cx.id = "sh-nav-connect";
+      cx.className = "nav-item";
+      cx.href = "/connect";
+      cx.setAttribute("role", "menuitem");
+      cx.style.textDecoration = "none";
+      cx.style.marginBottom = "8px";
+      cx.innerHTML =
+        '<span class="nav-icon" aria-hidden="true">&#128268;</span>' +
+        '<span class="nav-text"> Plan &amp; Connections</span>';
+      try { nav.insertBefore(cx, nav.firstElementChild); } catch (e) {}
+    }
+
+    // "Meeting Prep" -> the standalone /meetings surface.
+    if (!document.getElementById("sh-nav-meetings")) {
+      var a = document.createElement("a");
+      a.id = "sh-nav-meetings";
+      a.className = "nav-item";
+      a.href = "/meetings";
+      a.setAttribute("role", "menuitem");
+      a.style.textDecoration = "none";
+      a.style.marginBottom = "8px";
+      a.innerHTML =
+        '<span class="nav-icon" aria-hidden="true">&#128197;</span>' +
+        '<span class="nav-text"> Meeting Prep</span>';
+      // Insert at the very top so Meeting Prep sits above Plan & Connections.
+      try { nav.insertBefore(a, nav.firstElementChild); } catch (e) {}
+    }
+    return !!(document.getElementById("sh-nav-meetings") && document.getElementById("sh-nav-connect"));
   }
   // Sidebar footer: a discreet "Shortcuts (?)" button that opens the demo's
   // keyboard-shortcuts modal and visibly teaches the "?" key. Placed right after
