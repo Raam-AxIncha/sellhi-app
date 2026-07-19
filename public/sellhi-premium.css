@@ -291,3 +291,22 @@ body.dark #p6-settings {
   --g50:#16223c; --g100:#2c3a52; --g200:#3b4a63; --g300:#475569;
   --g400:#94a3b8; --g500:#b6c2d4; --g600:#d3dce8; --g700:#e6ecf5; --g800:#f1f5f9; --g900:#ffffff;
 }
+
+/* ============================================================
+   Branded center loader. The demo's step overlays already show a spinner + live
+   status messages + a progress bar (great for telling subscribers what's
+   happening). We upgrade the bare ring into the spinning SellHi mark — cohesive
+   with the sidebar spin, on-brand, and deliberately a touch smaller than the
+   sidebar logo. Messages + progress bar are left intact. demo.html untouched.
+   ============================================================ */
+.loading-overlay .loading-spinner {
+  width: 44px !important;
+  height: 44px !important;
+  border: none !important;                    /* drop the plain ring */
+  border-radius: 11px;
+  background: url("/favicon-512.png") center / contain no-repeat;
+  /* keeps the demo's clockwise `spin` animation already on this element */
+}
+body.dark .loading-overlay .loading-spinner {
+  background-image: url("/favicon-512-ondark.png");   /* light mark on the dark overlay */
+}
