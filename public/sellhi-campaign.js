@@ -126,6 +126,10 @@
       '<div class="card" style="margin-bottom:16px;"><div class="card-title">Staged campaigns</div><div id="sh-p6-staged"></div></div>';
     dash.insertBefore(wrap, dash.firstChild);
     hideP6Fakes(dash);
+    gateTab("p6-aztesting", "A/Z subject-line testing",
+      "Test multiple subject lines and let the winner be picked automatically. This needs live sends to produce real open and reply results — it activates the moment an email sender is connected and outreach is running.");
+    gateTab("p6-settings", "Sending operations",
+      "Daily send limits, sending windows, warmup and deliverability controls live here. They take effect once an email sender is connected — until then there is nothing sending to operate.");
 
     document.getElementById("sh-p6-stage").addEventListener("click", stageCampaign);
     renderP6Dynamic();
@@ -142,6 +146,26 @@
         el.style.display = "none";
       }
     });
+  }
+
+  // The A/Z Testing + Operations tabs ship fabricated results (fake A/B open/reply
+  // rates, an "All Systems Operational — all connected" banner that isn't true).
+  // Replace each with an honest "unlocks with live sending" panel so nothing on the
+  // page implies outreach is running when it isn't.
+  function gateTab(id, title, body) {
+    var el = document.getElementById(id);
+    if (!el || el.__shGated) return;
+    el.__shGated = true;
+    Array.prototype.forEach.call(el.children, function (c) { c.style.display = "none"; });
+    var card = document.createElement("div");
+    card.className = "card";
+    card.style.marginBottom = "16px";
+    card.innerHTML =
+      '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+      '<span aria-hidden="true" style="font-size:18px;">&#128274;</span><div>' +
+      '<div style="font-weight:700;color:var(--g800);margin-bottom:4px;">' + esc(title) + ' &middot; unlocks with live sending</div>' +
+      '<div style="font-size:13px;color:var(--g600);line-height:1.6;">' + esc(body) + "</div></div></div>";
+    el.appendChild(card);
   }
 
   function renderP6Dynamic() {
