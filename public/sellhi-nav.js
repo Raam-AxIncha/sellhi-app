@@ -228,3 +228,22 @@
   if (document.readyState === "complete") boot2();
   else window.addEventListener("load", boot2);
 })();
+
+/* --- Brand spinner: roll the sidebar logo mark CLOCKWISE while the app is loading
+ * — during the initial page load, and whenever any research/generate overlay is
+ * active. App-layer only; toggles the .sh-spinning class (animation in
+ * sellhi-overrides.css). --- */
+(function () {
+  var spinning = false, ready = false;
+  function mark() { return document.querySelector(".sidebar-logo-mark"); }
+  function loading() { try { return !!document.querySelector(".loading-overlay.active"); } catch (e) { return false; } }
+  function setSpin(on) {
+    var m = mark(); if (!m) return;               // logo not in DOM yet -> retry next tick
+    if (on === spinning) return;
+    spinning = on;
+    m.classList.toggle("sh-spinning", !!on);
+  }
+  // Spin from first paint until shortly after load; thereafter follow overlay state.
+  window.addEventListener("load", function () { setTimeout(function () { ready = true; }, 500); });
+  setInterval(function () { setSpin(!ready || loading()); }, 180);
+})();

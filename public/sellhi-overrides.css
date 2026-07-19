@@ -14,19 +14,19 @@
      room on both edges (centered feel, not stretched edge-to-edge). */
   .sidebar-nav { padding: 14px 15px; }
 
-  /* --- Brand: SellHi stays the dominant first-impression element --- */
+  /* --- Brand: SellHi stays the dominant first-impression element (enlarged) --- */
   .sidebar-logo {
-    height: 74px;
+    height: 88px;
     gap: 11px;
-    padding: 0 16px;
+    padding: 0 14px;
   }
   .sidebar-logo-mark {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
   }
   .sidebar-logo span {
-    font-size: 27px;
+    font-size: 31px;
     font-weight: 800;
     letter-spacing: -0.4px;
     line-height: 1;
@@ -78,3 +78,12 @@ textarea:focus-visible {
 
 /* Editable dossier affordance stays subtle but discoverable. */
 .sh-editable { transition: background .1s ease, box-shadow .1s ease; }
+
+/* ---- Brand loading spinner: the logo mark rolls CLOCKWISE while the app is
+   loading/working (initial page load + any research/generate overlay). Driven by
+   the .sh-spinning class toggled in sellhi-nav.js. Respects reduced-motion. ---- */
+@keyframes sh-logo-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.sidebar-logo-mark.sh-spinning { animation: sh-logo-spin .9s linear infinite; transform-origin: 50% 50%; }
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-logo-mark.sh-spinning { animation: none; }
+}
