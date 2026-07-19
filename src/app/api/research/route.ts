@@ -114,7 +114,14 @@ ${SCHEMA}`;
 
 Return the JSON dossier now.`;
 
+  // Fewer web-search round-trips + abort a few seconds before the platform timeout,
+  // so a slow research run returns a clean "try again" instead of a raw 502.
+  const SEARCH_MAX_USES = Number(process.env.RESEARCH_SEARCH_MAX_USES || "5");
+  const TIME_BUDGET_MS = Number(process.env.RESEARCH_TIMEOUT_MS || "52000");
+
   let anthropicJson: unknown;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIME_BUDGET_MS);
   try {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -127,9 +134,10 @@ Return the JSON dossier now.`;
         model: MODEL,
         max_tokens: 3000,
         system,
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }],
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: SEARCH_MAX_USES }],
         messages: [{ role: "user", content: userMsg }],
       }),
+      signal: controller.signal,
     });
     if (!resp.ok) {
       const detail = await resp.text();
@@ -140,10 +148,15 @@ Return the JSON dossier now.`;
     }
     anthropicJson = await resp.json();
   } catch (e) {
+    const aborted = !!e && typeof e === "object" && (e as { name?: string }).name === "AbortError";
     return NextResponse.json(
-      { error: "Could not reach research service", detail: String(e).slice(0, 200) },
-      { status: 502 }
+      aborted
+        ? { error: "Research took longer than usual this time — please run it again." }
+        : { error: "Could not reach research service", detail: String(e).slice(0, 200) },
+      { status: aborted ? 200 : 502 }
     );
+  } finally {
+    clearTimeout(timer);
   }
 
   // Pull the final text blocks and parse the JSON dossier out of them.

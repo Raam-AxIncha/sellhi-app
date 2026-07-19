@@ -271,3 +271,23 @@ body.dark .loading-overlay { background: rgba(17,24,39,.82) !important; }
    fully available via the "?" key (and the modal it opens).
    ============================================================ */
 .annotation { display: none !important; }
+
+/* ============================================================
+   DARK-MODE CORRECTNESS for injected data panels.
+   The stock demo's dark theme does NOT flip the --g gray scale (body.dark keeps
+   --g at light values and restyles components one by one). Our injected panels are
+   self-contained, so we remap the --g scale to dark values WITHIN those containers
+   only — flipping all their text, tracks and borders for dark mode, without
+   touching any demo component elsewhere.
+   Covers: p7 Command Center + p8 Learn & Optimize (content fully ours), p4 live-
+   connections card, p6 campaign builder, and the p6 gated A/Z + Operations tabs.
+   ============================================================ */
+body.dark #phase-p7 .content,
+body.dark #phase-p8 .content,
+body.dark #sh-p4-connections,
+body.dark #sh-p6-builder,
+body.dark #p6-aztesting,
+body.dark #p6-settings {
+  --g50:#16223c; --g100:#2c3a52; --g200:#3b4a63; --g300:#475569;
+  --g400:#94a3b8; --g500:#b6c2d4; --g600:#d3dce8; --g700:#e6ecf5; --g800:#f1f5f9; --g900:#ffffff;
+}
