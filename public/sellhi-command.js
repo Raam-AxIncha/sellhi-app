@@ -231,7 +231,7 @@
     }
 
     // Honest note about what unlocks with outreach
-    html += honestNote("Outreach analytics — response rate, open rate, meetings booked, pipeline value and ROI — activate automatically once the Campaign Engine is live and messages are sending. Today the Command Center reflects your researched pipeline and calendar.");
+    html += honestNote("The Contacted → Replied → Meetings → Won stages of your funnel activate automatically once the Campaign Engine is live and messages are sending. Today the Command Center reflects your researched pipeline and calendar.");
 
     content.innerHTML = html;
     neutralizeP7Chrome(m);
