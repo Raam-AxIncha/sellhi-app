@@ -384,3 +384,27 @@ body.dark .sh-loader-mark::after { border-color: rgba(55,195,180,.16); border-to
   .sh-loader-mark, .sh-loader-halo, .sh-loader-bar-fill, .sh-step .sh-dot { animation: none; }
   .sh-loader-bar-fill { width: 100%; }
 }
+
+/* ============================================================
+   LEGIBILITY on injected data dashboards (p4/p6/p7/p8).
+   These are data surfaces where readability beats the calm/muted aesthetic:
+   un-mute the card titles (they were --sh-ink2) and strengthen the faint grays in
+   both light and dark so nothing reads dim. Scoped to our containers only.
+   ============================================================ */
+#phase-p7 .content .card-title,
+#phase-p8 .content .card-title,
+#sh-p4-connections .card-title,
+#sh-p6-builder .card-title,
+#p6-aztesting .card-title,
+#p6-settings .card-title { color: var(--sh-ink) !important; }
+
+/* Light mode: darken the faintest label/body grays for contrast. */
+#phase-p7 .content, #phase-p8 .content, #sh-p4-connections, #sh-p6-builder,
+#p6-aztesting, #p6-settings {
+  --g400: #566072; --g500: #3f4a5e; --g600: #313b4d;
+}
+/* Dark mode: brighten text grays (overrides the earlier dark remap for these). */
+body.dark #phase-p7 .content, body.dark #phase-p8 .content, body.dark #sh-p4-connections,
+body.dark #sh-p6-builder, body.dark #p6-aztesting, body.dark #p6-settings {
+  --g400: #b9c3d4; --g500: #d5dde9; --g600: #e7edf5; --g700: #f0f4f9;
+}

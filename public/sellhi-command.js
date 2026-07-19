@@ -22,6 +22,24 @@
   // ── data ────────────────────────────────────────────────────────────────────
   var DATA = { companies: [], counts: null, criteria: null, meetings: [], connected: { google: false, microsoft: false }, loaded: false };
 
+  // Command Center date-range filter (drives the meetings + funnel-meetings stage).
+  var p7Range = { mode: "30", from: "", to: "" };
+  function p7Meetings() {
+    var now = Date.now();
+    return (DATA.meetings || []).filter(function (mt) {
+      var t = mt.start_at ? Date.parse(mt.start_at) : NaN;
+      if (isNaN(t)) return true;                       // undated -> always include
+      if (p7Range.mode === "all") return t >= now - 3600000;
+      if (p7Range.mode === "custom") {
+        var f = p7Range.from ? Date.parse(p7Range.from) : -Infinity;
+        var to = p7Range.to ? (Date.parse(p7Range.to) + 86400000) : Infinity;   // inclusive end-day
+        return t >= f && t < to;
+      }
+      var days = parseInt(p7Range.mode, 10) || 30;
+      return t >= now - 3600000 && t <= now + days * 86400000;
+    }).sort(function (a, b) { return (Date.parse(a.start_at) || 0) - (Date.parse(b.start_at) || 0); });
+  }
+
   function companyScore(c) {
     if (typeof c._score === "number") return c._score;
     var sc = c.scores || {};
@@ -123,6 +141,7 @@
     if (!m.total) {
       html += emptyPortfolioCard("p7");
     } else {
+      var meets = p7Meetings();
       // Stat row (all real)
       html += '<div class="metric-row metric-row-4">' +
         metric("Target companies", m.total, "in your researched list", "var(--primary)") +
@@ -130,6 +149,9 @@
         metric("Live buying signals", m.signals.length, m.signals.length ? "ready to action" : "none flagged yet", "var(--warning)") +
         metric("Avg fit score", m.avgScore, m.avgScore >= 70 ? "healthy pipeline" : "broaden or refine ICP") +
         "</div>";
+
+      // Pipeline funnel (real: research -> prioritise -> signals -> meetings)
+      html += funnelCard(m, meets.length);
 
       // Portfolio by tier + top industries
       html += '<div class="grid-2">';
@@ -167,7 +189,7 @@
       }
       html += "</div>";
 
-      html += upcomingMeetingsCard(m);
+      html += upcomingMeetingsCard(meets, m.anyCal);
       html += "</div>";
     }
 
@@ -178,22 +200,55 @@
     neutralizeP7Chrome(m);
   }
 
-  function upcomingMeetingsCard(m) {
-    var h = '<div class="card"><div class="card-title">Upcoming meetings</div>';
-    if (m.upcoming.length) {
-      m.upcoming.slice(0, 6).forEach(function (mt) {
+  function upcomingMeetingsCard(list, anyCal) {
+    list = list || [];
+    var h = '<div class="card"><div class="card-title">Meetings · ' + esc(p7RangeLabel()) + "</div>";
+    if (list.length) {
+      list.slice(0, 8).forEach(function (mt) {
         h += '<div class="action-item"><div class="action-content"><div class="action-title">' + esc(mt.title || "Meeting") + "</div>" +
           '<div class="action-sub">' + esc(fmtWhen(mt.start_at) || "Time TBD") + (mt.location ? " · " + esc(mt.location) : "") + "</div></div>" +
           '<button class="btn btn-sm btn-outline" onclick="location.href=\'/meetings\'">Prep</button></div>';
       });
       h += '<div style="margin-top:12px;"><a class="btn btn-sm btn-outline" href="/meetings">Open Meeting Prep &#8594;</a></div>';
-    } else if (m.anyCal) {
-      h += '<div style="font-size:13px;color:var(--g500);line-height:1.6;">No upcoming meetings on your connected calendar. New events sync automatically.</div>';
+    } else if (anyCal) {
+      h += '<div style="font-size:13px;color:var(--g500);line-height:1.6;">No meetings in this date range. Widen the range (top-right) or check back as events sync.</div>';
     } else {
-      h += '<div style="font-size:13px;color:var(--g500);line-height:1.6;margin-bottom:12px;">Connect your calendar to see upcoming meetings here and get a prep sheet for each one.</div>' +
+      h += '<div style="font-size:13px;color:var(--g500);line-height:1.6;margin-bottom:12px;">Connect your calendar to see meetings here and get a prep sheet for each one.</div>' +
         '<a class="btn btn-sm btn-primary" href="/meetings">Connect calendar &#8594;</a>';
     }
     return h + "</div>";
+  }
+
+  function p7RangeLabel() {
+    if (p7Range.mode === "all") return "all upcoming";
+    if (p7Range.mode === "custom") {
+      if (p7Range.from || p7Range.to) return (p7Range.from || "…") + " to " + (p7Range.to || "…");
+      return "custom range";
+    }
+    return "next " + p7Range.mode + " days";
+  }
+
+  // Real pipeline funnel: Researched -> Strong-fit -> Live signals -> Meetings.
+  // Downstream (Contacted/Replied/Won) needs outreach, so we stop honestly at
+  // meetings and flag what unlocks. `mc` = meetings count in the selected range.
+  function funnelCard(m, mc) {
+    var stages = [
+      { label: "Researched", n: m.total, sub: "companies in your ICP list", col: "#008080" },
+      { label: "Strong fit", n: m.tiers[1], sub: "Tier-1 (score 80+)", col: "#0a9a8c" },
+      { label: "Live signals", n: m.signals.length, sub: "buying signals now", col: "#1D9E75" },
+      { label: "Meetings", n: mc, sub: p7RangeLabel(), col: "#BA7517" },
+    ];
+    var max = Math.max(m.total, 1);
+    var rows = stages.map(function (s) {
+      var pct = Math.max(16, Math.round((s.n / max) * 100));
+      return '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">' +
+        '<div style="width:96px;text-align:right;font-size:13px;color:var(--g700);font-weight:500;">' + esc(s.label) + "</div>" +
+        '<div style="flex:1;min-width:0;"><div style="margin:0 auto;width:' + pct + '%;min-width:70px;background:' + s.col + ';height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgba(16,24,40,.12);">' + s.n + "</div>" +
+        '<div style="text-align:center;font-size:11px;color:var(--g400);margin-top:4px;">' + esc(s.sub) + "</div></div>" +
+        '<div style="width:40px;flex:0 0 auto;"></div></div>';
+    }).join("");
+    return '<div class="card" style="margin-bottom:16px;"><div class="card-title">Pipeline funnel</div>' + rows +
+      '<div style="font-size:11px;color:var(--g400);margin-top:6px;">Contacted → Replied → Won stages activate once the Campaign Engine is sending. Today: research → prioritise → signal → meeting.</div></div>';
   }
 
   function emptyPortfolioCard(phase) {
@@ -238,6 +293,46 @@
       // Client filter -> honest single-account reality for the pilot.
       var sel = document.querySelector("#phase-p7 .topbar select");
       if (sel) sel.innerHTML = "<option>Your pipeline</option>";
+
+      // Date-range picker: replace the static "Last 30 days" chip with a real,
+      // subscriber-controlled range (presets + custom dates) that filters the
+      // meetings + funnel-meetings stage.
+      var topbar = document.querySelector("#phase-p7 .topbar");
+      if (topbar) {
+        var host = document.getElementById("sh-p7-rangewrap");
+        if (!host) {
+          var chip = null;
+          Array.prototype.forEach.call(topbar.querySelectorAll(".chip"), function (c) {
+            if (/last\s*30|days/i.test(c.textContent || "")) chip = c;
+          });
+          host = document.createElement("span");
+          host.id = "sh-p7-rangewrap";
+          host.style.cssText = "display:inline-flex;align-items:center;gap:6px;";
+          if (chip && chip.parentNode) chip.parentNode.replaceChild(host, chip);
+          else { var right = topbar.querySelector("div"); if (right) right.insertBefore(host, right.firstChild); }
+        }
+        function opt(v, l) { return '<option value="' + v + '"' + (p7Range.mode === v ? " selected" : "") + ">" + l + "</option>"; }
+        host.innerHTML =
+          '<select id="sh-p7-range" class="field-input" style="width:auto;font-size:12px;padding:6px 10px;">' +
+          opt("7", "Next 7 days") + opt("30", "Next 30 days") + opt("90", "Next 90 days") + opt("all", "All upcoming") + opt("custom", "Custom range…") +
+          "</select>" +
+          '<span id="sh-p7-custom" style="display:' + (p7Range.mode === "custom" ? "inline-flex" : "none") + ';align-items:center;gap:6px;">' +
+          '<input id="sh-p7-from" type="date" class="field-input" style="width:auto;font-size:12px;padding:5px 8px;" value="' + esc(p7Range.from) + '">' +
+          '<span style="font-size:12px;color:var(--g500);">to</span>' +
+          '<input id="sh-p7-to" type="date" class="field-input" style="width:auto;font-size:12px;padding:5px 8px;" value="' + esc(p7Range.to) + '"></span>';
+        var rsel = host.querySelector("#sh-p7-range");
+        if (rsel) rsel.addEventListener("change", function () {
+          p7Range.mode = rsel.value;
+          if (p7Range.mode === "custom") { var cu = document.getElementById("sh-p7-custom"); if (cu) cu.style.display = "inline-flex"; }
+          else buildP7();
+        });
+        var wireDate = function (id, key) {
+          var elx = host.querySelector(id);
+          if (elx) elx.addEventListener("change", function () { p7Range[key] = elx.value; if (p7Range.mode === "custom") buildP7(); });
+        };
+        wireDate("#sh-p7-from", "from");
+        wireDate("#sh-p7-to", "to");
+      }
     } catch (e) {}
   }
 
