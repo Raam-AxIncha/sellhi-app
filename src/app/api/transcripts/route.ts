@@ -37,32 +37,72 @@ export async function GET(request: Request) {
 
   // 2) Find a Fireflies transcript that actually MATCHES this meeting/company.
   // We do NOT return an unrelated "latest" transcript — if nothing matches, we
-  // return null so the UI shows a clean "no transcript yet" state.
+  // return null so the UI shows a clean "no transcript yet" state. Matching is by
+  // company name in the title OR by an attendee's email domain, then most-recent.
+  type FfAttendee = { displayName?: string; email?: string; name?: string };
+  type FfTranscript = {
+    id: string; title?: string; dateString?: string; organizer_email?: string;
+    participants?: string[]; meeting_attendees?: FfAttendee[];
+    summary?: { overview?: string; action_items?: string; keywords?: string[] };
+  };
   try {
-    const query = `query { transcripts(limit: 25) { id title summary { overview } dateString } }`;
+    const query = `query {
+      transcripts(limit: 30) {
+        id title dateString organizer_email participants
+        meeting_attendees { displayName email name }
+        summary { overview action_items keywords }
+      }
+    }`;
     const resp = await fetch("https://api.fireflies.ai/graphql", {
       method: "POST",
       headers: { "content-type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({ query }),
     });
     const j = await resp.json();
-    const list: Array<{ id: string; title?: string; summary?: { overview?: string } }> =
-      j?.data?.transcripts || [];
+    const list: FfTranscript[] = j?.data?.transcripts || [];
 
-    let match: { id: string; title?: string; summary?: { overview?: string } } | undefined;
+    // newest-first (Fireflies usually returns this order, but be explicit)
+    list.sort((a, b) => (Date.parse(b.dateString || "") || 0) - (Date.parse(a.dateString || "") || 0));
+
+    let match: FfTranscript | undefined;
     if (company) {
       const c = company.toLowerCase();
-      // strip common company suffixes so "Acmeware Inc" still matches "Acmeware ..."
-      const core = c.replace(/\b(inc|llc|ltd|limited|corp|co|gmbh|plc|group)\b\.?/g, "").trim();
+      const core = c.replace(/\b(inc|llc|ltd|limited|corp|co|gmbh|plc|group)\b\.?/g, "").replace(/[^a-z0-9]+/g, "");
+      const emailsOf = (t: FfTranscript): string[] => {
+        const fromAtt = (t.meeting_attendees || []).map((a) => (a.email || "").toLowerCase());
+        const fromParts = (t.participants || []).map((p) => String(p || "").toLowerCase());
+        return fromAtt.concat(fromParts, [(t.organizer_email || "").toLowerCase()]);
+      };
       match = list.find((t) => {
         const title = (t.title || "").toLowerCase();
-        return title.includes(c) || (core.length > 2 && title.includes(core));
+        if (title.includes(c) || (core.length > 2 && title.replace(/[^a-z0-9]+/g, "").includes(core))) return true;
+        if (core.length > 2) {
+          return emailsOf(t).some((e) => {
+            const dom = (e.split("@")[1] || "").replace(/\.[a-z.]+$/, "").replace(/[^a-z0-9]+/g, "");
+            return dom && (dom === core || dom.includes(core) || core.includes(dom));
+          });
+        }
+        return false;
       });
     }
     if (!match) return NextResponse.json({ ok: true, transcript: null });
+
+    const attendees = (match.meeting_attendees || [])
+      .map((a) => ({ name: a.displayName || a.name || "", email: a.email || "" }))
+      .filter((a) => a.name || a.email);
+
     return NextResponse.json({
       ok: true,
-      transcript: { title: match.title || "Meeting", summary: match.summary?.overview || "", external_id: match.id },
+      transcript: {
+        title: match.title || "Meeting",
+        date: match.dateString || "",
+        summary: match.summary?.overview || "",
+        actionItems: match.summary?.action_items || "",
+        keywords: Array.isArray(match.summary?.keywords) ? match.summary?.keywords : [],
+        attendees,
+        external_id: match.id,
+        url: match.id ? "https://app.fireflies.ai/view/" + match.id : "",
+      },
     });
   } catch (e) {
     return NextResponse.json({ error: "Fireflies fetch failed", detail: String(e).slice(0, 200) }, { status: 502 });

@@ -1,0 +1,10 @@
+<svg width="128" height="128" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SellHi — dotted globe with rising S-arrow">
+  <circle cx="32" cy="36" r="20" stroke="#008080" stroke-width="1.5"/>
+  <g fill="#FF6600">
+    <circle cx="23" cy="26" r="1.15"/><circle cx="41" cy="26" r="1.15"/>
+    <circle cx="16" cy="36" r="1.15"/><circle cx="24" cy="36" r="1.15"/><circle cx="40" cy="36" r="1.15"/><circle cx="48" cy="36" r="1.15"/>
+    <circle cx="23" cy="46" r="1.15"/><circle cx="41" cy="46" r="1.15"/>
+  </g>
+  <path d="M37 49 C 28 47, 28 39, 33 37 C 39 34.5, 39 27, 32 25 C 29.5 24, 30.5 20, 32 18 L 32 8" stroke="#008080" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path d="M28 12 L32 7 L36 12" stroke="#008080" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

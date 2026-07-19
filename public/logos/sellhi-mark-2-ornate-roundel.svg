@@ -1,0 +1,17 @@
+<svg width="112" height="112" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SellHi — ornate roundel">
+  <circle cx="32" cy="32" r="30" stroke="#008080" stroke-width="1.6"/>
+  <circle cx="32" cy="32" r="25" stroke="#A9D6D6" stroke-width="1"/>
+  <circle cx="60" cy="32" r="1.2" fill="#008080"/>
+  <circle cx="51.8" cy="12.2" r="1.2" fill="#008080"/>
+  <circle cx="32" cy="4" r="1.2" fill="#008080"/>
+  <circle cx="12.2" cy="12.2" r="1.2" fill="#008080"/>
+  <circle cx="4" cy="32" r="1.2" fill="#008080"/>
+  <circle cx="12.2" cy="51.8" r="1.2" fill="#008080"/>
+  <circle cx="32" cy="60" r="1.2" fill="#008080"/>
+  <circle cx="51.8" cy="51.8" r="1.2" fill="#008080"/>
+  <circle cx="31" cy="35" r="12.5" stroke="#A9D6D6" stroke-width="1.3"/>
+  <ellipse cx="31" cy="35" rx="5" ry="12.5" stroke="#A9D6D6" stroke-width="0.9"/>
+  <line x1="18.5" y1="35" x2="43.5" y2="35" stroke="#A9D6D6" stroke-width="0.9"/>
+  <path d="M22 48 C 16.5 47, 16.5 41.5, 22 40.5 C 29 39.5, 25.5 31.5, 33.5 30 C 41 28.5, 37.5 20.5, 44 18" stroke="#008080" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+  <circle cx="46" cy="14.5" r="2.4" fill="#008080"/>
+</svg>

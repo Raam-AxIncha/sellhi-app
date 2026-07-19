@@ -88,6 +88,8 @@
   body.dark .swatch{box-shadow:0 0 0 1px #3b4a63;}
   body.dark .banner{background:#3a2a12;border-color:#5a4520;color:#f2c68a;}
   body.dark a{color:#7db3ff;}
+  /* Dark-mode brand mark: the navy logo is invisible on the dark topbar — swap to the on-dark version. */
+  body.dark .brand .mark{content:url("/favicon-512-ondark.png");}
 </style>
 </head>
 <body>
@@ -111,9 +113,28 @@
       </div>
 
       <div class="card">
-        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
           <span>Upcoming &amp; prep</span>
-          <button class="btn btn-sm" id="add-manual">+ Prep a company</button>
+          <span style="display:flex;gap:6px;">
+            <button class="btn btn-sm" id="add-meeting">+ New meeting</button>
+            <button class="btn btn-sm" id="add-manual">+ Prep a company</button>
+          </span>
+        </div>
+        <!-- Create a real meeting (writes to a connected calendar, or tracks locally) -->
+        <div id="create-panel" class="hidden" style="border:1px solid var(--g200);border-radius:10px;padding:12px;margin-bottom:10px;">
+          <input id="new-title" class="field-input" type="text" placeholder="Meeting title" style="margin-bottom:8px;">
+          <div class="grid2" style="margin-bottom:8px;">
+            <div><label class="kv"><span class="k">Starts</span></label><input id="new-start" class="field-input" type="datetime-local"></div>
+            <div><label class="kv"><span class="k">Ends</span></label><input id="new-end" class="field-input" type="datetime-local"></div>
+          </div>
+          <input id="new-location" class="field-input" type="text" placeholder="Location or link (optional)" style="margin-bottom:8px;">
+          <label class="kv"><span class="k">Add to</span></label>
+          <select id="new-provider" class="field-input" style="margin-bottom:8px;"></select>
+          <div id="new-status" class="muted" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn btn-sm" id="new-cancel">Cancel</button>
+            <button class="btn btn-sm btn-primary" id="new-create">Create</button>
+          </div>
         </div>
         <div id="meeting-list"></div>
       </div>
@@ -133,7 +154,27 @@
               <div id="prep-title" style="font-size:18px;font-weight:800;color:var(--g900);"></div>
               <div id="prep-sub" class="muted"></div>
             </div>
-            <span id="prep-save" class="savehint">Saved</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button class="btn btn-sm hidden" id="edit-toggle">Edit details</button>
+              <span id="prep-save" class="savehint">Saved</span>
+            </div>
+          </div>
+          <!-- Inline edit form (calendar events write back to Google/Microsoft) -->
+          <div id="edit-panel" class="hidden" style="margin-top:14px;border-top:1px solid var(--g200);padding-top:14px;">
+            <div class="grid2" style="margin-bottom:10px;">
+              <div><label class="kv"><span class="k">Title</span></label><input id="edit-title" class="field-input" type="text" placeholder="Meeting title"></div>
+              <div><label class="kv"><span class="k">Location</span></label><input id="edit-location" class="field-input" type="text" placeholder="Location or link"></div>
+              <div><label class="kv"><span class="k">Starts</span></label><input id="edit-start" class="field-input" type="datetime-local"></div>
+              <div><label class="kv"><span class="k">Ends</span></label><input id="edit-end" class="field-input" type="datetime-local"></div>
+            </div>
+            <div id="edit-status" class="muted" style="margin-bottom:8px;"></div>
+            <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;">
+              <button class="btn btn-sm" id="edit-delete" style="color:var(--danger);border-color:var(--danger);">Delete</button>
+              <span style="display:flex;gap:8px;">
+                <button class="btn btn-sm" id="edit-cancel">Cancel</button>
+                <button class="btn btn-sm btn-primary" id="edit-save">Save changes</button>
+              </span>
+            </div>
           </div>
         </div>
 

@@ -1,0 +1,11 @@
+<svg width="120" height="120" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SellHi — Ganesha derived (balanced)">
+  <circle cx="32" cy="7" r="1.3" fill="#008080"/>
+  <path d="M32 9 C 29.5 12.5, 29.5 16, 32 17.5 C 34.5 16, 34.5 12.5, 32 9 Z" fill="#008080"/>
+  <path d="M25 24 C 18 22, 15.5 30, 20 35" stroke="#A9D6D6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <path d="M39 24 C 46 22, 48.5 30, 44 35" stroke="#A9D6D6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <circle cx="32" cy="43" r="11.5" stroke="#A9D6D6" stroke-width="1.3"/>
+  <ellipse cx="32" cy="43" rx="4.6" ry="11.5" stroke="#A9D6D6" stroke-width="0.9"/>
+  <line x1="20.5" y1="43" x2="43.5" y2="43" stroke="#A9D6D6" stroke-width="0.9"/>
+  <path d="M34 20 C 33 27, 24 27, 23 34 C 22.5 40, 29 42, 33 37" stroke="#008080" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+  <circle cx="45.5" cy="38" r="2.5" fill="#008080"/>
+</svg>

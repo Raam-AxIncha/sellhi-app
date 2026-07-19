@@ -13,7 +13,7 @@
   function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
   function slug(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"").slice(0,60); }
 
-  var state = { key: null, company: null, dossier: null, canvasData: null };
+  var state = { key: null, company: null, dossier: null, canvasData: null, meetings: {}, currentMeeting: null, connected: {} };
 
   // ---- left column: calendar status + meeting list ------------------------
   function providerBtn(provider, label, connected) {
@@ -60,8 +60,10 @@
 
   function renderList(meetings) {
     var html = "";
+    state.meetings = {};
     (meetings || []).forEach(function (m) {
       var key = "meeting:" + (m.external_id || m.id);
+      state.meetings[key] = m;
       html += '<div class="m-item" data-key="' + esc(key) + '" data-company="' + esc(m.title || "") + '">' +
         '<div class="m-title">' + esc(m.title || "Untitled meeting") + "</div>" +
         '<div class="m-meta">' + esc(fmtWhen(m.start_at)) + (m.join_url ? " · has join link" : "") + "</div></div>";
@@ -90,6 +92,7 @@
     fetch("/api/meetings", { credentials: "include" })
       .then(function (r) { return r.json(); })
       .then(function (j) {
+        state.connected = j.connected || {};
         renderCalStatus(j.connected);
         renderList(j.meetings);
         // If a calendar is connected, pull fresh events once per load, then refresh.
@@ -111,15 +114,144 @@
   // ---- right column: prep panel -------------------------------------------
   function openPrep(key, company) {
     state.key = key; state.company = company || "";
+    state.currentMeeting = state.meetings[key] || null;
     $("#prep-empty").classList.add("hidden");
     $("#prep-panel").classList.remove("hidden");
     $("#prep-title").textContent = company || "Meeting prep";
     $("#prep-sub").textContent = key.indexOf("company:") === 0 ? "Company prep sheet" : "Meeting prep";
+    renderEditControls();
     setTab("dossier");
     renderMeContext();
     loadNote();
     loadCommonConnections();
     loadTranscript();
+  }
+
+  // ---- edit meeting details (write-back to Google / Microsoft) -------------
+  function isoToLocalInput(iso) {
+    if (!iso) return "";
+    var d = new Date(iso); if (isNaN(d.getTime())) return "";
+    // datetime-local wants local wall-clock 'YYYY-MM-DDTHH:mm'
+    var p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  function localInputToIso(v) {
+    if (!v) return "";
+    var d = new Date(v); // interpreted as local time
+    return isNaN(d.getTime()) ? "" : d.toISOString();
+  }
+  function renderEditControls() {
+    var m = state.currentMeeting;
+    var toggle = $("#edit-toggle"), panel = $("#edit-panel");
+    if (panel) panel.classList.add("hidden");
+    // Only real calendar/manual meetings (a DB row with an id) can be edited.
+    if (m && m.id) { if (toggle) toggle.classList.remove("hidden"); }
+    else { if (toggle) toggle.classList.add("hidden"); }
+  }
+  function openEditForm() {
+    var m = state.currentMeeting; if (!m) return;
+    $("#edit-title").value = m.title || "";
+    $("#edit-location").value = m.location || "";
+    $("#edit-start").value = isoToLocalInput(m.start_at);
+    $("#edit-end").value = isoToLocalInput(m.end_at);
+    $("#edit-status").textContent = (m.provider === "google" || m.provider === "microsoft")
+      ? "Changes save back to your " + (m.provider === "google" ? "Google" : "Microsoft") + " calendar."
+      : "";
+    $("#edit-panel").classList.remove("hidden");
+  }
+  function saveEditForm() {
+    var m = state.currentMeeting; if (!m || !m.id) return;
+    var payload = { id: m.id, title: $("#edit-title").value.trim(), location: $("#edit-location").value.trim() };
+    var s = localInputToIso($("#edit-start").value); if (s) payload.start_at = s;
+    var e = localInputToIso($("#edit-end").value); if (e) payload.end_at = e;
+    var status = $("#edit-status"), btn = $("#edit-save");
+    status.textContent = "Saving…"; btn.disabled = true;
+    fetch("/api/meetings", { method: "PATCH", headers: { "content-type": "application/json" }, credentials: "include", body: JSON.stringify(payload) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
+      .then(function (res) {
+        btn.disabled = false;
+        if (res.ok) {
+          // reflect locally
+          m.title = payload.title; m.location = payload.location;
+          if (payload.start_at) m.start_at = payload.start_at;
+          if (payload.end_at) m.end_at = payload.end_at;
+          state.company = payload.title || state.company;
+          $("#prep-title").textContent = payload.title || $("#prep-title").textContent;
+          $("#edit-panel").classList.add("hidden");
+          loadMeetings();
+          return;
+        }
+        if (res.j && res.j.needsReconnect) {
+          status.innerHTML = 'Your calendar is connected read-only. <a href="/api/calendar/' + esc(m.provider) + '/start">Reconnect to grant edit access</a>, then try again.';
+        } else {
+          status.textContent = (res.j && res.j.error) || "Couldn't save changes.";
+        }
+      })
+      .catch(function () { btn.disabled = false; status.textContent = "Couldn't save changes."; });
+  }
+  function deleteMeeting() {
+    var m = state.currentMeeting; if (!m || !m.id) return;
+    var remote = (m.provider === "google" || m.provider === "microsoft");
+    if (!window.confirm("Delete this meeting?" + (remote ? " It will also be removed from your calendar." : ""))) return;
+    var status = $("#edit-status"), btn = $("#edit-delete");
+    status.textContent = "Deleting…"; if (btn) btn.disabled = true;
+    fetch("/api/meetings", { method: "DELETE", headers: { "content-type": "application/json" }, credentials: "include", body: JSON.stringify({ id: m.id }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (btn) btn.disabled = false;
+        if (res.ok) {
+          $("#prep-panel").classList.add("hidden");
+          $("#prep-empty").classList.remove("hidden");
+          state.key = null; state.currentMeeting = null;
+          loadMeetings();
+          try { toast("info", "Meeting deleted."); } catch (e) {}
+          return;
+        }
+        if (res.j && res.j.needsReconnect) status.innerHTML = 'Reconnect your calendar to grant edit access, then try again.';
+        else status.textContent = (res.j && res.j.error) || "Couldn't delete.";
+      })
+      .catch(function () { if (btn) btn.disabled = false; status.textContent = "Couldn't delete."; });
+  }
+
+  // ---- create a new meeting (real calendar event or local) ----------------
+  function providerOptions() {
+    var opts = [];
+    if (state.connected && state.connected.google) opts.push('<option value="google">Google Calendar</option>');
+    if (state.connected && state.connected.microsoft) opts.push('<option value="microsoft">Microsoft Calendar</option>');
+    opts.push('<option value="manual">Just track it here (no calendar)</option>');
+    return opts.join("");
+  }
+  function openCreateForm() {
+    $("#new-title").value = ""; $("#new-location").value = "";
+    $("#new-start").value = ""; $("#new-end").value = "";
+    $("#new-provider").innerHTML = providerOptions();
+    $("#new-status").textContent = "";
+    $("#create-panel").classList.remove("hidden");
+    $("#new-title").focus();
+  }
+  function createMeeting() {
+    var title = $("#new-title").value.trim();
+    var status = $("#new-status"), btn = $("#new-create");
+    if (!title) { status.textContent = "Give the meeting a title."; return; }
+    var payload = { title: title, provider: $("#new-provider").value || "manual" };
+    var loc = $("#new-location").value.trim(); if (loc) payload.location = loc;
+    var s = localInputToIso($("#new-start").value); if (s) payload.start_at = s;
+    var e = localInputToIso($("#new-end").value); if (e) payload.end_at = e;
+    status.textContent = "Creating…"; btn.disabled = true;
+    fetch("/api/meetings", { method: "POST", headers: { "content-type": "application/json" }, credentials: "include", body: JSON.stringify(payload) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        btn.disabled = false;
+        if (res.ok) {
+          $("#create-panel").classList.add("hidden");
+          loadMeetings();
+          try { toast("success", payload.provider === "manual" ? "Meeting added." : "Meeting created on your calendar."); } catch (x) {}
+          return;
+        }
+        if (res.j && res.j.needsReconnect) status.innerHTML = 'Reconnect that calendar to grant edit access, then try again.';
+        else status.textContent = (res.j && res.j.error) || "Couldn't create the meeting.";
+      })
+      .catch(function () { btn.disabled = false; status.textContent = "Couldn't create the meeting."; });
   }
 
   function renderMeContext() {
@@ -225,19 +357,51 @@
     canvas.addEventListener("touchend", endDraw);
   }
 
-  // ---- common connections (Common Room) — graceful until configured -------
+  // ---- common connections -------------------------------------------------
+  // Two compliant paths (no scraping):
+  //  A) People you ALREADY know at this account — built from your own calendar
+  //     attendees + Fireflies participants (server: /api/common-connections).
+  //  B) Deep-links into regular LinkedIn (mutual connections show natively on a
+  //     profile) and LinkedIn Sales Navigator (TeamLink) for SN subscribers.
+  function liPeople(q) { return "https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent(q || ""); }
+  function liSalesNav(q) { return "https://www.linkedin.com/sales/search/people?query=(spellCorrectionEnabled:true,keywords:" + encodeURIComponent(q || "") + ")"; }
+  function sourceLabel(s) {
+    if (!s) return "";
+    if (s.indexOf("calendar") > -1 && s.indexOf("fireflies") > -1) return "via calendar + Fireflies";
+    if (s.indexOf("fireflies") > -1) return "via Fireflies";
+    return "via calendar";
+  }
+  function deepLinksBlock(company) {
+    var co = company || "this account";
+    return '<div class="muted" style="margin-bottom:8px;">Open <b>' + esc(co) + '</b> on LinkedIn — regular LinkedIn shows your mutual connections natively on each profile; Sales Navigator adds TeamLink paths.</div>' +
+      '<div class="connect-row" style="margin-bottom:14px;">' +
+      '<a class="btn btn-sm" target="_blank" rel="noopener noreferrer" href="' + liPeople(company) + '">People on LinkedIn &#8599;</a>' +
+      '<a class="btn btn-sm" target="_blank" rel="noopener noreferrer" href="' + liSalesNav(company) + '">Sales Navigator &#8599;</a></div>';
+  }
   function loadCommonConnections() {
     var host = $("#common-connections");
-    host.innerHTML = '<div class="muted">Checking…</div>';
-    fetch("/api/common-connections", { method: "POST", headers: { "content-type": "application/json" }, credentials: "include", body: JSON.stringify({ company: state.company }) })
+    var company = state.company || "";
+    host.innerHTML = deepLinksBlock(company) +
+      '<div class="card-title" style="margin-bottom:8px;">People you already know here</div><div id="cc-people" class="muted">Checking your calendar &amp; calls…</div>';
+    fetch("/api/common-connections", { method: "POST", headers: { "content-type": "application/json" }, credentials: "include", body: JSON.stringify({ company: company }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
       .then(function (res) {
-        if (res.status === 503) { host.innerHTML = '<div class="empty">Connect <b>Common Room</b> to surface people you and this account already share. <span class="muted">(Set COMMON_ROOM_API_KEY.)</span></div>'; return; }
+        var box = $("#cc-people"); if (!box) return;
         var people = (res.j && res.j.connections) || [];
-        if (!people.length) { host.innerHTML = '<div class="muted">No shared connections found for this account yet.</div>'; return; }
-        host.innerHTML = people.map(function (p) { return '<span class="chip">' + esc(p.name || p) + (p.role ? " · " + esc(p.role) : "") + "</span>"; }).join("");
+        if (!people.length) {
+          box.innerHTML = '<div class="muted">No shared contacts at this account in your calendar or calls yet. As you meet more people here, they\'ll appear automatically. Connect a calendar (and Fireflies) to grow this list.</div>';
+          return;
+        }
+        box.innerHTML = people.map(function (p) {
+          var nm = p.name || (p.email || "").split("@")[0];
+          var meta = [p.email, sourceLabel(p.source)].filter(Boolean).join(" · ");
+          return '<div class="m-item" style="cursor:default;flex-direction:row;align-items:center;justify-content:space-between;">' +
+            '<div style="min-width:0;"><div class="m-title" title="' + esc(p.context || "") + '">' + esc(nm) + "</div>" +
+            '<div class="m-meta" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(meta) + "</div></div>" +
+            '<a class="btn btn-sm" target="_blank" rel="noopener noreferrer" href="' + liPeople(nm + " " + company) + '">LinkedIn &#8599;</a></div>';
+        }).join("");
       })
-      .catch(function () { host.innerHTML = '<div class="muted">Common connections unavailable.</div>'; });
+      .catch(function () { var box = $("#cc-people"); if (box) box.innerHTML = '<div class="muted">Couldn\'t load shared contacts right now.</div>'; });
   }
 
   // ---- transcript (Fireflies) — graceful until configured -----------------
@@ -249,10 +413,35 @@
       .then(function (res) {
         if (res.status === 503) { host.innerHTML = '<div class="empty">Connect <b>Fireflies</b> to auto-capture this meeting\'s transcript &amp; summary. <span class="muted">(Set FIREFLIES_API_KEY.)</span></div>'; return; }
         var t = res.j && res.j.transcript;
-        if (!t) { host.innerHTML = '<div class="muted">No transcript yet. Once Fireflies joins this meeting, its summary appears here.</div>'; return; }
-        host.innerHTML = '<div style="font-weight:700;margin-bottom:6px;">' + esc(t.title || "Summary") + "</div><div class=\"muted\">" + esc(t.summary || "") + "</div>";
+        if (!t) { host.innerHTML = '<div class="muted">No transcript yet. Once Fireflies records a call for this account, its summary and action items appear here.</div>'; return; }
+        host.innerHTML = renderTranscript(t);
       })
       .catch(function () { host.innerHTML = '<div class="muted">Transcript unavailable.</div>'; });
+  }
+  function fmtList(v) {
+    // Fireflies action_items is markdown-ish text or an array; render as lines.
+    var items = Array.isArray(v) ? v : String(v || "").split(/\n+/);
+    items = items.map(function (s) { return String(s).replace(/^[-*•\d.\s]+/, "").trim(); }).filter(Boolean);
+    if (!items.length) return "";
+    return "<ul style=\"margin:6px 0 0;padding-left:18px;\">" + items.map(function (s) { return "<li style=\"margin-bottom:4px;\">" + esc(s) + "</li>"; }).join("") + "</ul>";
+  }
+  function renderTranscript(t) {
+    var h = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;">' +
+      '<div><div style="font-weight:700;">' + esc(t.title || "Summary") + "</div>" +
+      (t.date ? '<div class="savehint">' + esc(t.date) + "</div>" : "") + "</div>" +
+      (t.url ? '<a class="btn btn-sm" target="_blank" rel="noopener noreferrer" href="' + esc(t.url) + '">Open in Fireflies &#8599;</a>' : "") + "</div>";
+    if (t.summary) h += '<div class="muted" style="margin-bottom:10px;line-height:1.6;">' + esc(t.summary) + "</div>";
+    var ai = fmtList(t.actionItems);
+    if (ai) h += '<div class="card-title" style="margin-top:6px;">Action items</div>' + ai;
+    if (Array.isArray(t.keywords) && t.keywords.length) {
+      h += '<div class="card-title" style="margin-top:12px;">Keywords</div><div style="margin-top:4px;">' +
+        t.keywords.slice(0, 12).map(function (k) { return '<span class="chip">' + esc(k) + "</span>"; }).join("") + "</div>";
+    }
+    if (Array.isArray(t.attendees) && t.attendees.length) {
+      h += '<div class="card-title" style="margin-top:12px;">Participants</div><div class="muted" style="margin-top:4px;">' +
+        t.attendees.map(function (a) { return esc(a.name || (a.email || "").split("@")[0]); }).join(", ") + "</div>";
+    }
+    return h;
   }
 
   // ---- tabs ----------------------------------------------------------------
@@ -283,6 +472,13 @@
       loadMeetings();
       openPrep(key, name.trim());
     });
+    var et = $("#edit-toggle"); if (et) et.addEventListener("click", openEditForm);
+    var ec = $("#edit-cancel"); if (ec) ec.addEventListener("click", function () { $("#edit-panel").classList.add("hidden"); });
+    var es = $("#edit-save"); if (es) es.addEventListener("click", saveEditForm);
+    var ed = $("#edit-delete"); if (ed) ed.addEventListener("click", deleteMeeting);
+    var am = $("#add-meeting"); if (am) am.addEventListener("click", openCreateForm);
+    var nc = $("#new-cancel"); if (nc) nc.addEventListener("click", function () { $("#create-panel").classList.add("hidden"); });
+    var ncr = $("#new-create"); if (ncr) ncr.addEventListener("click", createMeeting);
     window.addEventListener("resize", function () { if (!$("#pane-scribble").classList.contains("hidden")) setupCanvasSize(); });
   }
   if (document.readyState === "complete" || document.readyState === "interactive") boot();

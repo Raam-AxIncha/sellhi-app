@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SellHi — globe with rising S-arrow, beaded crown">
+  <path d="M18 17 A 15 15 0 0 1 46 17" stroke="#5FADAD" stroke-width="1.1" fill="none"/>
+  <circle cx="18" cy="17" r="1.5" fill="#008080"/>
+  <circle cx="21" cy="9.5" r="1.5" fill="#008080"/>
+  <circle cx="26" cy="4.8" r="1.5" fill="#008080"/>
+  <circle cx="32" cy="3.2" r="1.5" fill="#008080"/>
+  <circle cx="38" cy="4.8" r="1.5" fill="#008080"/>
+  <circle cx="43" cy="9.5" r="1.5" fill="#008080"/>
+  <circle cx="46" cy="17" r="1.5" fill="#008080"/>
+  <circle cx="32" cy="35" r="20" stroke="#5FADAD" stroke-width="1.8"/>
+  <ellipse cx="32" cy="35" rx="8" ry="20" stroke="#5FADAD" stroke-width="1.2"/>
+  <line x1="12" y1="35" x2="52" y2="35" stroke="#5FADAD" stroke-width="1.2"/>
+  <line x1="19" y1="26.5" x2="45" y2="26.5" stroke="#5FADAD" stroke-width="1"/>
+  <line x1="19" y1="43.5" x2="45" y2="43.5" stroke="#5FADAD" stroke-width="1"/>
+  <path d="M37 48 C 27 46, 27 38, 33 36 C 40 33.5, 39 25, 32 24 C 30.5 23.5, 31 21, 32 19.5" stroke="#008080" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <path d="M28.5 23 L32 18 L35.5 23" stroke="#008080" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

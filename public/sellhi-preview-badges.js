@@ -8,7 +8,7 @@
  */
 (function () {
   // Scripted/sample phases. Remove an entry when that phase goes live.
-  var NOT_LIVE = ["p4", "p6", "p7", "p8"];  // p3 Smart Matching + p5 Content Factory now live
+  var NOT_LIVE = ["p4", "p6"];  // p3 Smart Matching + p5 Content Factory live; p7 Command Center + p8 Learn & Optimize now real (sellhi-command.js)
 
   function tag() {
     var s = document.createElement("span");

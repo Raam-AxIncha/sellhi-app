@@ -162,3 +162,102 @@ body.dark img[src="/favicon-512.png"],
 body.dark img.sidebar-logo-mark {
   content: url("/favicon-512-ondark.png");
 }
+
+/* ============================================================
+   WORLD-CLASS POLISH PASS  (app-layer, light + dark, self-contained)
+   Additive micro-interactions + finishing touches layered over the
+   premium theme above. No layout changes; demo.html stays pristine.
+   Motion respects prefers-reduced-motion. Goal: the product should feel
+   instantly premium and considered to a B2B fractional-sales buyer.
+   ============================================================ */
+
+/* Shared motion tokens */
+body { --sh-ease: cubic-bezier(.2,.7,.2,1); --sh-fast: .13s; --sh-med: .22s; }
+
+/* ---- Phase entrance: each phase fades + lifts in when activated. Gives the
+   single-page flow a deliberate, app-like sense of movement. ---- */
+@keyframes sh-phase-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.phase-section.active { animation: sh-phase-in var(--sh-med) var(--sh-ease) both; }
+
+/* ---- Interactive cards (match cards + content signal cards) get a subtle
+   hover lift so clickable surfaces feel responsive. The flat Market-Intel list
+   (#p2-company-list) is deliberately excluded — it keeps its clean row hover. ---- */
+.phase-section .p3-match,
+#p5-signals .signal-card,
+#p3-match-list .signal-card {
+  transition: transform var(--sh-fast) var(--sh-ease),
+              box-shadow var(--sh-fast) var(--sh-ease),
+              border-color var(--sh-fast) var(--sh-ease);
+  will-change: transform;
+}
+.phase-section .p3-match:hover,
+#p5-signals .signal-card:hover,
+#p3-match-list .signal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16,24,40,.10), 0 2px 6px rgba(16,24,40,.06);
+  border-color: var(--sh-teal) !important;
+}
+body.dark .phase-section .p3-match:hover,
+body.dark #p5-signals .signal-card:hover,
+body.dark #p3-match-list .signal-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+
+/* ---- Buttons: crisp, tactile feedback. Primary gains an on-brand glow on
+   hover and a gentle press; all buttons ease their state changes. ---- */
+.phase-section .btn { transition: background var(--sh-fast) var(--sh-ease),
+                                   border-color var(--sh-fast) var(--sh-ease),
+                                   box-shadow var(--sh-fast) var(--sh-ease),
+                                   transform var(--sh-fast) var(--sh-ease); }
+.phase-section .btn-primary:hover { filter: brightness(1.05); box-shadow: 0 4px 14px rgba(0,128,128,.30); }
+.phase-section .btn:active { transform: translateY(1px); }
+
+/* ---- Numbers: tabular figures so metric values + scores align cleanly. ---- */
+.phase-section .metric-value,
+.phase-section .score-ring,
+#p2-tier-legend { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* ---- Score rings: a touch more presence, still calm. ---- */
+.phase-section .score-ring { transition: transform var(--sh-fast) var(--sh-ease); }
+.phase-section .p3-match:hover .score-ring { transform: scale(1.05); }
+
+/* ---- Loading overlays: soften the backdrop for a premium "thinking" moment. ---- */
+.loading-overlay.active { backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+body.dark .loading-overlay { background: rgba(17,24,39,.82) !important; }
+
+/* ---- Inputs: smooth focus transition instead of an instant jump. ---- */
+.phase-section .field-input,
+.phase-section .filter-select,
+.phase-section .search-box input { transition: outline-color var(--sh-fast) var(--sh-ease), border-color var(--sh-fast) var(--sh-ease); }
+
+/* ---- Chips (ICP industries, filters): tactile hover + selected clarity. ---- */
+.phase-section .chip { transition: background var(--sh-fast) var(--sh-ease), border-color var(--sh-fast) var(--sh-ease), color var(--sh-fast) var(--sh-ease); }
+.phase-section .chip:hover { border-color: var(--sh-teal) !important; }
+.phase-section .chip.active { background: var(--sh-teal-soft) !important; border-color: var(--sh-teal) !important; color: var(--sh-teal-ink) !important; }
+
+/* ---- Refined thin scrollbar inside the workspace content (both modes). ---- */
+.content { scrollbar-width: thin; scrollbar-color: var(--sh-line) transparent; }
+.content::-webkit-scrollbar { width: 10px; height: 10px; }
+.content::-webkit-scrollbar-thumb { background: var(--sh-line); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+.content::-webkit-scrollbar-thumb:hover { background: var(--sh-ink2); background-clip: padding-box; }
+.content::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Toasts: gentle slide-in so confirmations feel intentional. ---- */
+@keyframes sh-toast-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+.toast-container .toast { animation: sh-toast-in var(--sh-med) var(--sh-ease) both; box-shadow: 0 8px 28px rgba(16,24,40,.14); border-radius: 12px; }
+
+/* ---- Step wizard: active dot gets a soft focus ring; line to completed steps
+   picks up the accent so progress reads at a glance. ---- */
+.phase-section .step-dot { transition: background var(--sh-fast) var(--sh-ease), box-shadow var(--sh-fast) var(--sh-ease); }
+.phase-section .step-dot.active { box-shadow: 0 0 0 4px var(--sh-teal-soft); }
+
+/* ---- Respect users who prefer less motion. ---- */
+@media (prefers-reduced-motion: reduce) {
+  .phase-section.active,
+  .toast-container .toast { animation: none; }
+  .phase-section .p3-match,
+  #p5-signals .signal-card,
+  #p3-match-list .signal-card,
+  .phase-section .btn,
+  .phase-section .score-ring { transition: none; }
+}

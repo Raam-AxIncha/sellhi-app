@@ -1,0 +1,12 @@
+<svg width="150" height="150" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SellHi — global exchange, selling high">
+  <circle cx="32" cy="33" r="12" stroke="#008080" stroke-width="2.2"/>
+  <ellipse cx="32" cy="33" rx="5" ry="12" stroke="#008080" stroke-width="1.2"/>
+  <line x1="20" y1="33" x2="44" y2="33" stroke="#008080" stroke-width="1.2"/>
+  <path d="M44 46 C 52 38, 52 22, 36 15" stroke="#008080" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <path d="M31.5 17 L36 12.5 L40.5 16.5" stroke="#008080" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M20 20 C 12 28, 12 44, 28 51" stroke="#008080" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <path d="M23.5 47 L28 52 L32.5 48.5" stroke="#008080" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M52 13 L53 16 L56 17 L53 18 L52 21 L51 18 L48 17 L51 16 Z" fill="#FFC107"/>
+  <path d="M13 44 L13.8 46.2 L16 47 L13.8 47.8 L13 50 L12.2 47.8 L10 47 L12.2 46.2 Z" fill="#FFC107"/>
+  <path d="M49 45 L49.6 46.4 L51 47 L49.6 47.6 L49 49 L48.4 47.6 L47 47 L48.4 46.4 Z" fill="#FFC107"/>
+</svg>

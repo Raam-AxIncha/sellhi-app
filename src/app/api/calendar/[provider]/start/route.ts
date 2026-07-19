@@ -15,13 +15,15 @@ const CFG: Record<string, { idEnv: string; authUrl: string; scope: string; extra
   google: {
     idEnv: "GOOGLE_CLIENT_ID",
     authUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-    scope: "openid email https://www.googleapis.com/auth/calendar.readonly",
+    // calendar.events = read + WRITE events (needed to edit/modify events, not just read).
+    scope: "openid email https://www.googleapis.com/auth/calendar.events",
     extra: "access_type=offline&prompt=select_account%20consent",
   },
   microsoft: {
     idEnv: "MICROSOFT_CLIENT_ID",
     authUrl: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-    scope: "openid email offline_access https://graph.microsoft.com/Calendars.Read",
+    // Calendars.ReadWrite = read + WRITE events (needed to edit/modify events).
+    scope: "openid email offline_access https://graph.microsoft.com/Calendars.ReadWrite",
     extra: "response_mode=query",
   },
 };

@@ -42,7 +42,10 @@
   var STEP_PHASES = { p1:1, p2:1, p3:1 };   // numbered wizard steps
   var TAB_PHASES  = { p5:1, p6:1, p8:1 };   // string tab ids
   var restoring = false;
-  var cur = { ph: null, sub: undefined };
+  var cur = { ph: null, sub: undefined };   // last COMMITTED (landable) position
+  var pending = null;                        // latest requested position awaiting settle
+  var pollTimer = null;
+  var waited = 0;
   var wrapped = {};
 
   function samePos(a, b) { return a && b && a.ph === b.ph && String(a.sub) === String(b.sub); }
@@ -56,10 +59,44 @@
     if (sub !== undefined && STEP_PHASES[ph]) sub = parseInt(sub, 10);
     return { ph: ph, sub: sub };
   }
-  function push(pos) {
-    if (restoring || samePos(cur, pos)) return;
+
+  // A view is TRANSIENT while any loading overlay is on screen (the demo toggles
+  // `.loading-overlay.active` for every research/generate spinner). We never want a
+  // history entry that lands on a spinner — Back or refresh into it would show a
+  // stale, empty loading screen. So we only record a view once the app has settled.
+  function isLoading() {
+    try { return !!document.querySelector(".loading-overlay.active"); } catch (e) { return false; }
+  }
+
+  function commit(pos) {
+    if (!pos) return;
+    if (samePos(cur, pos)) { pending = null; return; }
     cur = { ph: pos.ph, sub: pos.sub };
+    pending = null;
     try { history.pushState({ sh: cur }, "", encode(cur)); } catch (e) {}
+  }
+
+  // Debounced, loading-aware recorder. This is the "selective" part: rapid or
+  // programmatic step advances (e.g. Market Intel jumping to the research step while
+  // fetching, or the P1 auto-dossier build) collapse to a SINGLE history entry — the
+  // final landable view — instead of one entry per transient screen.
+  function schedule(pos) {
+    if (restoring) return;                 // popstate restores must never create new entries
+    pending = pos;
+    waited = 0;
+    if (pollTimer) return;                 // a poll is already running; it will pick up `pending`
+    pollTimer = setInterval(function () {
+      waited += 1;
+      if (restoring || !pending) { clearInterval(pollTimer); pollTimer = null; pending = null; return; }
+      // Still mid-transition? keep waiting — capped (~15s) so a stuck overlay can't strand history.
+      if (isLoading() && waited < 100) return;
+      commit(pending);
+      clearInterval(pollTimer); pollTimer = null;
+    }, 150);
+  }
+  function cancelPending() {
+    pending = null;
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
   function wrap(name) {
     if (wrapped[name]) return;
@@ -69,8 +106,8 @@
     window[name] = function () {
       var r = orig.apply(this, arguments);
       try {
-        if (name === "showPhase") push({ ph: arguments[0], sub: undefined });
-        else push({ ph: name.slice(0, 2), sub: arguments[0] }); // pXStep / pXTab
+        if (name === "showPhase") schedule({ ph: arguments[0], sub: undefined });
+        else schedule({ ph: name.slice(0, 2), sub: arguments[0] }); // pXStep / pXTab
       } catch (e) {}
       return r;
     };
@@ -86,6 +123,7 @@
   function restore(pos) {
     if (!pos) return;
     restoring = true;
+    cancelPending();
     try {
       if (typeof window.showPhase === "function") window.showPhase(pos.ph);
       if (pos.sub !== undefined && pos.sub !== null && pos.sub !== "") {
