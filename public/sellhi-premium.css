@@ -429,3 +429,30 @@ body.dark #sh-p6-builder, body.dark #p6-aztesting, body.dark #p6-settings {
 #phase-p7 .content .metric-change, #phase-p8 .content .metric-change {
   color: var(--sh-ink2) !important;
 }
+
+/* ============================================================
+   FROZEN APP HEADER — the per-phase topbar (page title + filters + notifications)
+   stays pinned as the workspace scrolls, on every phase. Frosted glass so whatever
+   scrolls under it stays legible without needing to match the exact page color, and
+   a hairline + z-index keep it cleanly above the cards. Loader (z 10001) still wins.
+   ============================================================ */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(255,255,255,.86);
+  -webkit-backdrop-filter: blur(9px) saturate(1.03);
+  backdrop-filter: blur(9px) saturate(1.03);
+  border-bottom: 1px solid var(--sh-line);
+}
+body.dark .topbar {
+  background: rgba(12,20,34,.82);
+  border-bottom-color: rgba(255,255,255,.08);
+}
+
+/* ---- Data cards read as clearly bounded panels in dark mode (the default border
+   is nearly invisible against the navy chrome — this restores the funnel/card
+   outline the way it looked before). ---- */
+body.dark .phase-section .card {
+  border-color: rgba(255,255,255,.11) !important;
+}

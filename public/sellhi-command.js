@@ -120,9 +120,31 @@
 
   // ── shared widget builders ───────────────────────────────────────────────────
   function metric(label, value, sub, color) {
+    // Integer KPIs roll up from 0 -> value (see countUp); non-numeric render as-is.
+    var num = (typeof value === "number" && isFinite(value));
     return '<div class="metric"><div class="metric-label">' + esc(label) + "</div>" +
-      '<div class="metric-value"' + (color ? ' style="color:' + color + ';"' : "") + ">" + esc(value) + "</div>" +
+      '<div class="metric-value"' + (color ? ' style="color:' + color + ';"' : "") +
+      (num ? ' data-count="' + value + '">0' : ">" + esc(value)) + "</div>" +
       (sub ? '<div class="metric-change">' + esc(sub) + "</div>" : "") + "</div>";
+  }
+
+  // Roll each KPI tile from 0 up to its value — a small, honest "counting" flourish.
+  function countUp(scope) {
+    var els = scope.querySelectorAll(".metric-row .metric-value[data-count]");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    Array.prototype.forEach.call(els, function (el) {
+      var target = parseFloat(el.getAttribute("data-count")) || 0;
+      if (reduce || target <= 0) { el.textContent = String(target); return; }
+      var dur = 700, t0 = null;
+      function step(ts) {
+        if (t0 == null) t0 = ts;
+        var p = Math.min(1, (ts - t0) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);            // ease-out cubic
+        el.textContent = String(Math.round(eased * target));
+        if (p < 1) requestAnimationFrame(step); else el.textContent = String(target);
+      }
+      requestAnimationFrame(step);
+    });
   }
   function tierBar(tier, count, max) {
     var pct = max ? Math.max(4, Math.round(count / max * 100)) : 0;
@@ -140,19 +162,29 @@
     var content = document.querySelector("#phase-p7 .content");
     if (!content) return;
     var m = derive();
+    var meets = p7Meetings();
+    // Skip the rebuild when nothing that's on screen has changed. This is what stops
+    // the background refresh (render paints from cache, then re-fetches) from wiping
+    // and re-drawing the funnel — the "appears then vanishes" flicker.
+    var sig = "p7|" + [m.total, m.tiers[1], m.tiers[2], m.tiers[3], m.signals.length,
+      m.avgScore, m.industries.length, meets.length, m.anyCal,
+      p7Range.mode, p7Range.from, p7Range.to].join("|");
+    if (content.getAttribute("data-sh-sig") === sig) return;
+    content.setAttribute("data-sh-sig", sig);
+
     var maxTier = Math.max(m.tiers[1], m.tiers[2], m.tiers[3], 1);
     var html = "";
 
     if (!m.total) {
       html += emptyPortfolioCard("p7");
     } else {
-      var meets = p7Meetings();
-      // Stat row (all real)
+      // Scoreboard: KPIs that COMPLEMENT the funnel (the funnel already owns
+      // Researched + Strong fit, so those don't repeat here). Numbers roll 0 -> n.
       html += '<div class="metric-row metric-row-4">' +
-        metric("Target companies", m.total, "in your researched list", "var(--primary)") +
-        metric("Tier-1 targets", m.tiers[1], "strong fit (score 80+)", "var(--success)") +
         metric("Live buying signals", m.signals.length, m.signals.length ? "ready to action" : "none flagged yet", "var(--warning)") +
-        metric("Avg fit score", m.avgScore, m.avgScore >= 70 ? "healthy pipeline" : "broaden or refine ICP") +
+        metric("Avg fit score", m.avgScore, m.avgScore >= 70 ? "healthy pipeline" : "broaden or refine ICP", "var(--primary)") +
+        metric("Meetings", meets.length, p7RangeLabel(), "var(--success)") +
+        metric("Verticals covered", m.industries.length, "distinct segments in your list", "var(--primary)") +
         "</div>";
 
       // Pipeline funnel (real: research -> prioritise -> signals -> meetings)
@@ -203,6 +235,7 @@
 
     content.innerHTML = html;
     neutralizeP7Chrome(m);
+    countUp(content);
   }
 
   function upcomingMeetingsCard(list, anyCal) {
@@ -405,6 +438,7 @@
     html += honestNote("Message-level optimization (open/reply rates, best send times, A/B winners) appears here automatically once the Campaign Engine is live and outreach is running.");
 
     content.innerHTML = html;
+    countUp(content);
   }
 
   function kv(k, v) {
@@ -440,6 +474,12 @@
   function render(phase) {
     var build = phase === "p7" ? buildP7 : phase === "p8" ? buildP8 : null;
     if (!build) return;
+    // Force a fresh paint on entry (the demo may have repopulated the phase content),
+    // so our dashboard always wins. The sig-guard inside buildP7 then suppresses ONLY
+    // the redundant background-refresh rebuild — that's what kills the funnel flicker
+    // without ever leaving demo content on screen.
+    var c = document.querySelector("#phase-" + phase + " .content");
+    if (c) c.removeAttribute("data-sh-sig");
     // Paint instantly from cache so the funnel lands and STAYS (no blank flash),
     // then refresh in the background so a fresh Market Intel run is reflected. The
     // guarded loadData above won't clobber a good pipeline, so the rebuild is safe.
