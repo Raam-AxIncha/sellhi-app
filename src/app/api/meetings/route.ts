@@ -109,35 +109,50 @@ export async function POST(request: Request) {
   if (!title) return NextResponse.json({ error: "missing title" }, { status: 400 });
 
   const start_at = typeof body.start_at === "string" ? body.start_at : null;
-  const end_at = typeof body.end_at === "string" ? body.end_at : null;
+  let end_at = typeof body.end_at === "string" ? body.end_at : null;
   const location = typeof body.location === "string" ? body.location : null;
   const description = typeof body.description === "string" ? body.description : "";
   const wantProvider = typeof body.provider === "string" ? body.provider : "manual";
+  const onCalendar = wantProvider === "google" || wantProvider === "microsoft";
+
+  // Google/Microsoft both REQUIRE start AND end to create an event. Enforce a start,
+  // and default a missing end to start + 1 hour so a create never 400s on a blank end.
+  if (onCalendar) {
+    if (!start_at) return NextResponse.json({ error: "Add a start time to put this on your calendar." }, { status: 400 });
+    if (!end_at) {
+      const s = new Date(start_at).getTime();
+      end_at = isNaN(s) ? start_at : new Date(s + 60 * 60 * 1000).toISOString();
+    }
+  }
 
   let provider = "manual";
   let external_id = "manual-" + Date.now();
 
   // If asked to create on a real calendar, write it to the provider first.
-  if (wantProvider === "google" || wantProvider === "microsoft") {
+  if (onCalendar) {
     const token = await getConnToken(supabase, user.id, wantProvider);
     if (!token) return NextResponse.json({ error: wantProvider + " calendar not connected", needsReconnect: true }, { status: 409 });
     try {
       let resp: Response;
       if (wantProvider === "google") {
-        const gbody: Record<string, unknown> = { summary: title };
+        const gbody: Record<string, unknown> = {
+          summary: title,
+          start: { dateTime: new Date(start_at as string).toISOString(), timeZone: "UTC" },
+          end: { dateTime: new Date(end_at as string).toISOString(), timeZone: "UTC" },
+        };
         if (location) gbody.location = location;
         if (description) gbody.description = description;
-        if (start_at) gbody.start = { dateTime: new Date(start_at).toISOString(), timeZone: "UTC" };
-        if (end_at) gbody.end = { dateTime: new Date(end_at).toISOString(), timeZone: "UTC" };
         resp = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
           method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(gbody),
         });
       } else {
-        const mbody: Record<string, unknown> = { subject: title };
+        const mbody: Record<string, unknown> = {
+          subject: title,
+          start: { dateTime: msLocal(start_at as string), timeZone: "UTC" },
+          end: { dateTime: msLocal(end_at as string), timeZone: "UTC" },
+        };
         if (location) mbody.location = { displayName: location };
         if (description) mbody.body = { contentType: "text", content: description };
-        if (start_at) mbody.start = { dateTime: msLocal(start_at), timeZone: "UTC" };
-        if (end_at) mbody.end = { dateTime: msLocal(end_at), timeZone: "UTC" };
         resp = await fetch("https://graph.microsoft.com/v1.0/me/events", {
           method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(mbody),
         });

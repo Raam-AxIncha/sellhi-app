@@ -207,6 +207,7 @@
           try { toast("info", "Meeting deleted."); } catch (e) {}
           return;
         }
+        if (res.j && res.j.detail) { try { console.error("[SellHi] delete-event failed:", res.j.error, "—", res.j.detail); } catch (e) {} }
         if (res.j && res.j.needsReconnect) status.innerHTML = 'Reconnect your calendar to grant edit access, then try again.';
         else status.textContent = (res.j && res.j.error) || "Couldn't delete.";
       })
@@ -233,10 +234,16 @@
     var title = $("#new-title").value.trim();
     var status = $("#new-status"), btn = $("#new-create");
     if (!title) { status.textContent = "Give the meeting a title."; return; }
-    var payload = { title: title, provider: $("#new-provider").value || "manual" };
+    var provider = $("#new-provider").value || "manual";
+    var payload = { title: title, provider: provider };
     var loc = $("#new-location").value.trim(); if (loc) payload.location = loc;
     var s = localInputToIso($("#new-start").value); if (s) payload.start_at = s;
     var e = localInputToIso($("#new-end").value); if (e) payload.end_at = e;
+    // Calendar events need a start time (end defaults to +1h server-side).
+    if ((provider === "google" || provider === "microsoft") && !payload.start_at) {
+      status.textContent = "Pick a start time to add this to your calendar.";
+      return;
+    }
     status.textContent = "Creating…"; btn.disabled = true;
     fetch("/api/meetings", { method: "POST", headers: { "content-type": "application/json" }, credentials: "include", body: JSON.stringify(payload) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
@@ -248,6 +255,7 @@
           try { toast("success", payload.provider === "manual" ? "Meeting added." : "Meeting created on your calendar."); } catch (x) {}
           return;
         }
+        if (res.j && res.j.detail) { try { console.error("[SellHi] create-event failed:", res.j.error, "—", res.j.detail); } catch (x) {} }
         if (res.j && res.j.needsReconnect) status.innerHTML = 'Reconnect that calendar to grant edit access, then try again.';
         else status.textContent = (res.j && res.j.error) || "Couldn't create the meeting.";
       })
