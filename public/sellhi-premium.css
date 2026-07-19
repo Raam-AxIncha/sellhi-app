@@ -408,3 +408,24 @@ body.dark #phase-p7 .content, body.dark #phase-p8 .content, body.dark #sh-p4-con
 body.dark #sh-p6-builder, body.dark #p6-aztesting, body.dark #p6-settings {
   --g400: #b9c3d4; --g500: #d5dde9; --g600: #e7edf5; --g700: #f0f4f9;
 }
+
+/* ---- BULLETPROOF text legibility. The demo colors these headings with
+   `body.dark .action-title { color: var(--g100) }`; because our panels remap the
+   --g scale (so cards get dark backgrounds in dark mode) that g100 turns DARK and
+   the text goes dim-on-dark. Pin the real text tokens directly instead: --sh-ink /
+   --sh-ink2 flip correctly in BOTH themes, and !important beats the demo rule and
+   any inline var() color. Scoped to our injected data surfaces only. ---- */
+#phase-p7 .content .action-title, #phase-p8 .content .action-title,
+#sh-p4-connections .action-title, #sh-p6-builder .action-title,
+#p6-aztesting .action-title, #p6-settings .action-title,
+#phase-p7 .content .notif-title, #phase-p8 .content .notif-title,
+#phase-p7 .content .notif-text,  #phase-p8 .content .notif-text {
+  color: var(--sh-ink) !important;
+}
+#phase-p7 .content .action-sub, #phase-p8 .content .action-sub,
+#sh-p4-connections .action-sub, #sh-p6-builder .action-sub,
+#p6-aztesting .action-sub, #p6-settings .action-sub,
+#phase-p7 .content .notif-time, #phase-p8 .content .notif-time,
+#phase-p7 .content .metric-change, #phase-p8 .content .metric-change {
+  color: var(--sh-ink2) !important;
+}

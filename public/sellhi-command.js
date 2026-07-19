@@ -58,9 +58,14 @@
         var d = (j && j.dossier && j.dossier.data) || {};
         var mc = d.marketCompanies || {};
         var arr = Array.isArray(mc.companies) ? mc.companies : (Array.isArray(mc) ? mc : (Array.isArray(d.companies) ? d.companies : []));
-        DATA.companies = arr || [];
-        DATA.counts = mc.counts || null;
-        DATA.criteria = mc.criteria || null;
+        // Never let a transient/empty response wipe a good pipeline — that's what
+        // made the funnel "appear then vanish" on re-entry. Only replace when we
+        // actually got companies, or when we had none to begin with.
+        if ((arr && arr.length) || !DATA.companies.length) {
+          DATA.companies = arr || [];
+          DATA.counts = mc.counts || null;
+          DATA.criteria = mc.criteria || null;
+        }
       })
       .catch(function () {})
       .then(done, done);
@@ -417,7 +422,10 @@
   function render(phase) {
     var build = phase === "p7" ? buildP7 : phase === "p8" ? buildP8 : null;
     if (!build) return;
-    // Always refetch on entry so a fresh Market Intel run is reflected.
+    // Paint instantly from cache so the funnel lands and STAYS (no blank flash),
+    // then refresh in the background so a fresh Market Intel run is reflected. The
+    // guarded loadData above won't clobber a good pipeline, so the rebuild is safe.
+    if (DATA.loaded) { try { build(); } catch (e) {} }
     loadData(function () { try { build(); } catch (e) {} });
   }
   function wrapShowPhase() {
