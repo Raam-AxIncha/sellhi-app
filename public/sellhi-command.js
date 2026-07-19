@@ -175,6 +175,10 @@
     var maxTier = Math.max(m.tiers[1], m.tiers[2], m.tiers[3], 1);
     var html = "";
 
+    // Account/settings affordance: reach the plan + channel setup from here too.
+    html += '<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">' +
+      '<a href="/connect" class="btn btn-sm btn-outline">&#9881; Plan &amp; Connections &#8594;</a></div>';
+
     if (!m.total) {
       html += emptyPortfolioCard("p7");
     } else {
