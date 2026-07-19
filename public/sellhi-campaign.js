@@ -125,9 +125,23 @@
       // Staged list
       '<div class="card" style="margin-bottom:16px;"><div class="card-title">Staged campaigns</div><div id="sh-p6-staged"></div></div>';
     dash.insertBefore(wrap, dash.firstChild);
+    hideP6Fakes(dash);
 
     document.getElementById("sh-p6-stage").addEventListener("click", stageCampaign);
     renderP6Dynamic();
+  }
+
+  // The demo's Dashboard tab ships fabricated performance below our panels (Total
+  // Sent 841, reply rate, "Active Campaigns" table, channel-mix donut) — which
+  // contradicts the honest "sending is off / nothing sent" state. Hide those fake
+  // blocks; keep the genuinely useful Sequence Builder (a real .card) intact.
+  function hideP6Fakes(dash) {
+    Array.prototype.forEach.call(dash.children, function (el) {
+      if (!el || el.id === "sh-p6-builder") return;
+      if (el.classList && (el.classList.contains("metric-row") || el.classList.contains("grid-2"))) {
+        el.style.display = "none";
+      }
+    });
   }
 
   function renderP6Dynamic() {
