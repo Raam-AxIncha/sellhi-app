@@ -58,7 +58,8 @@ export async function GET(request: Request) {
     `<script src="/sellhi-preview-badges.js${v}"></script>` +
     `<script src="/sellhi-content.js${v}"></script>` +
     `<script src="/sellhi-command.js${v}"></script>` +
-    `<script src="/sellhi-campaign.js${v}"></script>`;
+    `<script src="/sellhi-campaign.js${v}"></script>` +
+    `<script src="/sellhi-loader.js${v}"></script>`;
   html = html.includes("</body>")
     ? html.replace("</body>", `${bootstrap}</body>`)
     : html + bootstrap;

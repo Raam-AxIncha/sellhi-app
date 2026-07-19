@@ -293,67 +293,85 @@ body.dark #p6-settings {
 }
 
 /* ============================================================
-   BRANDED, VIEWPORT-CENTERED LOADER.
-   Problem: the demo pins each step overlay ABSOLUTE inside its own card, so on a
-   given monitor + scroll position the loader can sit below the fold — you have to
-   scroll to see it. Fix: when active, promote the overlay to FIXED / full-viewport
-   so it's always dead-center on any monitor form factor. Then make it premium:
-   a blurred backdrop, a pulsing teal halo, the spinning SellHi mark, and the demo's
-   own live status messages + progress bar (which narrate the actual work).
-   demo.html stays pristine.
+   BRANDED, VIEWPORT-CENTERED LOADER (#sh-loader, built in sellhi-loader.js).
+   Why a body-level element: the demo pins each step overlay ABSOLUTE inside its
+   card, and `position:fixed` gets trapped by ancestors that have a CSS transform
+   (this app animates cards/phases with transforms) — so a "fixed" overlay could
+   still land below the fold. Rendering the loader as a direct child of <body>
+   guarantees it's centered on the VIEWPORT on every monitor form factor.
+   It mirrors the demo's live status text into a ticking step checklist, spins the
+   SellHi mark over a pulsing halo, and shows an INDETERMINATE bar (never a false
+   100%). While it's up we hide the demo's in-card overlay (kept in the DOM so its
+   status text keeps updating — that's the signal we read). demo.html untouched.
    ============================================================ */
-.loading-overlay.active {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 9999 !important;
-  border-radius: 0 !important;
-  background: rgba(248,250,252,.80) !important;
+body.sh-loading .loading-overlay.active { visibility: hidden !important; }
+
+#sh-loader {
+  position: fixed; inset: 0; z-index: 10001;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(248,250,252,.86);
   -webkit-backdrop-filter: blur(7px) saturate(1.05);
   backdrop-filter: blur(7px) saturate(1.05);
-  gap: 4px;
 }
-body.dark .loading-overlay.active {
-  background: rgba(9,14,24,.78) !important;
-}
-/* Pulsing teal halo behind the mark — the "flashier" flourish (non-rotating). */
-.loading-overlay.active::before {
-  content: "";
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 190px; height: 190px;
-  transform: translate(-50%, -60%);
-  border-radius: 50%;
+#sh-loader.on { display: flex; }
+body.dark #sh-loader { background: rgba(9,14,24,.82); }
+
+.sh-loader-halo {
+  position: absolute; top: 50%; left: 50%;
+  width: 210px; height: 210px; transform: translate(-50%, -76%);
+  border-radius: 50%; pointer-events: none;
   background: radial-gradient(closest-side, rgba(0,128,128,.20), rgba(0,128,128,0) 72%);
   animation: sh-loader-halo 1.9s ease-in-out infinite;
-  pointer-events: none;
 }
-body.dark .loading-overlay.active::before {
-  background: radial-gradient(closest-side, rgba(55,195,180,.24), rgba(55,195,180,0) 72%);
-}
+body.dark .sh-loader-halo { background: radial-gradient(closest-side, rgba(55,195,180,.24), rgba(55,195,180,0) 72%); }
 @keyframes sh-loader-halo {
-  0%, 100% { opacity: .45; transform: translate(-50%, -60%) scale(.85); }
-  50%      { opacity: 1;   transform: translate(-50%, -60%) scale(1.12); }
+  0%, 100% { opacity: .45; transform: translate(-50%, -76%) scale(.85); }
+  50%      { opacity: 1;   transform: translate(-50%, -76%) scale(1.12); }
 }
-/* The spinning SellHi mark (larger now that it owns the viewport, still < sidebar's presence). */
-.loading-overlay .loading-spinner {
-  position: relative;
-  z-index: 1;
-  width: 60px !important;
-  height: 60px !important;
-  border: none !important;                    /* drop the plain ring */
-  border-radius: 13px;
+
+.sh-loader-mark {
+  position: relative; z-index: 1;
+  width: 60px; height: 60px; border-radius: 13px;
   background: url("/favicon-512.png") center / contain no-repeat;
   filter: drop-shadow(0 6px 16px rgba(0,128,128,.28));
-  /* keeps the demo's clockwise `spin` animation already on this element */
+  animation: sh-logo-spin .9s linear infinite;   /* clockwise (keyframe in sellhi-overrides.css) */
 }
-body.dark .loading-overlay .loading-spinner {
-  background-image: url("/favicon-512-ondark.png");   /* light mark on the dark backdrop */
-}
-/* Status messages + progress read clearly on the full-screen loader. */
-.loading-overlay .loading-text {
+body.dark .sh-loader-mark { background-image: url("/favicon-512-ondark.png"); }
+
+.sh-loader-text {
   position: relative; z-index: 1;
-  font-size: 15px !important;
-  color: var(--sh-ink) !important;
-  margin-top: 6px;
+  margin-top: 16px; font-size: 15px; font-weight: 500; color: var(--sh-ink);
 }
-.loading-overlay .loading-progress { position: relative; z-index: 1; width: 220px; }
+
+/* Ticking step checklist — mirrors the app's live status messages. */
+.sh-loader-list {
+  position: relative; z-index: 1;
+  list-style: none; margin: 16px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 9px; text-align: left; min-width: 260px; max-width: 360px;
+}
+.sh-step { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--sh-ink2); transition: color .25s ease, opacity .25s ease; }
+.sh-step.pending { opacity: .45; }
+.sh-step.active, .sh-step.done { color: var(--sh-ink); }
+.sh-step.active { font-weight: 500; }
+.sh-step-ic { flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; border: 1.5px solid var(--sh-line); }
+.sh-step.done .sh-step-ic { background: var(--sh-teal); border-color: var(--sh-teal); color: #fff; }
+.sh-step.active .sh-step-ic { border-color: var(--sh-teal); }
+.sh-step .sh-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--sh-teal); animation: sh-loader-halo 1s ease-in-out infinite; }
+
+/* Indeterminate progress bar — slides continuously, never fakes 100%. */
+.sh-loader-bar {
+  position: relative; z-index: 1; margin-top: 18px;
+  width: 240px; height: 4px; border-radius: 999px; overflow: hidden; background: var(--sh-line);
+}
+.sh-loader-bar-fill {
+  height: 100%; width: 38%; border-radius: 999px; background: var(--sh-teal);
+  animation: sh-bar-indef 1.25s ease-in-out infinite;
+}
+@keyframes sh-bar-indef {
+  0%   { transform: translateX(-130%); }
+  100% { transform: translateX(330%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sh-loader-mark, .sh-loader-halo, .sh-loader-bar-fill, .sh-step .sh-dot { animation: none; }
+  .sh-loader-bar-fill { width: 100%; }
+}
