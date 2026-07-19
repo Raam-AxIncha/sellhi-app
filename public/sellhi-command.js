@@ -129,7 +129,7 @@
     var col = tier === 1 ? "var(--success)" : tier === 2 ? "var(--warning)" : "var(--g400)";
     var lbl = tier === 1 ? "Tier 1 · strong fit" : tier === 2 ? "Tier 2 · partial" : "Tier 3 · exploratory";
     return '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">' +
-      '<div style="width:150px;font-size:12px;color:var(--g600);">' + lbl + "</div>" +
+      '<div style="width:150px;font-size:12px;color:var(--sh-ink);">' + lbl + "</div>" +
       '<div style="flex:1;height:22px;background:var(--g100);border-radius:6px;overflow:hidden;">' +
       '<div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:6px;transition:width .5s cubic-bezier(.2,.7,.2,1);"></div></div>' +
       '<div style="width:36px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;">' + count + "</div></div>";
@@ -162,19 +162,19 @@
       html += '<div class="grid-2">';
       html += '<div class="card"><div class="card-title">Target portfolio by fit tier</div>' +
         tierBar(1, m.tiers[1], maxTier) + tierBar(2, m.tiers[2], maxTier) + tierBar(3, m.tiers[3], maxTier) +
-        '<div style="font-size:11px;color:var(--g400);margin-top:6px;">Tiers come from your Market Intel research and current segment weights.</div></div>';
+        '<div style="font-size:11px;color:var(--sh-ink2);margin-top:6px;">Tiers come from your Market Intel research and current segment weights.</div></div>';
 
       html += '<div class="card"><div class="card-title">Top verticals in your list</div>';
       if (m.industries.length) {
         m.industries.slice(0, 6).forEach(function (it) {
           var pct = Math.max(6, Math.round(it.n / m.total * 100));
           html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:9px;">' +
-            '<div style="width:120px;font-size:12px;color:var(--g700);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(it.name) + "</div>" +
+            '<div style="width:120px;font-size:12px;color:var(--sh-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(it.name) + "</div>" +
             '<div style="flex:1;height:8px;background:var(--g100);border-radius:999px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:var(--primary);border-radius:999px;"></div></div>' +
             '<div style="width:28px;text-align:right;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;">' + it.n + "</div></div>";
         });
       } else {
-        html += '<div style="font-size:13px;color:var(--g500);">No verticals yet — run Market Intel.</div>';
+        html += '<div style="font-size:13px;color:var(--sh-ink2);">No verticals yet — run Market Intel.</div>';
       }
       html += "</div></div>";
 
@@ -190,7 +190,7 @@
         });
         html += '<div style="margin-top:12px;"><button class="btn btn-sm btn-primary" onclick="try{showPhase(\'p5\')}catch(e){}">Draft outreach in Content Factory &#8594;</button></div>';
       } else {
-        html += '<div style="font-size:13px;color:var(--g500);line-height:1.6;">No live buying signals flagged yet. Re-run Market Intel to surface companies with recent funding, hiring, or leadership changes.</div>';
+        html += '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;">No live buying signals flagged yet. Re-run Market Intel to surface companies with recent funding, hiring, or leadership changes.</div>';
       }
       html += "</div>";
 
@@ -216,9 +216,9 @@
       });
       h += '<div style="margin-top:12px;"><a class="btn btn-sm btn-outline" href="/meetings">Open Meeting Prep &#8594;</a></div>';
     } else if (anyCal) {
-      h += '<div style="font-size:13px;color:var(--g500);line-height:1.6;">No meetings in this date range. Widen the range (top-right) or check back as events sync.</div>';
+      h += '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;">No meetings in this date range. Widen the range (top-right) or check back as events sync.</div>';
     } else {
-      h += '<div style="font-size:13px;color:var(--g500);line-height:1.6;margin-bottom:12px;">Connect your calendar to see meetings here and get a prep sheet for each one.</div>' +
+      h += '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;margin-bottom:12px;">Connect your calendar to see meetings here and get a prep sheet for each one.</div>' +
         '<a class="btn btn-sm btn-primary" href="/meetings">Connect calendar &#8594;</a>';
     }
     return h + "</div>";
@@ -237,30 +237,48 @@
   // Downstream (Contacted/Replied/Won) needs outreach, so we stop honestly at
   // meetings and flag what unlocks. `mc` = meetings count in the selected range.
   function funnelCard(m, mc) {
-    var stages = [
+    // A TRUE funnel: each stage is a subset of the one above it, so the bars taper.
+    // The live stages are Researched -> Strong fit (Tier-1 is a subset of researched).
+    // Downstream stages are the outreach journey — they don't exist until the Campaign
+    // Engine sends, so we show them LOCKED (never faked). Live signals + calendar
+    // meetings deliberately live in their own cards below: they aren't subsets of the
+    // target list, so putting them here is what broke the funnel shape and duplicated
+    // the stat row up top.
+    var live = [
       { label: "Researched", n: m.total, sub: "companies in your ICP list", col: "#008080" },
       { label: "Strong fit", n: m.tiers[1], sub: "Tier-1 (score 80+)", col: "#0a9a8c" },
-      { label: "Live signals", n: m.signals.length, sub: "buying signals now", col: "#1D9E75" },
-      { label: "Meetings", n: mc, sub: p7RangeLabel(), col: "#BA7517" },
+    ];
+    var locked = [
+      { label: "Contacted", sub: "unlocks with Campaign Engine", w: 46 },
+      { label: "Replied", sub: "unlocks with Campaign Engine", w: 37 },
+      { label: "Meetings", sub: "booked from outreach", w: 29 },
+      { label: "Won", sub: "closed-won", w: 22 },
     ];
     var max = Math.max(m.total, 1);
-    var rows = stages.map(function (s) {
-      var pct = Math.max(16, Math.round((s.n / max) * 100));
+    var rows = live.map(function (s) {
+      var pct = Math.min(100, Math.max(16, Math.round((s.n / max) * 100)));
       return '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">' +
-        '<div style="width:96px;text-align:right;font-size:13px;color:var(--g700);font-weight:500;">' + esc(s.label) + "</div>" +
-        '<div style="flex:1;min-width:0;"><div style="margin:0 auto;width:' + pct + '%;min-width:70px;background:' + s.col + ';height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgba(16,24,40,.12);">' + s.n + "</div>" +
-        '<div style="text-align:center;font-size:11px;color:var(--g400);margin-top:4px;">' + esc(s.sub) + "</div></div>" +
+        '<div style="width:96px;text-align:right;font-size:13px;color:var(--sh-ink);font-weight:500;">' + esc(s.label) + "</div>" +
+        '<div style="flex:1;min-width:0;"><div style="margin:0 auto;width:' + pct + '%;min-width:70px;max-width:100%;background:' + s.col + ';height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgba(16,24,40,.12);">' + s.n + "</div>" +
+        '<div style="text-align:center;font-size:11px;color:var(--sh-ink2);margin-top:4px;">' + esc(s.sub) + "</div></div>" +
+        '<div style="width:40px;flex:0 0 auto;"></div></div>';
+    }).join("");
+    rows += locked.map(function (s) {
+      return '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;opacity:.7;">' +
+        '<div style="width:96px;text-align:right;font-size:13px;color:var(--sh-ink2);font-weight:500;">' + esc(s.label) + "</div>" +
+        '<div style="flex:1;min-width:0;"><div style="margin:0 auto;width:' + s.w + '%;min-width:70px;height:36px;border-radius:9px;border:1.5px dashed var(--sh-line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--sh-ink2);font-size:13px;">&#128274;</div>' +
+        '<div style="text-align:center;font-size:11px;color:var(--sh-ink2);margin-top:4px;">' + esc(s.sub) + "</div></div>" +
         '<div style="width:40px;flex:0 0 auto;"></div></div>';
     }).join("");
     return '<div class="card" style="margin-bottom:16px;"><div class="card-title">Pipeline funnel</div>' + rows +
-      '<div style="font-size:11px;color:var(--g400);margin-top:6px;">Contacted → Replied → Won stages activate once the Campaign Engine is sending. Today: research → prioritise → signal → meeting.</div></div>';
+      '<div style="font-size:11px;color:var(--sh-ink2);margin-top:6px;">Live stages: Researched &#8594; Strong fit. Contacted &#8594; Replied &#8594; Meetings &#8594; Won unlock automatically once the Campaign Engine starts sending — real numbers, no estimates.</div></div>';
   }
 
   function emptyPortfolioCard(phase) {
     return '<div class="card"><div class="card-title">Your pipeline</div>' +
       '<div style="text-align:center;padding:30px 20px;">' +
-      '<div style="font-size:15px;font-weight:600;color:var(--g700);margin-bottom:6px;">No target companies yet</div>' +
-      '<div style="font-size:13px;color:var(--g500);line-height:1.6;max-width:460px;margin:0 auto 16px;">Run Market Intel to research companies that fit your ICP. Once you do, this ' +
+      '<div style="font-size:15px;font-weight:600;color:var(--sh-ink);margin-bottom:6px;">No target companies yet</div>' +
+      '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;max-width:460px;margin:0 auto 16px;">Run Market Intel to research companies that fit your ICP. Once you do, this ' +
       (phase === "p7" ? "Command Center" : "dashboard") + ' fills with your real pipeline — tiers, signals, and verticals.</div>' +
       '<button class="btn btn-primary btn-sm" onclick="try{showPhase(\'p2\')}catch(e){}">Go to Market Intel &#8594;</button></div></div>';
   }
@@ -268,7 +286,7 @@
   function honestNote(text) {
     return '<div class="card" style="margin-top:16px;background:var(--g50);"><div style="display:flex;gap:10px;align-items:flex-start;">' +
       '<span aria-hidden="true" style="font-size:16px;">&#128274;</span>' +
-      '<div style="font-size:12px;color:var(--g600);line-height:1.6;">' + esc(text) + "</div></div></div>";
+      '<div style="font-size:12px;color:var(--sh-ink);line-height:1.6;">' + esc(text) + "</div></div></div>";
   }
 
   // p7's demo topbar carries sample notifications + a fake "All Clients (8)" filter.
@@ -323,7 +341,7 @@
           "</select>" +
           '<span id="sh-p7-custom" style="display:' + (p7Range.mode === "custom" ? "inline-flex" : "none") + ';align-items:center;gap:6px;">' +
           '<input id="sh-p7-from" type="date" class="field-input" style="width:auto;font-size:12px;padding:5px 8px;" value="' + esc(p7Range.from) + '">' +
-          '<span style="font-size:12px;color:var(--g500);">to</span>' +
+          '<span style="font-size:12px;color:var(--sh-ink2);">to</span>' +
           '<input id="sh-p7-to" type="date" class="field-input" style="width:auto;font-size:12px;padding:5px 8px;" value="' + esc(p7Range.to) + '"></span>';
         var rsel = host.querySelector("#sh-p7-range");
         if (rsel) rsel.addEventListener("change", function () {
@@ -380,9 +398,9 @@
     recs.forEach(function (r) {
       html += '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--g100);">' +
         '<span aria-hidden="true" style="font-size:15px;line-height:1.3;">' + r.icon + "</span>" +
-        '<div style="font-size:13px;color:var(--g700);line-height:1.55;">' + r.text + "</div></div>";
+        '<div style="font-size:13px;color:var(--sh-ink);line-height:1.55;">' + r.text + "</div></div>";
     });
-    html += '<div style="font-size:11px;color:var(--g400);margin-top:10px;">Recommendations are computed from your researched list — no invented benchmarks.</div></div>';
+    html += '<div style="font-size:11px;color:var(--sh-ink2);margin-top:10px;">Recommendations are computed from your researched list — no invented benchmarks.</div></div>';
 
     html += honestNote("Message-level optimization (open/reply rates, best send times, A/B winners) appears here automatically once the Campaign Engine is live and outreach is running.");
 
@@ -390,8 +408,8 @@
   }
 
   function kv(k, v) {
-    return '<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--g400);">' + esc(k) + "</div>" +
-      '<div style="font-size:14px;font-weight:600;color:var(--g700);margin-top:3px;">' + esc(v) + "</div></div>";
+    return '<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--sh-ink2);">' + esc(k) + "</div>" +
+      '<div style="font-size:14px;font-weight:600;color:var(--sh-ink);margin-top:3px;">' + esc(v) + "</div></div>";
   }
 
   function buildRecs(m, topInd) {
