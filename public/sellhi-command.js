@@ -317,7 +317,10 @@
   }
 
   function honestNote(text) {
-    return '<div class="card" style="margin-top:16px;background:var(--g50);"><div style="display:flex;gap:10px;align-items:flex-start;">' +
+    // Use the teal-tint token (dark in dark mode, mint in light) so it ALWAYS
+    // contrasts with --sh-ink text. The old var(--g50) resolved light in dark mode,
+    // which made this text invisible (light-on-light).
+    return '<div class="card" style="margin-top:16px;background:var(--sh-teal-soft);border:1px solid var(--sh-line);"><div style="display:flex;gap:10px;align-items:flex-start;">' +
       '<span aria-hidden="true" style="font-size:16px;">&#128274;</span>' +
       '<div style="font-size:12px;color:var(--sh-ink);line-height:1.6;">' + esc(text) + "</div></div></div>";
   }
