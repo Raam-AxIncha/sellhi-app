@@ -287,3 +287,27 @@
   window.addEventListener("load", function () { setTimeout(function () { ready = true; }, 500); });
   setInterval(function () { setSpin(!ready || loading()); }, 180);
 })();
+
+/* --- Production polish: the demo marks not-yet-live modules with "WIP" pills in
+ * the primary nav. To subscribers that reads as "broken," so we soften the label
+ * to "Soon" and calm the styling. Text-only; demo.html stays pristine. --- */
+(function () {
+  function soften() {
+    var nav = document.querySelector(".sidebar-nav");
+    if (!nav) return;
+    var els = nav.querySelectorAll(".nav-item *");
+    Array.prototype.forEach.call(els, function (e) {
+      if (e.children.length === 0 && (e.textContent || "").trim().toUpperCase() === "WIP") {
+        e.textContent = "Soon";
+        e.style.textTransform = "none";
+        e.style.background = "#eef2f6";
+        e.style.color = "#6b7a88";
+        e.style.borderColor = "#e2e8ef";
+        e.setAttribute("data-sh-soon", "1");
+      }
+    });
+  }
+  function boot() { var n = 0; var t = setInterval(function () { soften(); if (++n > 30) clearInterval(t); }, 200); }
+  if (document.readyState === "complete") boot();
+  else window.addEventListener("load", boot);
+})();

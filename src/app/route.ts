@@ -55,6 +55,7 @@ export async function GET(request: Request) {
     `<script src="/sellhi-research.js${v}"></script>` +
     `<script src="/sellhi-market.js${v}"></script>` +
     `<script src="/sellhi-nav.js${v}"></script>` +
+    `<script src="/sellhi-progress.js${v}"></script>` +
     `<script src="/sellhi-preview-badges.js${v}"></script>` +
     `<script src="/sellhi-content.js${v}"></script>` +
     `<script src="/sellhi-command.js${v}"></script>` +
