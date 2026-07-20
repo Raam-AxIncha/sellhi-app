@@ -78,7 +78,7 @@
     wrap.className = "card";
     wrap.style.marginBottom = "18px";
     wrap.innerHTML =
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><div class="card-title" style="margin:0;">Your live connections</div>' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><div class="card-title" style="margin:0;">Integrations status</div>' +
       '<span class="badge badge-teal">' + ([c.google, c.microsoft, ff].filter(Boolean).length) + " active</span></div>" +
       '<div style="font-size:12px;color:var(--sh-ink2);margin-bottom:12px;">The real state of your stack right now. Everything below runs on credentials you control.</div>' +
       connRow({ name: "Google Calendar", state: c.google ? "connected" : "action", detail: c.google ? "Reading & (with edit scope) writing your events." : "Pull your meetings into Meeting Prep.", actionLabel: c.google ? "Manage" : "Connect", actionHref: "/meetings", unlocks: c.google ? "" : "Meeting sync + prep" }) +

@@ -288,22 +288,28 @@
   setInterval(function () { setSpin(!ready || loading()); }, 180);
 })();
 
-/* --- Production polish: the demo marks not-yet-live modules with "WIP" pills in
- * the primary nav. To subscribers that reads as "broken," so we soften the label
- * to "Soon" and calm the styling. Text-only; demo.html stays pristine. --- */
+/* --- Production polish (nav labels): (1) soften the demo's "WIP" pills to a calm
+ * "Soon" so not-yet-live modules don't read as "broken"; (2) rename the p4
+ * "Connected" module to "Integrations" so it no longer collides with the new
+ * "Plan & Connections" surface (/connect) — one word = the live status view, the
+ * other = plan + channel setup. Text-only; demo.html stays pristine. --- */
 (function () {
   function soften() {
     var nav = document.querySelector(".sidebar-nav");
     if (!nav) return;
     var els = nav.querySelectorAll(".nav-item *");
     Array.prototype.forEach.call(els, function (e) {
-      if (e.children.length === 0 && (e.textContent || "").trim().toUpperCase() === "WIP") {
+      if (e.children.length !== 0) return;
+      var tx = (e.textContent || "").trim();
+      if (tx.toUpperCase() === "WIP") {
         e.textContent = "Soon";
         e.style.textTransform = "none";
         e.style.background = "#eef2f6";
         e.style.color = "#6b7a88";
         e.style.borderColor = "#e2e8ef";
         e.setAttribute("data-sh-soon", "1");
+      } else if (tx === "Connected" || tx === "Connected Stack") {
+        e.textContent = "Integrations";
       }
     });
   }
