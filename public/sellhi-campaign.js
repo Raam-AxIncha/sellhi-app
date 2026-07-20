@@ -61,7 +61,7 @@
       : "";
     return '<div class="action-item" style="align-items:center;">' +
       '<div class="action-content"><div class="action-title">' + esc(opts.name) + " " + pill + "</div>" +
-      '<div class="action-sub">' + esc(opts.detail || "") + (opts.unlocks ? ' <span style="color:var(--g400);">· Unlocks: ' + esc(opts.unlocks) + "</span>" : "") + "</div></div>" +
+      '<div class="action-sub">' + esc(opts.detail || "") + (opts.unlocks ? ' <span style="color:var(--sh-ink2);">· Unlocks: ' + esc(opts.unlocks) + "</span>" : "") + "</div></div>" +
       action + "</div>";
   }
 
@@ -78,13 +78,13 @@
     wrap.innerHTML =
       '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><div class="card-title" style="margin:0;">Your live connections</div>' +
       '<span class="badge badge-teal">' + ([c.google, c.microsoft, ff].filter(Boolean).length) + " active</span></div>" +
-      '<div style="font-size:12px;color:var(--g500);margin-bottom:12px;">The real state of your stack right now. Everything below runs on credentials you control.</div>' +
+      '<div style="font-size:12px;color:var(--sh-ink2);margin-bottom:12px;">The real state of your stack right now. Everything below runs on credentials you control.</div>' +
       connRow({ name: "Google Calendar", state: c.google ? "connected" : "action", detail: c.google ? "Reading & (with edit scope) writing your events." : "Pull your meetings into Meeting Prep.", actionLabel: c.google ? "Manage" : "Connect", actionHref: "/meetings", unlocks: c.google ? "" : "Meeting sync + prep" }) +
       connRow({ name: "Microsoft Calendar", state: c.microsoft ? "connected" : "action", detail: c.microsoft ? "Reading & (with edit scope) writing your events." : "Pull your Outlook meetings in.", actionLabel: c.microsoft ? "Manage" : "Connect", actionHref: "/meetings", unlocks: c.microsoft ? "" : "Meeting sync + prep" }) +
       connRow({ name: "Fireflies (transcripts)", state: ff === true ? "connected" : "action", detail: ff === true ? "Call summaries & action items flow into Meeting Prep." : "Auto-capture call transcripts & summaries.", actionLabel: ff === true ? "Manage" : "Set key", actionHref: ff === true ? "/meetings" : "", unlocks: ff === true ? "" : "Transcripts in prep" }) +
       connRow({ name: "Email sender", state: "action", detail: "No sender connected — campaign sending is disabled.", unlocks: "Live campaign send" }) +
       connRow({ name: "CRM (HubSpot)", state: "planned", detail: "Sync accounts, contacts & pipeline. On the roadmap.", unlocks: "Pipeline write-back" }) +
-      '<div style="font-size:11px;color:var(--g400);margin-top:10px;">Manage calendars & Fireflies in Meeting Prep. Email sender + CRM connect here once wired.</div>';
+      '<div style="font-size:11px;color:var(--sh-ink2);margin-top:10px;">Manage calendars & Fireflies in Meeting Prep. Email sender + CRM connect here once wired.</div>';
     content.insertBefore(wrap, content.firstChild);
 
     // Entry point to the two-dimensional Connect & Plan surface (/connect).
@@ -95,7 +95,7 @@
       cta.style.cssText = "margin-bottom:14px;border:1px solid var(--primary);display:flex;align-items:center;gap:14px;flex-wrap:wrap;";
       cta.innerHTML =
         '<div style="flex:1;min-width:220px;"><div class="card-title" style="margin:0 0 4px;">Set up your plan &amp; channels</div>' +
-        '<div style="font-size:12.5px;color:var(--g500);line-height:1.5;">Pick your tier, then bring your own tools or let SellHi manage each channel. You’re billed on opportunities surfaced — never per tool or seat.</div></div>' +
+        '<div style="font-size:12.5px;color:var(--sh-ink2);line-height:1.5;">Pick your tier, then bring your own tools or let SellHi manage each channel. You’re billed on opportunities surfaced — never per tool or seat.</div></div>' +
         '<a class="btn btn-primary btn-sm" href="/connect">Open Connect &amp; Plan &#8594;</a>';
       content.insertBefore(cta, content.firstChild);
     }
@@ -124,8 +124,8 @@
       // Gated send banner
       '<div class="card" style="margin-bottom:16px;border-left:4px solid var(--warning);">' +
       '<div style="display:flex;gap:10px;align-items:flex-start;"><span aria-hidden="true" style="font-size:18px;">&#128274;</span><div>' +
-      '<div style="font-weight:700;color:var(--g800);margin-bottom:2px;">Live sending is off</div>' +
-      '<div style="font-size:12px;color:var(--g600);line-height:1.6;">You can build a real audience and stage campaigns now. Nothing is delivered until you connect an <b>email sender</b> (e.g. Smartlead / SMTP / Gmail API) with a verified from-address and domain warmup. Until then, staged campaigns sit safely here — no messages leave SellHi.</div>' +
+      '<div style="font-weight:700;color:var(--sh-ink);margin-bottom:2px;">Live sending is off</div>' +
+      '<div style="font-size:12px;color:var(--sh-ink);line-height:1.6;">You can build a real audience and stage campaigns now. Nothing is delivered until you connect an <b>email sender</b> (e.g. Smartlead / SMTP / Gmail API) with a verified from-address and domain warmup. Until then, staged campaigns sit safely here — no messages leave SellHi.</div>' +
       "</div></div></div>" +
       // Audience builder
       '<div class="card" style="margin-bottom:16px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
@@ -133,7 +133,7 @@
       '<div id="sh-p6-tierfilter" style="display:flex;gap:6px;"></div></div>' +
       '<div id="sh-p6-audience"></div>' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;flex-wrap:wrap;">' +
-      '<div id="sh-p6-audience-count" style="font-size:12px;color:var(--g500);"></div>' +
+      '<div id="sh-p6-audience-count" style="font-size:12px;color:var(--sh-ink2);"></div>' +
       '<button class="btn btn-sm btn-primary" id="sh-p6-stage">Stage campaign &#8594;</button></div></div>' +
       // Staged list
       '<div class="card" style="margin-bottom:16px;"><div class="card-title">Staged campaigns</div><div id="sh-p6-staged"></div></div>';
@@ -176,8 +176,8 @@
     card.innerHTML =
       '<div style="display:flex;gap:10px;align-items:flex-start;">' +
       '<span aria-hidden="true" style="font-size:18px;">&#128274;</span><div>' +
-      '<div style="font-weight:700;color:var(--g800);margin-bottom:4px;">' + esc(title) + ' &middot; unlocks with live sending</div>' +
-      '<div style="font-size:13px;color:var(--g600);line-height:1.6;">' + esc(body) + "</div></div></div>";
+      '<div style="font-weight:700;color:var(--sh-ink);margin-bottom:4px;">' + esc(title) + ' &middot; unlocks with live sending</div>' +
+      '<div style="font-size:13px;color:var(--sh-ink);line-height:1.6;">' + esc(body) + "</div></div></div>";
     el.appendChild(card);
   }
 
@@ -197,14 +197,14 @@
     var sel = selectedCompanies();
     if (aud) {
       if (!DATA.companies.length) {
-        aud.innerHTML = '<div style="font-size:13px;color:var(--g500);line-height:1.6;padding:8px 0;">No target companies yet. <button class="btn btn-sm btn-primary" onclick="try{showPhase(\'p2\')}catch(e){}">Run Market Intel</button> to build your audience.</div>';
+        aud.innerHTML = '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;padding:8px 0;">No target companies yet. <button class="btn btn-sm btn-primary" onclick="try{showPhase(\'p2\')}catch(e){}">Run Market Intel</button> to build your audience.</div>';
       } else {
         aud.innerHTML = sel.slice(0, 10).map(function (c) {
           var t = companyTier(c);
           return '<div class="action-item" style="align-items:center;"><div class="action-content"><div class="action-title">' + esc(c.name) +
             '</div><div class="action-sub">' + esc([c.industry, c.employees ? c.employees + " employees" : "", c.stage].filter(Boolean).join(" · ")) + "</div></div>" +
             '<span class="badge ' + (TIER_BADGE[t] || "badge-gray") + '">Tier ' + t + "</span></div>";
-        }).join("") + (sel.length > 10 ? '<div style="font-size:11px;color:var(--g400);margin-top:6px;">+ ' + (sel.length - 10) + " more in this segment</div>" : "");
+        }).join("") + (sel.length > 10 ? '<div style="font-size:11px;color:var(--sh-ink2);margin-top:6px;">+ ' + (sel.length - 10) + " more in this segment</div>" : "");
       }
     }
     var cnt = document.getElementById("sh-p6-audience-count");
@@ -218,7 +218,7 @@
     var host = document.getElementById("sh-p6-staged");
     if (!host) return;
     var list = DATA.campaigns || [];
-    if (!list.length) { host.innerHTML = '<div style="font-size:13px;color:var(--g500);">No staged campaigns yet. Pick an audience above and stage one — it\'ll wait here (saved to your account, across devices), ready to send the moment an email sender is connected.</div>'; return; }
+    if (!list.length) { host.innerHTML = '<div style="font-size:13px;color:var(--sh-ink2);">No staged campaigns yet. Pick an audience above and stage one — it\'ll wait here (saved to your account, across devices), ready to send the moment an email sender is connected.</div>'; return; }
     host.innerHTML = list.map(function (c) {
       return '<div class="action-item" style="align-items:center;"><div class="action-content">' +
         '<div class="action-title">' + esc(c.name) + '</div>' +

@@ -85,9 +85,9 @@
     d.id = "p2-tier-legend";
     d.style.cssText =
       "display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:0 0 12px 0;padding:8px 12px;" +
-      "background:var(--g50);border:1px solid var(--g200);border-radius:8px;font-size:11px;color:var(--g600);";
+      "background:var(--g50);border:1px solid var(--g200);border-radius:8px;font-size:11px;color:var(--sh-ink);";
     d.innerHTML =
-      '<span style="font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);">Tiers</span>' +
+      '<span style="font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--sh-ink2);">Tiers</span>' +
       '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success);margin-right:5px;"></span>Tier 1 &middot; strong fit (score 80+)</span>' +
       '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warning);margin-right:5px;"></span>Tier 2 &middot; partial (60&ndash;79)</span>' +
       '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--g400);margin-right:5px;"></span>Tier 3 &middot; exploratory (&lt;60)</span>';
@@ -168,7 +168,7 @@
         '<div class="signal-card"><div style="flex:1;">' +
         '<div class="signal-title">' + esc(s.label) + "</div>" +
         '<div class="signal-sub">' + esc(s.sub) + "</div></div>" +
-        '<span style="font-size:13px;font-weight:500;color:var(--g600);margin-right:8px;">' + s.count +
+        '<span style="font-size:13px;font-weight:500;color:var(--sh-ink);margin-right:8px;">' + s.count +
         " compan" + (s.count === 1 ? "y" : "ies") + "</span>" +
         '<span class="badge ' + badge + '">Tier ' + s.tier + "</span></div>"
       );
@@ -310,12 +310,12 @@
     return '<div class="card p3-match" data-name="'+nm+'" data-score="'+score+'" data-industry="'+esc(c.industry||'')+'" data-tier="'+tier+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
       +'<div style="display:flex;gap:12px;align-items:flex-start;"><div class="fb-avatar">'+esc(c.initials||(c.name||'').slice(0,2).toUpperCase())+'</div>'
-      +'<div><div style="font-size:15px;font-weight:600;">'+nm+'</div><div style="font-size:12px;color:var(--g500);">'+sub+'</div></div></div>'
+      +'<div><div style="font-size:15px;font-weight:600;">'+nm+'</div><div style="font-size:12px;color:var(--sh-ink2);">'+sub+'</div></div></div>'
       +'<div class="score-ring '+scoreRingClass(score)+'">'+score+'</div></div>'
-      +'<div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--g500);"><span>&#9673; Tier '+tier+' fit</span>'+signal+'</div>'
+      +'<div style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--sh-ink2);"><span>&#9673; Tier '+tier+' fit</span>'+signal+'</div>'
       +'<div style="background:var(--g50);border-radius:6px;padding:10px 14px;margin-top:10px;">'
-      +'<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--g400);margin-bottom:4px;">Why this match</div>'
-      +'<div style="font-size:12px;color:var(--g700);line-height:1.5;">'+why+'</div></div>'
+      +'<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--sh-ink2);margin-bottom:4px;">Why this match</div>'
+      +'<div style="font-size:12px;color:var(--sh-ink);line-height:1.5;">'+why+'</div></div>'
       +'<div style="display:flex;gap:8px;margin-top:10px;">'
       +'<button class="btn btn-sm" style="border:1px solid var(--success);color:var(--success);" data-accept="'+nm+'">Accept</button>'
       +'<button class="btn btn-sm btn-outline" style="color:var(--danger);border-color:var(--danger);" data-skip="'+nm+'">Skip</button></div>'
@@ -327,8 +327,8 @@
     if(!S.companies.length){
       // No real Market Intel data yet -> honest empty state instead of sample cards.
       list.innerHTML='<div class="empty-state" style="text-align:center;padding:34px 20px;">'
-        +'<div style="font-size:15px;font-weight:600;color:var(--g700);margin-bottom:6px;">No matches yet</div>'
-        +'<div style="font-size:13px;color:var(--g500);line-height:1.6;margin-bottom:16px;max-width:420px;margin-left:auto;margin-right:auto;">'
+        +'<div style="font-size:15px;font-weight:600;color:var(--sh-ink);margin-bottom:6px;">No matches yet</div>'
+        +'<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;margin-bottom:16px;max-width:420px;margin-left:auto;margin-right:auto;">'
         +'Run Market Intel to research companies that fit your ICP. Your highest-fit matches will appear here automatically.</div>'
         +'<button class="btn btn-primary btn-sm" onclick="try{showPhase(\'p2\')}catch(e){}">Go to Market Intel &#8594;</button>'
         +'</div>';

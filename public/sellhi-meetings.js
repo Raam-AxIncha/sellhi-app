@@ -268,7 +268,7 @@
     var p = d.practice || {}, seat = d.seat || {}, exp = d.experience || {};
     var chips = (exp.industries || []).map(function (i) { return '<span class="chip">' + esc(i) + "</span>"; }).join("");
     $("#me-context").innerHTML =
-      '<div style="font-weight:700;color:var(--g800);margin-bottom:4px;">' + esc(d.headline || (seat.nameTitle || "")) + "</div>" +
+      '<div style="font-weight:700;color:var(--sh-ink);margin-bottom:4px;">' + esc(d.headline || (seat.nameTitle || "")) + "</div>" +
       (p.name ? '<div class="muted" style="margin-bottom:8px;">' + esc(p.name) + " · " + esc(exp.dealSize || "") + "</div>" : "") +
       (chips ? '<div>' + chips + "</div>" : "");
   }
