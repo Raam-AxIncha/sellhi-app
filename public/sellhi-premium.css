@@ -456,3 +456,54 @@ body.dark .topbar {
 body.dark .phase-section .card {
   border-color: rgba(255,255,255,.11) !important;
 }
+
+/* ============================================================
+   CRAFTED PASS (audit #5): one consistent spacing rhythm, radius, and button
+   hierarchy across the injected surfaces so the product reads as "designed,"
+   not "assembled." Scoped to our panels + the sidebar so the pristine demo
+   marketing sections are never touched.
+   ============================================================ */
+
+/* Sidebar: let the five nav "chapters" breathe — extra air above each group header. */
+.sidebar-nav .nav-label { margin-top: 15px; }
+.sidebar-nav .nav-label:first-of-type { margin-top: 4px; }
+
+/* Command Center + Learn & Optimize: even 20px rhythm between top-level blocks. */
+#phase-p7 .content > .metric-row,
+#phase-p7 .content > .card,
+#phase-p7 .content > .grid-2,
+#phase-p8 .content > .metric-row,
+#phase-p8 .content > .card,
+#phase-p8 .content > .grid-2 { margin-bottom: 20px !important; }
+#phase-p7 .content > :last-child,
+#phase-p8 .content > :last-child { margin-bottom: 0 !important; }
+
+/* Button hierarchy — one loud filled primary; everything else quiet outline.
+   Scoped to our injected panels so the demo's own buttons are left as-is. */
+#phase-p7 .content .btn, #phase-p8 .content .btn,
+#sh-p4-connections .btn, #sh-p4-connect-cta .btn, #sh-p6-builder .btn {
+  border-radius: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0;
+  transition: transform .1s ease, box-shadow .15s ease, background .15s ease;
+}
+#phase-p7 .content .btn-primary, #phase-p8 .content .btn-primary,
+#sh-p4-connect-cta .btn-primary {
+  box-shadow: 0 4px 14px rgba(0,128,128,.22);
+}
+#phase-p7 .content .btn-primary:hover, #phase-p8 .content .btn-primary:hover,
+#sh-p4-connect-cta .btn-primary:hover { transform: translateY(-1px); }
+/* Quiet, consistent outline/ghost secondaries in our panels. */
+#phase-p7 .content .btn-outline, #phase-p8 .content .btn-outline,
+#sh-p4-connections .btn-outline {
+  background: transparent !important;
+  border: 1px solid var(--sh-line) !important;
+  color: var(--sh-ink) !important;
+  box-shadow: none !important;
+}
+#phase-p7 .content .btn-outline:hover, #phase-p8 .content .btn-outline:hover,
+#sh-p4-connections .btn-outline:hover { border-color: var(--sh-teal) !important; color: var(--sh-teal-ink) !important; }
+
+/* Consistent field + badge radii inside our panels. */
+#phase-p7 .content .field-input, #phase-p8 .content .field-input,
+#sh-p6-builder .field-input, #sh-p6-builder select { border-radius: 9px !important; }

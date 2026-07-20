@@ -56,8 +56,10 @@
       : opts.state === "planned"
         ? '<span class="badge badge-gray">Planned</span>'
         : '<span class="badge badge-amber">Not connected</span>';
+    // Row actions are outline (secondary) so the page keeps ONE filled primary —
+    // the "Open Connect & Plan" CTA. (Audit #5: one primary per screen.)
     var action = opts.actionHref
-      ? '<a class="btn btn-sm ' + (opts.state === "connected" ? "btn-outline" : "btn-primary") + '" href="' + esc(opts.actionHref) + '">' + esc(opts.actionLabel || "Connect") + "</a>"
+      ? '<a class="btn btn-sm btn-outline" href="' + esc(opts.actionHref) + '">' + esc(opts.actionLabel || "Connect") + "</a>"
       : "";
     return '<div class="action-item" style="align-items:center;">' +
       '<div class="action-content"><div class="action-title">' + esc(opts.name) + " " + pill + "</div>" +
