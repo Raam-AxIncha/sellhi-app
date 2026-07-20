@@ -31,7 +31,7 @@
     el.setAttribute("aria-live", "polite");
     el.innerHTML =
       '<div class="sh-loader-halo" aria-hidden="true"></div>' +
-      '<div class="sh-loader-mark" aria-hidden="true"></div>' +
+      '<div class="sh-loader-mark" aria-hidden="true">' + (window.SHLogo ? window.SHLogo.mark() : "") + "</div>" +
       '<div class="sh-loader-text" id="sh-loader-text"></div>' +
       '<ul class="sh-loader-list" id="sh-loader-list"></ul>' +
       '<div class="sh-loader-bar" aria-hidden="true"><div class="sh-loader-bar-fill"></div></div>';

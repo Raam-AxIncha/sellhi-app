@@ -98,3 +98,47 @@ textarea:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .sh-logo-ring.on { animation: none; }
 }
+
+/* ============================================================
+   ANIMATED SELLHI LOGO (injected by sellhi-logo.js; mark reused by the loader).
+   Teal arrow stays put (its upward meaning is the point); the orange nav-wheel
+   reticle rotates clockwise; "Hi" twinkles like a shining star. Respects
+   reduced-motion. demo.html stays pristine.
+   ============================================================ */
+.sh-brandlogo { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
+.sh-mark { width: 48px; height: 48px; flex: 0 0 auto; display: block; overflow: visible; }
+
+.sidebar-logo .sh-brandword {
+  font-family: 'Raleway', system-ui, sans-serif;
+  font-weight: 700; font-size: 29px; letter-spacing: -0.5px; line-height: 1;
+  color: #0d5c73; position: relative;
+}
+body.dark .sidebar-logo .sh-brandword { color: #ffffff; }
+.sh-brandhi {
+  font-size: 0.52em; font-weight: 700; color: #F26A21;
+  vertical-align: super; margin-left: 1px; display: inline-block;
+  transform-origin: center bottom;
+}
+
+/* nav-wheel rotates clockwise (fill-box origin -> spins about its own centre) */
+@keyframes sh-wheel-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.sh-mark .sh-wheel { transform-box: fill-box; transform-origin: center; animation: sh-wheel-spin 5.5s linear infinite; }
+
+/* "Hi" shining-star twinkle: mostly calm, then a brief bright flare */
+@keyframes sh-hi-twinkle {
+  0%, 60%, 100% { text-shadow: none; transform: scale(1); }
+  74%           { text-shadow: 0 0 7px #F26A21, 0 0 15px rgba(242,106,33,.75), 0 0 26px rgba(242,106,33,.40); transform: scale(1.10); }
+  88%           { text-shadow: none; transform: scale(1); }
+}
+.sh-brandhi { animation: sh-hi-twinkle 3.4s ease-in-out infinite; }
+
+/* Wait state reuses the same mark; wheel spins faster as the spinner. */
+.sh-loader-mark { background: none !important; display: flex !important; align-items: center; justify-content: center; }
+.sh-loader-mark::after { display: none !important; }
+.sh-loader-mark .sh-mark { width: 64px; height: 64px; }
+#sh-loader .sh-mark .sh-wheel { animation-duration: 1.15s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-mark .sh-wheel { animation: none; }
+  .sh-brandhi { animation: none; }
+}
