@@ -242,7 +242,36 @@
     }, 120);
     var init = decode(location.hash);
     if (init) {
-      setTimeout(function () { restore(init); try { history.replaceState({ sh: init }, "", encode(init)); } catch (e) {} }, 450);
+      // Land directly on the hash's phase. The old fixed 450ms delay showed the
+      // default Identity phase first, then jumped — a visible flash. Instead we
+      // restore the moment showPhase + the target section are ready, and mask the
+      // workspace briefly so the switch isn't seen.
+      if (init.ph !== "p1") {
+        try {
+          if (!document.getElementById("sh-navmask-style")) {
+            var mk = document.createElement("style");
+            mk.id = "sh-navmask-style";
+            mk.textContent =
+              "#main-content{transition:opacity .16s ease;}" +
+              "body.sh-navmask #main-content{opacity:0 !important;}";
+            document.head.appendChild(mk);
+          }
+          document.body.classList.add("sh-navmask");
+        } catch (e) {}
+      }
+      var didRestore = false;
+      var doRestore = function () {
+        if (didRestore) return; didRestore = true;
+        restore(init);
+        try { history.replaceState({ sh: init }, "", encode(init)); } catch (e) {}
+        setTimeout(function () { try { document.body.classList.remove("sh-navmask"); } catch (e) {} }, 140);
+      };
+      var rt = setInterval(function () {
+        if (typeof window.showPhase === "function" && document.getElementById("phase-" + init.ph)) {
+          clearInterval(rt); doRestore();
+        }
+      }, 25);
+      setTimeout(function () { clearInterval(rt); doRestore(); }, 2500); // safety net
     } else {
       cur = { ph: "p1", sub: undefined };
       try { history.replaceState({ sh: cur }, "", "#p1"); } catch (e) {}
