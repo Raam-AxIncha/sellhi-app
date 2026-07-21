@@ -175,3 +175,28 @@ body.dark .sidebar-logo .sh-brandword { color: #ffffff; }
 .sidebar-nav .nav-label .nav-sub {
   font-weight: 500; letter-spacing: 0; text-transform: none; opacity: .7; margin-left: -2px;
 }
+
+/* ============================================================
+   BOOT SPLASH — hides the brief "assembling" flash on a hard reload.
+   On a full reload the raw demo paints first, then the app-layer JS
+   transforms it (taskbar, funnel, etc.) a moment later — so you'd see the
+   "before" version flash. A branded cover + spinner sits on top from the
+   first paint and AUTO-FADES after ~1.4s. Pure CSS (no JS), so it can never
+   get stuck. Only runs on a full page load/refresh, not in-app navigation.
+   ============================================================ */
+html::before {
+  content: ""; position: fixed; inset: 0; z-index: 100000; background: #f6f8f9;
+  animation: sh-boot-hide 1.4s ease forwards;
+}
+html:has(body.dark)::before { background: #0b1220; }
+html::after {
+  content: ""; position: fixed; top: 50%; left: 50%; width: 34px; height: 34px;
+  margin: -17px 0 0 -17px; border: 3px solid rgba(0,128,128,.22); border-top-color: #008080;
+  border-radius: 50%; z-index: 100001;
+  animation: sh-boot-spin .8s linear infinite, sh-boot-hide 1.4s ease forwards;
+}
+@keyframes sh-boot-spin { to { transform: rotate(360deg); } }
+@keyframes sh-boot-hide { 0%, 64% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  html::after { animation: sh-boot-hide 1.4s ease forwards; }
+}
