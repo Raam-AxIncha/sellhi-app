@@ -135,6 +135,22 @@
 
     document.body.appendChild(bar);
 
+    // "Shortcuts" is injected by sellhi-nav.js on its own poll and may not exist
+    // when the bar is first built. Keep watching briefly and pull it in (before
+    // the spacer) the moment it appears.
+    (function () {
+      var n = 0;
+      var st = setInterval(function () {
+        n++;
+        var sc = document.getElementById("sh-nav-shortcuts");
+        if (sc && !bar.contains(sc)) {
+          var c = cell(unwrap(sc));
+          if (c) { try { bar.insertBefore(c, spacer); } catch (e) { bar.appendChild(c); } }
+        }
+        if ((sc && bar.contains(sc)) || n > 50) clearInterval(st);
+      }, 80);
+    })();
+
     // Edge hover zones for reveal.
     var eL = document.createElement("div"); eL.id = "sh-edge-left";
     var eB = document.createElement("div"); eB.id = "sh-edge-bottom";
