@@ -43,7 +43,15 @@ export async function GET(request: Request) {
   if (html.includes("</head>")) {
     html = html.replace(
       "</head>",
-      `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}"></head>`
+      `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}">` +
+        // Pre-paint guard: if the URL targets a non-Identity phase (e.g. #p7 from
+        // "Plans → Command Center" or a hard reload), hide the workspace BEFORE the
+        // browser paints the default Identity phase, so there's no flash. sellhi-nav.js
+        // reveals it the instant the correct phase is shown; a safety timer reveals
+        // regardless so we can never get stuck hidden.
+        `<style>html.sh-prehide #main-content{opacity:0!important}#main-content{transition:opacity .16s ease}</style>` +
+        `<script>try{if(/^#p[2-8]/.test(location.hash)){document.documentElement.classList.add('sh-prehide');setTimeout(function(){document.documentElement.classList.remove('sh-prehide');},2600);}}catch(e){}</script>` +
+        `</head>`
     );
   }
 

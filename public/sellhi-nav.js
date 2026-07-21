@@ -264,7 +264,12 @@
         if (didRestore) return; didRestore = true;
         restore(init);
         try { history.replaceState({ sh: init }, "", encode(init)); } catch (e) {}
-        setTimeout(function () { try { document.body.classList.remove("sh-navmask"); } catch (e) {} }, 140);
+        setTimeout(function () {
+          try {
+            document.body.classList.remove("sh-navmask");
+            document.documentElement.classList.remove("sh-prehide"); // reveal the pre-paint guard
+          } catch (e) {}
+        }, 140);
       };
       var rt = setInterval(function () {
         if (typeof window.showPhase === "function" && document.getElementById("phase-" + init.ph)) {
