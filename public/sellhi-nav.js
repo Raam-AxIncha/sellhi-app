@@ -41,7 +41,7 @@
       var cx = document.createElement("a");
       cx.id = "sh-nav-connect"; cx.className = "nav-item"; cx.href = "/connect";
       cx.setAttribute("role", "menuitem"); cx.style.textDecoration = "none";
-      cx.innerHTML = '<span class="nav-icon" aria-hidden="true">&#128268;</span><span class="nav-text"> Plan &amp; Connections</span>';
+      cx.innerHTML = '<span class="nav-icon" aria-hidden="true">&#128268;</span><span class="nav-text"> Plans</span>';
       g.appendChild(cx);
     }
     return !!(document.getElementById("sh-nav-tools") && document.getElementById("sh-nav-meetings") && document.getElementById("sh-nav-connect"));

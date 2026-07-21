@@ -350,11 +350,20 @@
     }
   }
 
+  // The engine is persona-based now, not CXO-only — drop "CXO" from the title.
+  function fixIdentityTitle() {
+    var h = document.querySelector("#phase-p1 .topbar h1");
+    if (h && /cxo\s+identity\s+engine/i.test(h.textContent || "")) {
+      h.textContent = "Identity Engine";
+    }
+  }
+
   function paint() {
     try {
       renameLiveWorkspace();
       reserveExchangeSeat();
       alignBadges();
+      fixIdentityTitle();
     } catch (e) {}
   }
 
