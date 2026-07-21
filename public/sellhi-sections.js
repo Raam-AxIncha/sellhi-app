@@ -272,7 +272,15 @@
       else if (e.key === "ArrowLeft") { e.preventDefault(); go(state.i - 1); }
     }
 
-    var entry = { sub: sub, card: card, orig: orig, layout: layout, reset: function () { state.i = 0; layout(); } };
+    // Keep the viewport height fitted when a panel's content changes size after
+    // transform — e.g. sellhi-research.js populate() fills the dossier, fields
+    // become contentEditable, chips re-render. Prevents clipping/overflow later.
+    if (typeof ResizeObserver === "function") {
+      var ro = new ResizeObserver(function () { if (isVisible(sub)) measure(); });
+      Array.prototype.forEach.call(track.children, function (p) { ro.observe(p); });
+    }
+
+    var entry = { sub: sub, card: card, orig: orig, layout: layout, reset: function () { state.i = 0; layout(); }, _wasVisible: false };
     registry.push(entry);
     return entry;
   }
@@ -307,7 +315,17 @@
 
   function activate(sub) {
     var e = ensure(sub);
-    if (e) { e.reset(); setTimeout(function () { if (isVisible(sub)) e.layout(); }, 120); }
+    if (!e) return;
+    var vis = isVisible(sub);
+    // Reset to the first section ONLY on a genuine hidden -> visible entry — never
+    // when the step's `.active` class is merely re-asserted (the demo's p1Step()/
+    // updateWizard re-adds it, the user taps the current step dot, research.js
+    // repopulates, etc.). Otherwise the carousel would snap back to section 0
+    // out from under the user (the "revert to Practice" oscillation).
+    if (vis && !e._wasVisible) e.reset();
+    else e.layout();
+    e._wasVisible = vis;
+    setTimeout(function () { if (isVisible(sub)) e.layout(); }, 140);
   }
 
   function boot() {
@@ -326,8 +344,11 @@
     var obs = new MutationObserver(function (muts) {
       muts.forEach(function (m) {
         var t = m.target;
-        if (t.classList && t.classList.contains("sub-step") && t.classList.contains("active") && PLANS[t.id]) {
+        if (!(t.classList && t.classList.contains("sub-step") && PLANS[t.id])) return;
+        if (t.classList.contains("active")) {
           activate(t);
+        } else {
+          var e = findEntry(t); if (e) e._wasVisible = false; // left the step; reset on next real entry
         }
       });
     });
