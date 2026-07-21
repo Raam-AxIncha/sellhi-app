@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   if (html.includes("</head>")) {
     html = html.replace(
       "</head>",
-      `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}">` +
+      `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}"><link rel="stylesheet" href="/sellhi-sections.css${v}">` +
         `<style>html.sh-prehide #main-content{opacity:0!important}#main-content{transition:opacity .16s ease}</style>` +
         `<script>try{if(/^#p[2-8]/.test(location.hash)){document.documentElement.classList.add('sh-prehide');setTimeout(function(){document.documentElement.classList.remove('sh-prehide');},2600);}}catch(e){}</script>` +
         `</head>`
@@ -60,6 +60,7 @@ export async function GET(request: Request) {
     `<script src="/sellhi-market.js${v}"></script>` +
     `<script src="/sellhi-nav.js${v}"></script>` +
     `<script src="/sellhi-progress.js${v}"></script>` +
+    `<script src="/sellhi-sections.js${v}"></script>` +
     `<script src="/sellhi-preview-badges.js${v}"></script>` +
     `<script src="/sellhi-content.js${v}"></script>` +
     `<script src="/sellhi-command.js${v}"></script>` +

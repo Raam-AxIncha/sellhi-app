@@ -1,0 +1,102 @@
+/* ============================================================
+   SellHi — SECTIONS (one-section-at-a-time, side-to-side panels)
+   App-layer only. demo.html stays byte-for-byte pristine; this styles
+   the wrappers that sellhi-sections.js moves existing content into.
+   Uses --sh-* semantic tokens (with fallbacks) so text stays legible in
+   light AND dark mode. Font Raleway is already app-wide.
+   ============================================================ */
+
+/* ---- Header: intro block + horizontal section stepper ---- */
+.sh-sec-head { margin-bottom: 14px; }
+.sh-sec-intro > *:last-child { margin-bottom: 0 !important; }
+
+.sh-sec-steps {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--sh-line, #e6edec);
+}
+.sh-sec-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Raleway', system-ui, sans-serif; font-size: 12px;
+  background: none; border: none; cursor: pointer; padding: 3px 4px;
+  color: var(--sh-ink2, #5b6875); white-space: nowrap;
+  transition: color .15s ease;
+}
+.sh-sec-chip-n {
+  width: 18px; height: 18px; flex: 0 0 auto; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  border: 1.5px solid var(--sh-line, #e6edec);
+  color: var(--sh-ink2, #5b6875); background: transparent;
+  transition: background .2s, border-color .2s, box-shadow .2s, color .2s;
+}
+.sh-sec-chip-l { font-weight: 600; }
+.sh-sec-chip:hover { color: var(--sh-teal-ink, #0f6e56); }
+.sh-sec-chip.done { color: var(--sh-teal-ink, #0f6e56); }
+.sh-sec-chip.done .sh-sec-chip-n { background: var(--sh-teal, #008080); border-color: var(--sh-teal, #008080); color: #fff; }
+.sh-sec-chip.active { color: var(--sh-ink, #111827); }
+.sh-sec-chip.active .sh-sec-chip-n {
+  border-color: var(--sh-teal, #008080); color: var(--sh-teal-ink, #0f6e56);
+  box-shadow: 0 0 0 3px var(--sh-teal-soft, #e1f5ee);
+}
+.sh-sec-sep { width: 12px; height: 1.5px; border-radius: 2px; background: var(--sh-line, #e6edec); flex: 0 0 auto; }
+
+/* ---- Viewport + horizontal track ---- */
+.sh-sec-viewport {
+  position: relative; overflow: hidden;
+  height: auto; transition: height .32s cubic-bezier(.2,.7,.2,1);
+}
+.sh-sec-track {
+  display: flex; flex-wrap: nowrap; align-items: flex-start;
+  width: 100%;
+  transition: transform .34s cubic-bezier(.2,.7,.2,1);
+  will-change: transform;
+}
+.sh-sec-panel {
+  flex: 0 0 100%; width: 100%; min-width: 100%; box-sizing: border-box;
+  padding: 2px; /* keeps focus rings/box-shadows from clipping at edges */
+}
+
+/* ---- Controls ---- */
+.sh-sec-controls {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--sh-line, #e6edec);
+}
+.sh-sec-count { font-size: 12px; font-weight: 600; color: var(--sh-ink2, #5b6875); white-space: nowrap; }
+.sh-sec-btn {
+  font-family: 'Raleway', system-ui, sans-serif; font-size: 13px; font-weight: 700;
+  cursor: pointer; padding: 8px 16px; border-radius: 8px;
+  border: 1px solid var(--sh-line, #e6edec); background: var(--sh-surface, #fff);
+  color: var(--sh-ink, #111827);
+  transition: background .14s ease, border-color .14s ease, opacity .14s ease, box-shadow .14s ease;
+}
+.sh-sec-btn:hover { border-color: var(--sh-teal, #008080); color: var(--sh-teal-ink, #0f6e56); }
+.sh-sec-btn.sh-sec-primary {
+  background: var(--sh-teal, #008080); border-color: var(--sh-teal, #008080); color: #fff;
+}
+.sh-sec-btn.sh-sec-primary:hover { box-shadow: 0 4px 14px rgba(0,128,128,.28); color: #fff; }
+.sh-sec-btn:disabled { opacity: .4; cursor: default; box-shadow: none; border-color: var(--sh-line, #e6edec); color: var(--sh-ink2, #5b6875); }
+.sh-sec-btn.sh-sec-primary:disabled { background: var(--sh-line, #e6edec); }
+.sh-sec-btn:focus-visible { outline: 2px solid var(--sh-teal, #008080); outline-offset: 1px; }
+
+/* ---- Dark mode: lean on tokens; add surface fallbacks for legibility ---- */
+body.dark .sh-sec-steps,
+body.dark .sh-sec-controls { border-top-color: rgba(255,255,255,.08); }
+body.dark .sh-sec-sep { background: rgba(255,255,255,.12); }
+body.dark .sh-sec-btn { background: var(--sh-surface, #131c2e); border-color: rgba(255,255,255,.12); color: var(--sh-ink, #e8eef7); }
+body.dark .sh-sec-btn:disabled { background: rgba(255,255,255,.04); }
+body.dark .sh-sec-btn.sh-sec-primary { color: #fff; }
+body.dark .sh-sec-chip.active .sh-sec-chip-n { box-shadow: 0 0 0 3px rgba(0,128,128,.25); }
+
+/* ---- Responsive: chips wrap; on narrow screens hide labels, keep numbers ---- */
+@media (max-width: 640px) {
+  .sh-sec-chip-l { display: none; }
+  .sh-sec-sep { width: 8px; }
+  .sh-sec-btn { padding: 8px 12px; font-size: 12px; }
+}
+
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .sh-sec-viewport, .sh-sec-track { transition: none; }
+}
