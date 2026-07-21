@@ -146,6 +146,39 @@
       requestAnimationFrame(step);
     });
   }
+
+  // ── Opportunity-usage meter (measure + warn; fed by /api/usage) ──────────────
+  var USAGE = null, usageFetched = false;
+  function usageBar(u) {
+    if (!u || !u.ok) return "";
+    var unlimited = u.cap === null || u.cap === undefined;
+    var used = u.used || 0, pct = u.pct || 0;
+    var col = pct >= 100 ? "var(--danger)" : pct >= 80 ? "var(--warning)" : "var(--primary)";
+    var count = unlimited ? (used + " signal accounts this month · unlimited")
+      : (used + " / " + u.cap + " signal accounts this month");
+    var warn = (!unlimited && pct >= 80)
+      ? '<span style="color:' + col + ';font-weight:600;font-size:12px;">' + (pct >= 100 ? "At your plan limit" : "Nearing your limit") + "</span>" : "";
+    return '<div class="card" style="margin-bottom:20px;">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+        '<div class="card-title" style="margin:0;">Opportunity usage</div>' + warn +
+        '<a class="btn btn-sm btn-outline" style="margin-left:auto;" href="/connect">Manage plan</a></div>' +
+      '<div style="font-size:12px;color:var(--sh-ink2);margin-bottom:8px;">' + esc(count) +
+        (u.resetsOn ? " &middot; resets " + esc(u.resetsOn) : "") + "</div>" +
+      '<div style="height:8px;border-radius:999px;background:var(--sh-line);overflow:hidden;">' +
+        '<div style="height:100%;width:' + (unlimited ? 100 : pct) + '%;background:' + col + ';border-radius:999px;transition:width .5s cubic-bezier(.2,.7,.2,1);"></div></div></div>';
+  }
+  function renderUsage() {
+    var host = document.getElementById("sh-usage");
+    if (!host) return;
+    if (USAGE) { host.innerHTML = usageBar(USAGE); return; }
+    if (usageFetched) return;
+    usageFetched = true;
+    fetch("/api/usage", { credentials: "include" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { USAGE = j; var h = document.getElementById("sh-usage"); if (h && j) h.innerHTML = usageBar(j); })
+      .catch(function () {});
+  }
+
   function tierBar(tier, count, max) {
     var pct = max ? Math.max(4, Math.round(count / max * 100)) : 0;
     var col = tier === 1 ? "var(--success)" : tier === 2 ? "var(--warning)" : "var(--g400)";
@@ -190,6 +223,9 @@
         metric("Meetings", meets.length, p7RangeLabel(), "var(--success)") +
         metric("Verticals covered", m.industries.length, "distinct segments in your list", "var(--primary)") +
         "</div>";
+
+      // Opportunity-usage meter (filled async from /api/usage).
+      html += '<div id="sh-usage"></div>';
 
       // Pipeline funnel (real: research -> prioritise -> signals -> meetings)
       html += funnelCard(m, meets.length);
@@ -260,6 +296,7 @@
     content.innerHTML = html;
     neutralizeP7Chrome(m);
     countUp(content);
+    renderUsage();
   }
 
   function upcomingMeetingsCard(list, anyCal) {

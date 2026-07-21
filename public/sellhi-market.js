@@ -99,6 +99,7 @@
     if (!list) return;
     list.innerHTML = S.companies.map(cardHTML).join("");
     ensureTierLegend();
+    ensureFindMore();
     var search = document.getElementById("p2-search");
     if (search) search.value = "";
     var tierSel = document.getElementById("p2-filter-tier");
@@ -106,6 +107,53 @@
     if (typeof window.filterP2Companies === "function") {
       try { window.filterP2Companies(); } catch (e) {}
     }
+  }
+
+  // "Find more accounts": append a fresh batch (server excludes the ones you already
+  // have) so the list grows past a single pass — raising the ceiling toward the plan
+  // caps without one giant, timeout-prone request.
+  function ensureFindMore() {
+    var list = document.getElementById("p2-company-list");
+    if (!list || document.getElementById("sh-find-more-wrap")) return;
+    var wrap = document.createElement("div");
+    wrap.id = "sh-find-more-wrap";
+    wrap.style.cssText = "text-align:center;margin:14px 0 4px;";
+    var b = document.createElement("button");
+    b.id = "sh-find-more";
+    b.className = "btn btn-outline btn-sm";
+    b.innerHTML = "&#43; Find more accounts";
+    b.onclick = function () { findMore(b); };
+    wrap.appendChild(b);
+    list.parentNode.insertBefore(wrap, list.nextSibling);
+  }
+  function findMore(btn) {
+    if (!S.companies.length) return;
+    var orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = "Finding more…";
+    var crit = collectCriteria(); crit.append = true;
+    fetch("/api/market", {
+      method: "POST", headers: { "content-type": "application/json" },
+      credentials: "include", body: JSON.stringify(crit),
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        btn.disabled = false; btn.innerHTML = orig;
+        if (res.ok && res.j && Array.isArray(res.j.companies)) {
+          S.companies = res.j.companies;
+          S.counts = res.j.counts || S.counts;
+          rebuildIndustryFilter();
+          applyScoring();
+          var added = typeof res.j.added === "number" ? res.j.added : 0;
+          try {
+            toast(added > 0 ? "success" : "info",
+              added > 0 ? ("Found " + added + " more — " + S.companies.length + " accounts total.")
+                        : "No new companies this pass — try widening your ICP.");
+          } catch (e) {}
+        } else {
+          try { toast("info", (res.j && res.j.error) || "Couldn’t fetch more right now."); } catch (e) {}
+        }
+      })
+      .catch(function () { btn.disabled = false; btn.innerHTML = orig; try { toast("info", "Couldn’t fetch more right now."); } catch (e) {} });
   }
 
   function updateStep3Counts() {

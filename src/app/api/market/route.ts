@@ -10,7 +10,10 @@ export const maxDuration = 60;
 
 // Reuse the same daily-cap env var as research, but keep a SEPARATE counter
 // (data.market) so Market Intel and Dossier don't share the same budget.
-const DAILY_CAP = Number(process.env.RESEARCH_DAILY_CAP || "5");
+// "Find more" runs several passes, so give Market Intel its own (higher) daily cap.
+const DAILY_CAP = Number(process.env.MARKET_DAILY_CAP || process.env.RESEARCH_DAILY_CAP || "8");
+function periodKey() { return new Date().toISOString().slice(0, 7); } // YYYY-MM (UTC)
+function acctKey(name: string) { return name.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 80) || name.slice(0, 80); }
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5";
 
 function today() {
@@ -67,12 +70,15 @@ export async function POST(request: Request) {
     minEmp?: unknown;
     maxEmp?: unknown;
     buyingAuth?: unknown;
+    append?: unknown;
   } = {};
   try {
     body = await request.json();
   } catch {
     // Body is optional-ish; fall through with empties.
   }
+  // "Find more": append a fresh batch to the existing list instead of replacing it.
+  const append = body.append === true;
   const industries = Array.isArray(body.industries)
     ? (body.industries as unknown[]).filter((x) => typeof x === "string").slice(0, 12)
     : [];
@@ -112,6 +118,16 @@ export async function POST(request: Request) {
     );
   }
 
+  // Existing target list (used to (a) append vs replace, and (b) tell Claude which
+  // companies NOT to return again, so "Find more" surfaces genuinely new accounts).
+  const savedMc = (savedData?.marketCompanies as { companies?: unknown } | undefined) || undefined;
+  const existing: Array<Record<string, unknown>> = Array.isArray(savedMc?.companies)
+    ? (savedMc!.companies as Array<Record<string, unknown>>)
+    : [];
+  const excludeNames = append
+    ? existing.map((c) => String((c as { name?: unknown }).name || "")).filter(Boolean).slice(0, 60)
+    : [];
+
   const dossierContext = dossier
     ? `Their researched profile (use as ICP context):
 ${JSON.stringify(dossier).slice(0, 2000)}`
@@ -125,7 +141,7 @@ Rules:
 - Use web search to find real companies. Every company must be a real, findable business — never invent names.
 - Respect the size band (employee count) and target industries as hard filters where possible.
 - Prefer companies showing a current buying signal (recent funding, hiring a sales/revenue role, leadership change, market expansion).
-- Return exactly 5-6 companies. Fewer real matches is fine — never pad with invented ones.
+- Return 8-12 companies. Fewer real matches is fine — never pad with invented ones.
 - Work FAST: use at most ~4 web searches total, then answer. Do not exhaustively verify every field — a solid, well-sourced shortlist matters more than perfect completeness (this runs under a strict time limit).
 - Keep "why" to one short clause (<= 12 words). Output ONLY the JSON and make sure it is complete and valid.
 - Each "industry" must be a single short vertical (1-2 words, no "/" and no sub-category), so filters and segments read cleanly.
@@ -151,7 +167,7 @@ ICP criteria for the companies to find:
 - Target industries: ${industries.length ? industries.join(", ") : "(none selected — infer from their profile)"}
 - Company size: ${minEmp || "?"} to ${maxEmp || "?"} employees
 - Buying authority they want to reach: ${buyingAuth || "(unspecified)"}
-
+${excludeNames.length ? `\nIMPORTANT — the user already has these companies; do NOT return any of them again, find DIFFERENT real companies: ${excludeNames.join(", ")}.` : ""}
 Return the JSON object now.`;
 
   // Web-search round-trips are the main latency; fewer uses = faster, more reliable
@@ -173,7 +189,7 @@ Return the JSON object now.`;
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 3800,
+        max_tokens: 6000,
         system,
         tools: [{ type: "web_search_20250305", name: "web_search", max_uses: SEARCH_MAX_USES }],
         messages: [{ role: "user", content: userMsg }],
@@ -291,23 +307,61 @@ Return the JSON object now.`;
         : activeFromList,
   };
 
-  // Save the list + bump the daily counter.
+  // "Find more" (append) merges the new batch into the existing list, deduped by
+  // name; a fresh run replaces it. Counts are recomputed on the FINAL list.
+  let finalCompanies: Array<Record<string, unknown>> = companies;
+  if (append && existing.length) {
+    const seen = new Set(existing.map((c) => String((c as { name?: unknown }).name || "").toLowerCase()));
+    const merged = existing.slice();
+    for (const c of companies) {
+      const k = String((c as { name?: unknown }).name || "").toLowerCase();
+      if (k && !seen.has(k)) { seen.add(k); merged.push(c); }
+    }
+    finalCompanies = merged;
+  }
+  const added = finalCompanies.length - (append ? existing.length : 0);
+  const finalCounts = {
+    matchICP: finalCompanies.length,
+    found: Math.max(Number(counts.found) || 0, finalCompanies.length),
+    activeSignals: finalCompanies.filter((c) => typeof c.why === "string" && (c.why as string).length > 0).length,
+  };
+
+  // Save the list + bump the daily counter. Upsert (not update): a fresh user can run
+  // Market Intel before any dossier row exists — an .update() would hit 0 rows and
+  // silently drop the results + let the daily cost cap be bypassed.
   const newData = {
     ...(savedData || {}),
-    marketCompanies: { companies, counts, criteria: { industries, minEmp, maxEmp, buyingAuth } },
+    marketCompanies: { companies: finalCompanies, counts: finalCounts, criteria: { industries, minEmp, maxEmp, buyingAuth } },
     market: { day: today(), count: usedToday + 1, lastAt: new Date().toISOString() },
   };
-  // Upsert (not update): a fresh user can run Market Intel before any dossier row
-  // exists — an .update() would hit 0 rows and silently drop the results + let the
-  // daily cost cap be bypassed. Upsert creates the row keyed on the user id.
   await supabase
     .from("dossiers")
     .upsert({ id: user.id, data: newData, updated_at: new Date().toISOString() }, { onConflict: "id" });
 
+  // ── Usage METER (best-effort; never blocks research) ──────────────────────────
+  // Record each distinct SIGNAL account (has a live buying signal) surfaced this
+  // billing month. Idempotent on (user_id, period, account_key). If the ledger table
+  // isn't there yet it quietly no-ops. This only MEASURES — no gating here.
+  try {
+    const period = periodKey();
+    const sigCos = finalCompanies.filter((c) => typeof c.why === "string" && (c.why as string).length > 0);
+    if (sigCos.length) {
+      const rows = sigCos.map((c) => ({
+        user_id: user.id,
+        period,
+        account_key: acctKey(String(c.name)),
+        account_name: String(c.name).slice(0, 120),
+      }));
+      await supabase.from("signal_account_usage").upsert(rows, { onConflict: "user_id,period,account_key", ignoreDuplicates: true });
+    }
+  } catch { /* metering is best-effort */ }
+
   return NextResponse.json({
     ok: true,
-    companies,
-    counts,
+    companies: finalCompanies,
+    counts: finalCounts,
+    added,
+    appended: append,
     usedToday: usedToday + 1,
     cap: DAILY_CAP,
   });

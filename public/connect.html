@@ -147,6 +147,7 @@
 
   <div class="sec">1 · Your plan</div>
   <div class="tiers" id="tiers"></div>
+  <div id="shUsage" style="margin-top:12px"></div>
 
   <div class="sec">2 · What SellHi provides vs what you bring</div>
   <div class="split">
@@ -469,6 +470,20 @@
   function renderAll(){ renderTiers(); renderCoreEnt(); renderSplit(); renderCards(); renderCost(); if(!hydrating) scheduleSave(); }
   // First paint immediately (from defaults) so the UI isn't blank, then hydrate.
   reconcileModes(); renderAll(); loadConfig();
+
+  // Opportunity-usage meter — this month's signal accounts vs. the plan cap.
+  fetch('/api/usage',{credentials:'include'}).then(function(r){return r.ok?r.json():null;}).then(function(u){
+    var host=document.getElementById('shUsage'); if(!host||!u||!u.ok) return;
+    var unlimited=(u.cap===null||u.cap===undefined); var pct=u.pct||0;
+    var col=pct>=100?'#c0492a':pct>=80?'#BA7517':'#008080';
+    host.innerHTML='<div style="border:1px solid #083656;border-radius:12px;padding:12px 14px;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px;"><span style="color:var(--ink2)">Signal accounts this month</span>'
+      +'<span style="color:'+col+';font-weight:600">'+(unlimited?(u.used+' · unlimited'):(u.used+' / '+u.cap))+'</span></div>'
+      +'<div style="height:6px;border-radius:999px;background:#d9e6e4;overflow:hidden"><div style="height:100%;width:'+(unlimited?100:pct)+'%;background:'+col+';border-radius:999px"></div></div>'
+      +((!unlimited&&pct>=80)?'<div style="margin-top:7px;font-size:12px;color:'+col+'">'+(pct>=100?'You’ve hit your plan’s limit — upgrade to surface more opportunities.':'You’re nearing your plan’s limit.')+'</div>':'')
+      +'<div style="margin-top:7px;font-size:11px;color:var(--ink3)">Resets '+(u.resetsOn||'monthly')+' · you’re billed on opportunities surfaced.</div>'
+      +'</div>';
+  }).catch(function(){});
 })();
 </script>
 </body>
