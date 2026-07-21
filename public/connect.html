@@ -117,11 +117,15 @@
   .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(20px);background:#0b1f1d;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:400;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:60;box-shadow:0 8px 30px rgba(0,0,0,.3)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .note{font-size:11.5px;color:var(--ink3);margin-top:14px}
+  /* Embedded inside the app (Plans view): the app chrome supplies the header. */
+  html.sh-embed #connectTopRow{display:none;}
+  html.sh-embed .wrap{padding-top:16px;}
 </style>
+<script>try{if(/[?&]embed=1/.test(location.search)){document.documentElement.classList.add('sh-embed');}}catch(e){}</script>
 </head>
 <body>
 <div class="wrap">
-  <div style="margin-bottom:14px;display:flex;align-items:center;gap:14px">
+  <div id="connectTopRow" style="margin-bottom:14px;display:flex;align-items:center;gap:14px">
     <span class="sh-logolock"><svg class="sh-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="#178a8a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path d="M17,86 L49,54"/><path d="M49,54 L33,54 M49,54 L49,70"/></g><g class="sh-wheel" fill="none" stroke="#F26A21" stroke-width="6" stroke-linecap="round"><circle cx="65" cy="35" r="12.5"/><circle cx="65" cy="35" r="4.5" fill="#F26A21" stroke="none"/><path d="M65,16.5 L65,8 M65,53.5 L65,62 M84.5,35 L93,35 M45.5,35 L37,35" stroke-width="5"/></g></svg><span class="sh-word">Sell<sup class="sh-hi">Hi</sup></span></span>
     <a href="/#p7" style="text-decoration:none;color:var(--teal-ink);font-size:13px;margin-left:auto">&#8592; Command Center</a>
     <span id="saveState" style="font-size:12px;color:var(--ink3)">Loading your setup…</span>
