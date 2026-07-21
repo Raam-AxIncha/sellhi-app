@@ -51,6 +51,7 @@ export async function GET(request: Request) {
     `<script>window.__SELLHI_USER__=${JSON.stringify(identity)};try{localStorage.setItem('sellhi_auth','1');}catch(e){}</script>` +
     `<script>(function(){if(window.__SELLHI_FIXES__)return;window.__SELLHI_FIXES__=true;var o=window.fetch.bind(window),f=Object.create(null);window.fetch=function(i,n){try{var u=(typeof i==="string")?i:(i&&i.url)||"";var m=((n&&n.method)||(i&&i.method)||"GET").toUpperCase();if(m==="GET"&&u.indexOf("/api/dossier")!==-1&&u.indexOf("dossier-edit")===-1){var k=u;if(f[k])return f[k].then(function(r){return r.clone()});var p=o(i,n);f[k]=p;var c=function(){delete f[k]};p.then(c,c);return p.then(function(r){return r.clone()})}}catch(e){}return o(i,n)}})();</script>` +
     `<script src="/sellhi-identity.js${v}"></script>` +
+    `<script src="/sellhi-persona.js${v}"></script>` +
     `<script src="/sellhi-onboarding.js${v}"></script>` +
     `<script src="/sellhi-research.js${v}"></script>` +
     `<script src="/sellhi-market.js${v}"></script>` +

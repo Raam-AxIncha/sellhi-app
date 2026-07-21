@@ -71,6 +71,7 @@ export async function POST(request: Request) {
     maxEmp?: unknown;
     buyingAuth?: unknown;
     append?: unknown;
+    persona?: unknown;
   } = {};
   try {
     body = await request.json();
@@ -89,6 +90,31 @@ export async function POST(request: Request) {
     !/^select/i.test(body.buyingAuth)
       ? body.buyingAuth
       : "";
+
+  // Identity pack (function × level) from the client — drives who to hunt for
+  // and which signals matter. Defensive: every field optional, falls back to
+  // the generic GTM-leader framing when absent.
+  const pRaw = (body.persona && typeof body.persona === "object")
+    ? (body.persona as Record<string, unknown>)
+    : null;
+  const persona = pRaw
+    ? {
+        functionLabel: typeof pRaw.functionLabel === "string" ? pRaw.functionLabel : "",
+        level: pRaw.level === "delivery" ? "delivery" : "exec",
+        icp: Array.isArray(pRaw.icp)
+          ? (pRaw.icp as unknown[]).filter((x) => typeof x === "string").slice(0, 4) as string[]
+          : [],
+        signals: Array.isArray(pRaw.signals)
+          ? (pRaw.signals as unknown[]).filter((x) => typeof x === "string").slice(0, 6) as string[]
+          : [],
+      }
+    : null;
+  const personaRole = persona && persona.functionLabel
+    ? `fractional ${persona.functionLabel} ${persona.level === "delivery" ? "professional" : "leader"}`
+    : "fractional sales/GTM leader";
+  const personaSignalLine = persona && persona.signals.length
+    ? persona.signals.join("; ")
+    : "recent funding, hiring a relevant role, leadership change, market expansion";
 
   // Load the user's saved onboarding inputs + Phase 3a dossier for ICP grounding.
   const { data: dossierRow } = await supabase
@@ -133,14 +159,14 @@ export async function POST(request: Request) {
 ${JSON.stringify(dossier).slice(0, 2000)}`
     : `No researched profile yet — infer the ICP from the criteria below.`;
 
-  const system = `You are a B2B go-to-market research analyst building a target-account long-list for a fractional sales/GTM leader.
+  const system = `You are a B2B go-to-market research analyst building a target-account long-list for a ${personaRole}.
 
 Task: using web search, return a list of REAL, currently-operating companies that fit the Ideal Customer Profile (ICP) below. These are prospects the user could sell into.
 
 Rules:
 - Use web search to find real companies. Every company must be a real, findable business — never invent names.
 - Respect the size band (employee count) and target industries as hard filters where possible.
-- Prefer companies showing a current buying signal (recent funding, hiring a sales/revenue role, leadership change, market expansion).
+- Prefer companies showing a current buying signal relevant to THIS person's identity, such as: ${personaSignalLine}.
 - Return 8-12 companies. Fewer real matches is fine — never pad with invented ones.
 - Work FAST: use at most ~4 web searches total, then answer. Do not exhaustively verify every field — a solid, well-sourced shortlist matters more than perfect completeness (this runs under a strict time limit).
 - Keep "why" to one short clause (<= 12 words). Output ONLY the JSON and make sure it is complete and valid.
@@ -152,15 +178,23 @@ Rules:
 - Respond with ONLY a single valid JSON object matching this schema exactly (no prose, no code fences):
 ${SCHEMA}`;
 
+  const personaBlock = persona && persona.functionLabel
+    ? `\nThis person's identity (drives the WHOLE search):
+- They are a ${personaRole}.
+- Who they should target (ICP): ${persona.icp.length ? persona.icp.join("; ") : "(infer from profile)"}
+- Signals that mean a company needs them now: ${persona.signals.length ? persona.signals.join("; ") : "(infer)"}
+Bias the long-list and the "why" clauses toward THIS identity.\n`
+    : "";
+
   const userMsg = `Build the target-account long-list.
 
-The user (fractional GTM leader):
+The user (${personaRole}):
 - Name: ${inputs.name || "(unknown)"}
 - Title: ${inputs.title || "(unknown)"}
 - Practice/company: ${inputs.company || "(unknown)"}
 - Industries they serve: ${inputs.industries || "(none stated)"}
 - Typical deal size: ${inputs.deal_size || "(none stated)"}
-
+${personaBlock}
 ${dossierContext}
 
 ICP criteria for the companies to find:

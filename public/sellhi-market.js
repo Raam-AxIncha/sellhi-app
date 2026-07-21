@@ -94,10 +94,33 @@
     list.parentNode.insertBefore(d, list);
   }
 
+  // The identity "lens": a one-line reminder of who this search is hunting for,
+  // so the person SEES their identity driving the pipeline.
+  function ensureLens() {
+    var list = document.getElementById("p2-company-list");
+    if (!list) return;
+    var p = personaPack();
+    if (!p) return;
+    var role = p.level === "exec" ? "leader" : "pro";
+    var txt = '<b>Targeting as a Fractional ' + esc(p.functionLabel) + ' ' + role +
+      '</b> &mdash; ' + esc(p.icp && p.icp[0] ? p.icp[0] : "your ideal accounts") + ".";
+    var lens = document.getElementById("p2-persona-lens");
+    if (lens) { lens.innerHTML = txt; return; }
+    lens = document.createElement("div");
+    lens.id = "p2-persona-lens";
+    lens.style.cssText =
+      "margin:0 0 10px;padding:9px 13px;border-radius:8px;font-size:12px;line-height:1.5;" +
+      "color:var(--sh-ink,#12302e);background:var(--sh-teal-soft,#eef6f5);" +
+      "border:1px solid var(--sh-line,#e2ebea);border-left:3px solid var(--sh-teal,#008080);";
+    lens.innerHTML = txt;
+    list.parentNode.insertBefore(lens, list);
+  }
+
   function renderStep3List() {
     var list = document.getElementById("p2-company-list");
     if (!list) return;
     list.innerHTML = S.companies.map(cardHTML).join("");
+    ensureLens();
     ensureTierLegend();
     ensureFindMore();
     var search = document.getElementById("p2-search");
@@ -268,17 +291,39 @@
   }
 
   // ── Criteria collection + research trigger (Step 3) ────────────────────────
+  function personaPack() {
+    try {
+      if (window.SellHiPersona && typeof window.SellHiPersona.pack === "function") {
+        return window.SellHiPersona.pack();
+      }
+    } catch (e) {}
+    return null;
+  }
+
   function collectCriteria() {
     var industries = $all("#p2-industries .chip.active").map(function (el) { return (el.textContent || "").trim(); });
     var minEl = document.getElementById("p2-min");
     var maxEl = document.getElementById("p2-max");
     var authEl = document.getElementById("p2-buying-auth");
-    return {
+    var crit = {
       industries: industries,
       minEmp: minEl ? parseInt(minEl.value, 10) || 0 : 0,
       maxEmp: maxEl ? parseInt(maxEl.value, 10) || 0 : 0,
       buyingAuth: authEl ? authEl.value : "",
     };
+    // The identity pack drives the whole pipeline: pass the person's function,
+    // level, ICP and signals so the backend hunts for THEIR kind of buyer.
+    var p = personaPack();
+    if (p) {
+      crit.persona = {
+        functionKey: p.functionKey,
+        functionLabel: p.functionLabel,
+        level: p.level,
+        icp: p.icp,
+        signals: p.signals,
+      };
+    }
+    return crit;
   }
 
   var LOADING_STEPS = [

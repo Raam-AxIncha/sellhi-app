@@ -26,7 +26,7 @@
     var instr = "";
     var ta = document.getElementById("p5-custom-instructions");
     if (ta) instr = ta.value || "";
-    return {
+    var out = {
       company: SELECTED.company || (ctx.split("—")[0] || "").trim(),
       signal: SELECTED.signal || ctx,
       tone: active(groups[0]) || "Professional",
@@ -34,6 +34,19 @@
       channel: active(groups[2]) || "Email",
       instructions: instr,
     };
+    // Identity pack drives voice: the message should sound like THIS person's
+    // function + level (a CFO writes differently than a QA lead).
+    try {
+      if (window.SellHiPersona && typeof window.SellHiPersona.pack === "function") {
+        var p = window.SellHiPersona.pack();
+        out.persona = {
+          functionLabel: p.functionLabel,
+          level: p.level,
+          messages: p.messages,
+        };
+      }
+    } catch (e) {}
+    return out;
   }
 
   function setContext(c) {

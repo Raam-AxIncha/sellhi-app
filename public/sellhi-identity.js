@@ -1,6 +1,6 @@
 /*
  * SellHi identity bootstrap — runs on top of the exact live demo.
- * Swaps the hardcoded "Raam / Fractional CXO" corner for the REAL logged-in user
+ * Swaps the hardcoded "Raam / Fractional Pro" corner for the REAL logged-in user
  * and wires the sidebar "Log out" to the real sign-out. Nothing else changes.
  */
 (function () {
@@ -12,7 +12,7 @@
   function apply(u) {
     if (!u || !u.signedIn) return;
     var name = u.fullName || "";
-    var title = u.title || "Fractional CXO";
+    var title = u.title || "Fractional Pro";
     var nameEl = document.getElementById("sidebar-user-name");
     var roleEl = document.getElementById("sidebar-user-role");
     var avEl = document.getElementById("sidebar-avatar");

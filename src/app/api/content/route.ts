@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     length?: string;
     channel?: string;
     instructions?: string;
+    persona?: unknown;
   } = {};
   try {
     body = await request.json();
@@ -88,6 +89,26 @@ export async function POST(request: Request) {
   const signal = body.signal || "";
   const instructions = (body.instructions || "").slice(0, 600);
 
+  // Identity pack (function × level) — makes the message sound like THIS person.
+  const pRaw = (body.persona && typeof body.persona === "object")
+    ? (body.persona as Record<string, unknown>)
+    : null;
+  const persona = pRaw
+    ? {
+        functionLabel: typeof pRaw.functionLabel === "string" ? pRaw.functionLabel : "",
+        level: pRaw.level === "delivery" ? "delivery" : "exec",
+        messages: Array.isArray(pRaw.messages)
+          ? (pRaw.messages as unknown[]).filter((x) => typeof x === "string").slice(0, 4) as string[]
+          : [],
+      }
+    : null;
+  const personaRole = persona && persona.functionLabel
+    ? `fractional ${persona.functionLabel} ${persona.level === "delivery" ? "delivery professional" : "leader"}`
+    : "fractional sales executive";
+  const voiceGuide = persona && persona.messages.length
+    ? `\n- Voice for this identity — write like a ${personaRole}: ${persona.messages.join("; ")}`
+    : "";
+
   const lengthGuide =
     length === "Short"
       ? "Under 60 words."
@@ -95,19 +116,19 @@ export async function POST(request: Request) {
       ? "120-170 words."
       : "70-110 words.";
 
-  const system = `You are an expert B2B outbound copywriter writing on behalf of a fractional sales executive. Write two distinct ${channel} outreach variants to a target company, grounded in a real buying signal and the seller's real positioning.
+  const system = `You are an expert B2B outbound copywriter writing on behalf of a ${personaRole}. Write two distinct ${channel} outreach variants to a target company, grounded in a real buying signal and the seller's real positioning.
 
 Rules:
 - Variant A is "Pain-led" (open on the prospect's likely pain/inflection). Variant B is "Insight-led" (open with a useful insight/pattern).
-- Tone: ${tone}. Length each: ${lengthGuide}
+- Tone: ${tone}. Length each: ${lengthGuide}${voiceGuide}
 - ${channel === "Email" ? "Include a specific, non-clickbait subject line." : "This is a " + channel + " message — set subject to an empty string."}
 - Ground the message in the seller's REAL positioning and the target's signal. Do NOT invent facts about the target beyond the given signal. Use a [First Name] placeholder for the recipient.
 - Natural, credible, concise. No fluff, no clichés, no fake urgency.
 - Respond with ONLY a single valid JSON object matching this schema exactly (no prose, no code fences):
 ${SCHEMA}`;
 
-  const userMsg = `SELLER (writing the outreach):
-- Name/Title: ${seller.name || "(unknown)"} / ${seller.title || "Fractional CXO"}
+  const userMsg = `SELLER (writing the outreach — a ${personaRole}):
+- Name/Title: ${seller.name || "(unknown)"} / ${seller.title || "Fractional Pro"}
 - Practice: ${seller.company || "(unknown)"}
 - Positioning: ${seller.headline || "(none)"}
 - Notable proof point: ${seller.achievement || "(none)"}
