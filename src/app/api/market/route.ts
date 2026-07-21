@@ -297,10 +297,12 @@ Return the JSON object now.`;
     marketCompanies: { companies, counts, criteria: { industries, minEmp, maxEmp, buyingAuth } },
     market: { day: today(), count: usedToday + 1, lastAt: new Date().toISOString() },
   };
+  // Upsert (not update): a fresh user can run Market Intel before any dossier row
+  // exists — an .update() would hit 0 rows and silently drop the results + let the
+  // daily cost cap be bypassed. Upsert creates the row keyed on the user id.
   await supabase
     .from("dossiers")
-    .update({ data: newData, updated_at: new Date().toISOString() })
-    .eq("id", user.id);
+    .upsert({ id: user.id, data: newData, updated_at: new Date().toISOString() }, { onConflict: "id" });
 
   return NextResponse.json({
     ok: true,

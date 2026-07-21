@@ -142,9 +142,9 @@
     dash.insertBefore(wrap, dash.firstChild);
     hideP6Fakes(dash);
     gateTab("p6-aztesting", "A/Z subject-line testing",
-      "Test multiple subject lines and let the winner be picked automatically. This needs live sends to produce real open and reply results — it activates the moment an email sender is connected and outreach is running.");
+      "Test subject lines and auto-pick the winner. Needs live sends for real open/reply data — activates once an email sender is connected.");
     gateTab("p6-settings", "Sending operations",
-      "Daily send limits, sending windows, warmup and deliverability controls live here. They take effect once an email sender is connected — until then there is nothing sending to operate.");
+      "Send limits, sending windows, warmup and deliverability controls live here — active once an email sender is connected.");
 
     document.getElementById("sh-p6-stage").addEventListener("click", stageCampaign);
     renderP6Dynamic();

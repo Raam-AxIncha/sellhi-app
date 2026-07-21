@@ -179,10 +179,11 @@ Write the two ${channel} variants now as JSON.`;
       ...data,
       contentGen: { day: today(), count: usedToday + 1, lastAt: new Date().toISOString() },
     };
+    // Upsert so the daily-cap counter also persists for a user with no dossier row
+    // yet (an .update() would hit 0 rows and let the cost cap be bypassed).
     await supabase
       .from("dossiers")
-      .update({ data: newData, updated_at: new Date().toISOString() })
-      .eq("id", user.id);
+      .upsert({ id: user.id, data: newData, updated_at: new Date().toISOString() }, { onConflict: "id" });
   } catch {
     /* non-fatal */
   }

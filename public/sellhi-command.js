@@ -216,7 +216,7 @@
 
       // Hot list (companies with a live signal) + upcoming meetings
       html += '<div class="grid-2">';
-      html += '<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><div class="card-title" style="margin:0;">Accounts to action now</div><span class="badge badge-teal">' + m.signals.length + "</span></div>";
+      html += '<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><div class="card-title" style="margin:0;">Accounts to action now</div><span class="badge badge-teal">' + m.signals.length + "</span><span class=\"badge badge-amber\" style=\"margin-left:auto;\">Live signals</span></div>";
       if (m.signals.length) {
         m.signals.slice(0, 6).forEach(function (c) {
           var t = companyTier(c);
@@ -226,16 +226,36 @@
         });
         html += '<div style="margin-top:12px;"><button class="btn btn-sm btn-primary" onclick="try{showPhase(\'p5\')}catch(e){}">Draft outreach in Content Factory &#8594;</button></div>';
       } else {
-        html += '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;">No live buying signals flagged yet. Re-run Market Intel to surface companies with recent funding, hiring, or leadership changes.</div>';
+        html += '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;">No live signals yet. Re-run Market Intel to surface recent funding, hiring, or leadership changes.</div>';
       }
       html += "</div>";
 
       html += upcomingMeetingsCard(meets, m.anyCal);
       html += "</div>";
+
+      // ── Free-to-watch: researched accounts with NO live signal yet. This is the
+      // visual proof of the pricing promise — signal accounts are your billable
+      // opportunities; everything else is watched for free until a signal appears.
+      var noSig = (DATA.companies || []).filter(function (c) { return !c.why; });
+      if (noSig.length) {
+        html += '<div class="card"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
+          '<div class="card-title" style="margin:0;">Watching &mdash; no live signal yet</div>' +
+          '<span class="badge badge-gray">' + noSig.length + '</span>' +
+          '<span class="badge badge-teal" style="margin-left:auto;">Free to watch</span></div>' +
+          '<div style="font-size:12px;color:var(--sh-ink2);margin-bottom:10px;">Researched and on watch. You’re only billed when one of these surfaces a live buying signal &mdash; it then moves up to <strong>Accounts to action now</strong>.</div>';
+        noSig.slice(0, 8).forEach(function (c) {
+          var t = companyTier(c);
+          html += '<div class="action-item"><div class="action-content"><div class="action-title">' + esc(c.name) + '</div>' +
+            '<div class="action-sub">' + esc(c.industry || "Researched") + ' &middot; watching for funding, hiring or leadership moves</div></div>' +
+            '<span class="badge ' + (TIER_BADGE[t] || "badge-gray") + '">Tier ' + t + '</span></div>';
+        });
+        if (noSig.length > 8) html += '<div style="font-size:11px;color:var(--sh-ink2);margin-top:8px;">+ ' + (noSig.length - 8) + ' more on watch</div>';
+        html += "</div>";
+      }
     }
 
     // Honest note about what unlocks with outreach
-    html += honestNote("The Contacted → Replied → Meetings → Won stages of your funnel activate automatically once the Campaign Engine is live and messages are sending. Today the Command Center reflects your researched pipeline and calendar.");
+    html += honestNote("Contacted → Replied → Meetings → Won activate once the Campaign Engine starts sending. For now, this reflects your researched pipeline and calendar.");
 
     content.innerHTML = html;
     neutralizeP7Chrome(m);
@@ -308,7 +328,7 @@
         '<div style="width:40px;flex:0 0 auto;"></div></div>';
     }).join("");
     return '<div class="card" style="margin-bottom:16px;"><div class="card-title">Pipeline funnel</div>' + rows +
-      '<div style="font-size:11px;color:var(--sh-ink2);margin-top:6px;">Live stages: Researched &#8594; Strong fit. Contacted &#8594; Replied &#8594; Meetings &#8594; Won unlock automatically once the Campaign Engine starts sending — real numbers, no estimates.</div></div>';
+      '<div style="font-size:11px;color:var(--sh-ink2);margin-top:6px;">Live: Researched &#8594; Strong fit. The rest unlock when the Campaign Engine starts sending — real numbers, no estimates.</div></div>';
   }
 
   function emptyPortfolioCard(phase) {
@@ -353,9 +373,10 @@
         var header = panel.querySelector(".notif-header");
         panel.innerHTML = (header ? header.outerHTML : "") + items;
       }
-      // Client filter -> honest single-account reality for the pilot.
+      // The demo's "Your pipeline" filter select has nothing real to filter yet, so
+      // it was a dead one-option control. Hide it rather than show a fake dropdown.
       var sel = document.querySelector("#phase-p7 .topbar select");
-      if (sel) sel.innerHTML = "<option>Your pipeline</option>";
+      if (sel) sel.style.display = "none";
 
       // Date-range picker: replace the static "Last 30 days" chip with a real,
       // subscriber-controlled range (presets + custom dates) that filters the
@@ -442,7 +463,7 @@
     });
     html += '<div style="font-size:11px;color:var(--sh-ink2);margin-top:10px;">Recommendations are computed from your researched list — no invented benchmarks.</div></div>';
 
-    html += honestNote("Message-level optimization (open/reply rates, best send times, A/B winners) appears here automatically once the Campaign Engine is live and outreach is running.");
+    html += honestNote("Message-level optimization (open/reply rates, best send times, A/B winners) appears once the Campaign Engine is running.");
 
     content.innerHTML = html;
     countUp(content);

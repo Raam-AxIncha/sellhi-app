@@ -18,6 +18,16 @@
   b{font-weight:400}
   body{margin:0;font-family:'Raleway',system-ui,sans-serif;color:var(--ink);background:var(--page);line-height:1.5;}
   .wrap{max-width:1080px;margin:0 auto;padding:26px 22px 170px;}
+  /* Animated SellHi logo lockup (nav-wheel spins clockwise; "Hi" twinkles). */
+  .sh-logolock{display:inline-flex;align-items:center;gap:7px}
+  .sh-logolock .sh-mark{width:34px;height:34px;overflow:visible;display:block}
+  .sh-logolock .sh-word{font-weight:700;font-size:21px;letter-spacing:-.4px;color:#0d5c73;line-height:1}
+  .sh-logolock .sh-hi{color:#F26A21;font-size:.52em;vertical-align:super;margin-left:1px;display:inline-block}
+  @keyframes sh-wheel-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .sh-logolock .sh-wheel{transform-box:fill-box;transform-origin:center;animation:sh-wheel-spin 5.5s linear infinite}
+  @keyframes sh-hi-twinkle{0%,60%,100%{text-shadow:none;transform:scale(1)}74%{text-shadow:0 0 7px #F26A21,0 0 15px rgba(242,106,33,.75);transform:scale(1.1)}88%{text-shadow:none;transform:scale(1)}}
+  .sh-logolock .sh-hi{animation:sh-hi-twinkle 3.4s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.sh-logolock .sh-wheel,.sh-logolock .sh-hi{animation:none}}
 
   /* HERO tagline */
   .hero{background:linear-gradient(135deg,#04302e 0%,#0b514b 60%,#0a6a61 100%);border-radius:20px;padding:34px 34px 30px;color:#fff;position:relative;overflow:hidden;box-shadow:0 10px 30px rgba(4,48,46,.22)}
@@ -111,16 +121,17 @@
 </head>
 <body>
 <div class="wrap">
-  <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px">
-    <a href="/" style="text-decoration:none;color:var(--teal-ink);font-size:13px">&#8592; Back to SellHi</a>
-    <span id="saveState" style="margin-left:auto;font-size:12px;color:var(--ink3)">Loading your setup…</span>
+  <div style="margin-bottom:14px;display:flex;align-items:center;gap:14px">
+    <span class="sh-logolock"><svg class="sh-mark" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke="#178a8a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path d="M17,86 L49,54"/><path d="M49,54 L33,54 M49,54 L49,70"/></g><g class="sh-wheel" fill="none" stroke="#F26A21" stroke-width="6" stroke-linecap="round"><circle cx="65" cy="35" r="12.5"/><circle cx="65" cy="35" r="4.5" fill="#F26A21" stroke="none"/><path d="M65,16.5 L65,8 M65,53.5 L65,62 M84.5,35 L93,35 M45.5,35 L37,35" stroke-width="5"/></g></svg><span class="sh-word">Sell<sup class="sh-hi">Hi</sup></span></span>
+    <a href="/" style="text-decoration:none;color:var(--teal-ink);font-size:13px;margin-left:auto">&#8592; Back to SellHi</a>
+    <span id="saveState" style="font-size:12px;color:var(--ink3)">Loading your setup…</span>
   </div>
 
   <!-- HERO -->
   <div class="hero">
     <div class="eb">SellHi · Connect &amp; Pricing</div>
     <div class="tag">You're paying for <span>opportunities surfaced</span>,<br>not software rented.</div>
-    <div class="sub">That's why your bill is set by signal accounts — real, workable opportunities — and never by how many seats you add or which tools you plug in.</div>
+    <div class="sub">So your bill tracks signal accounts — real, workable opportunities — never seats or tools.</div>
   </div>
 
   <!-- CORE AI ENGINE (locked, not connectable) -->
@@ -128,7 +139,7 @@
     <div class="cbrain">🧠</div>
     <div style="flex:1">
       <div class="ctop"><b>Core AI Engine</b><span class="lockpill">🔒 Included · nothing to connect</span><span class="powered">Powered by Claude</span></div>
-      <div class="cbody">ICP &amp; TCP modeling, fit-scoring, and message generation — the SellHi brain. Runs securely server-side on SellHi's own keys (never exposed to your browser). It isn't a connect / BYO / managed choice; it's simply on, in every tier.</div>
+      <div class="cbody">ICP/TCP modeling, fit-scoring, and message generation — the SellHi brain. Runs server-side on our keys, never in your browser. Nothing to choose or connect; it's on in every tier.</div>
       <div id="coreEnt"></div>
     </div>
     <div class="alwayson">Always on</div>
@@ -146,7 +157,7 @@
   <div class="sec">3 · Channels — bring your own, or let SellHi manage</div>
   <div class="cards" id="cards"></div>
 
-  <div class="note">Your setup saves automatically to your SellHi account (secured so only you can see it) and follows you across devices. Scale is a flat $501 (bring your own) or $798 (fully-managed) — no per-seat charges.</div>
+  <div class="note">Your setup autosaves to your account and syncs across devices. Scale is flat: $501 BYO or $798 managed — never per seat.</div>
 </div>
 
 <!-- cost bar -->
@@ -187,11 +198,11 @@
     {id:'email', ic:'✉️', nm:'Email', desc:'Cold + warm email sequences at deliverable volume.',
       managedSub:'Smartlead (operated by SellHi)',
       byo:['Instantly','Lemlist','Apollo','MailReef'], fallback:'Other — SMTP / API',
-      must:'Connect your own sending domain / mailbox (required for deliverability, every tier).'},
+      must:'Bring your own sending domain/mailbox — required for deliverability on every tier.'},
     {id:'linkedin', ic:'💼', nm:'LinkedIn', desc:'Connection requests, InMails & follow-ups.',
       managedSub:'HighReach (operated by SellHi)',
       byo:['HeyReach','Dripify','Expandi','Waalaxy'], fallback:null,
-      must:'Requires your own LinkedIn Premium account — in BOTH modes. SellHi can never provide this.'},
+      must:'Requires your own LinkedIn Premium in both modes — SellHi can’t provide it.'},
     {id:'calls', ic:'📞', nm:'Calls', desc:'Warm calls & voicemail drops from a real line.',
       managedSub:'Aircall — includes a phone line',
       byo:['Dialpad','RingCentral','JustCall','Kixie'], fallback:'Other — click-to-call / API'}
@@ -352,7 +363,11 @@
       sel.onchange=function(){ state.tool[sel.getAttribute('data-cat')]=sel.value; renderCost(); scheduleSave(); };
     });
     Array.prototype.forEach.call(elCards.querySelectorAll('[data-req]'),function(a){
-      a.onclick=function(){ toast('Logged your request for a '+a.getAttribute('data-req')+' integration — thanks!'); };
+      a.onclick=function(){ var cat=a.getAttribute('data-req'); toast('Logging your '+cat+' request…');
+        fetch('/api/integration-request',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({category:cat})})
+          .then(function(r){return r.json();})
+          .then(function(j){ toast(j&&j.ok?('Logged your '+cat+' integration request — thanks!'):('Noted your '+cat+' request')); })
+          .catch(function(){ toast('Noted your '+cat+' request'); }); };
     });
     Array.prototype.forEach.call(elCards.querySelectorAll('[data-goto]'),function(b){
       b.onclick=function(){ state.tier=b.getAttribute('data-goto'); reconcileModes(); renderAll(); };

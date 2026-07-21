@@ -329,7 +329,7 @@
       list.innerHTML='<div class="empty-state" style="text-align:center;padding:34px 20px;">'
         +'<div style="font-size:15px;font-weight:600;color:var(--sh-ink);margin-bottom:6px;">No matches yet</div>'
         +'<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;margin-bottom:16px;max-width:420px;margin-left:auto;margin-right:auto;">'
-        +'Run Market Intel to research companies that fit your ICP. Your highest-fit matches will appear here automatically.</div>'
+        +'Run Market Intel to research ICP-fit companies. Your best matches appear here automatically.</div>'
         +'<button class="btn btn-primary btn-sm" onclick="try{showPhase(\'p2\')}catch(e){}">Go to Market Intel &#8594;</button>'
         +'</div>';
       var rc=document.getElementById('p3-result-count'); if(rc)rc.textContent='0 matches';

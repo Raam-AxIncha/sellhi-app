@@ -29,7 +29,7 @@
     var any = connected && (connected.google || connected.microsoft);
     $("#cal-status").innerHTML = any
       ? '<div class="muted">Calendar connected. Your upcoming meetings appear below. Wrong account? Use "Switch account".</div>'
-      : '<div class="muted">Connect a calendar to pull your real meetings in. You can still prep any company right now without it.</div>';
+      : '<div class="muted">Connect a calendar to pull in your meetings. You can prep any company without one.</div>';
     $("#connect-row").innerHTML =
       providerBtn("google", "Google", connected && connected.google) +
       providerBtn("microsoft", "Microsoft", connected && connected.microsoft);
@@ -421,7 +421,7 @@
       .then(function (res) {
         if (res.status === 503) { host.innerHTML = '<div class="empty">Connect <b>Fireflies</b> to auto-capture this meeting\'s transcript &amp; summary. <span class="muted">(Set FIREFLIES_API_KEY.)</span></div>'; return; }
         var t = res.j && res.j.transcript;
-        if (!t) { host.innerHTML = '<div class="muted">No transcript yet. Once Fireflies records a call for this account, its summary and action items appear here.</div>'; return; }
+        if (!t) { host.innerHTML = '<div class="muted">No transcript yet — it’ll appear here once Fireflies records a call for this account.</div>'; return; }
         host.innerHTML = renderTranscript(t);
       })
       .catch(function () { host.innerHTML = '<div class="muted">Transcript unavailable.</div>'; });
