@@ -16,6 +16,10 @@ Concretely, on **Identity Engine steps 2, 3, 4** the content is now split into l
 
 Scrolling on these pages drops from a full wall to just what one section needs.
 
+### Review gate (added)
+
+A step's **forward button is locked until every section has been opened**. If someone clicks "Looks right — let me deepen →" early, it doesn't advance — it **bounces them to the first unreviewed section**, shows a toast, and a hint reads *"Review all 6 sections to continue — 5 left."* Once all tabs are seen, each chip earns a teal check, the hint becomes *"All 6 sections reviewed ✓ — you can continue,"* and the original button works normally. "Back" is never gated. This is on for **all three steps** (6, 6, and 4 sections). To turn the gate off for any page, set `gate: false` on that page's entry in the `PLANS` map — the stepper still works, it just won't lock the button.
+
 ## 2. What to look at (after you push — see §5)
 
 1. Go to **Identity Engine**, click **Build my dossier** to reach Step 2.
@@ -38,6 +42,7 @@ Scrolling on these pages drops from a full wall to just what one section needs.
 - CSS brace-balance → 36 / 36 balanced.
 - **Segmentation test (jsdom)** against the real demo markup → all 3 steps split into the exact expected sections; wizard buttons preserved; **reverse/restore returns the DOM identically** (5 dossier sections → 5).
 - **Browser render test (Chromium)** → Next advances the track horizontally (`translateX -100% / -200%`), the card height adapts per section (240→152→178px), the "N of 6" counter updates, **zero page errors**.
+- **Review-gate test (Chromium)** → forward button starts locked; an early click is **blocked** (the step's deepen handler never fires), user is nudged to the next unreviewed section with a toast; after all 6 are viewed the button **unlocks and passes through** to the original handler. Zero page errors.
 
 ## 5. Safe-push routine (you run all git — copy/paste)
 

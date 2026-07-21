@@ -96,7 +96,31 @@ body.dark .sh-sec-chip.active .sh-sec-chip-n { box-shadow: 0 0 0 3px rgba(0,128,
   .sh-sec-btn { padding: 8px 12px; font-size: 12px; }
 }
 
+/* ---- Review gate: 'seen' chips show a check; forward button locks until done ---- */
+.sh-sec-chip.seen .sh-sec-chip-n {
+  background: var(--sh-teal, #008080); border-color: var(--sh-teal, #008080); color: transparent;
+}
+.sh-sec-chip.seen .sh-sec-chip-n::after {
+  content: "\2713"; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff;
+}
+
+/* Locked forward button: kept clickable (so it can nudge), but visibly disabled. */
+.sh-sec-locked { opacity: .5 !important; cursor: not-allowed !important; box-shadow: none !important; }
+
+.sh-sec-gate-hint {
+  display: none; margin-top: 10px; text-align: right;
+  font-family: 'Raleway', system-ui, sans-serif; font-size: 12px; font-weight: 600;
+  color: var(--sh-ink2, #5b6875);
+}
+.sh-sec-gate-hint.show { display: block; }
+.sh-sec-gate-hint.done { color: var(--sh-teal-ink, #0f6e56); }
+body.dark .sh-sec-gate-hint.done { color: #37c3b4; }
+.sh-sec-gate-hint.nudge { animation: sh-sec-nudge .5s ease; }
+@keyframes sh-sec-nudge { 0%,100%{transform:translateX(0);} 20%,60%{transform:translateX(5px);} 40%,80%{transform:translateX(-5px);} }
+
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .sh-sec-viewport, .sh-sec-track { transition: none; }
+  .sh-sec-gate-hint.nudge { animation: none; }
 }

@@ -177,15 +177,30 @@
     var next = el("button", "sh-sec-btn sh-sec-primary sh-sec-next"); next.type = "button"; next.innerHTML = "Next &#8594;";
     controls.appendChild(prev); controls.appendChild(count); controls.appendChild(next);
 
-    /* assemble: [overlay stays] head -> viewport -> controls -> footer(last) */
+    /* review-gate hint line (sits between the controls and the wizard footer) */
+    var hint = el("div", "sh-sec-gate-hint"); hint.setAttribute("role", "status"); hint.setAttribute("aria-live", "polite");
+
+    /* assemble: [overlay stays] head -> viewport -> controls -> hint -> footer(last) */
     card.appendChild(head);
     card.appendChild(viewport);
     card.appendChild(controls);
+    card.appendChild(hint);
     if (seg.footer) card.appendChild(seg.footer);
     card.setAttribute("data-sh-sections", "on");
 
+    /* The wizard's own forward button (the primary one, NOT "Back"): it stays
+       exactly where it is and keeps its original onclick, but we GATE it until
+       every section has been viewed. Set `gate:false` on a plan to opt out. */
+    var fwd = null;
+    if (seg.footer) {
+      fwd = seg.footer.querySelector(".btn-primary");
+      if (!fwd) { var bs = seg.footer.querySelectorAll(".btn"); fwd = bs[bs.length - 1] || null; }
+    }
+    var gate = plan.gate !== false && seg.sections.length > 1 && !!fwd;
+
     /* ---- state + behaviour ---- */
     var state = { i: 0, n: seg.sections.length };
+    var viewed = {}; // section index -> true once shown (persists across resets)
 
     function measure() {
       var panel = track.children[state.i];
@@ -194,16 +209,37 @@
       var h = panel.scrollHeight;
       if (h > 0) viewport.style.height = h + "px";
     }
+    function seenCount() { var c = 0; for (var k = 0; k < state.n; k++) if (viewed[k]) c++; return c; }
+    function firstUnseen() { for (var k = 0; k < state.n; k++) if (!viewed[k]) return k; return -1; }
+
+    function updateGate() {
+      if (!gate) return;
+      var left = state.n - seenCount();
+      if (left > 0) {
+        fwd.classList.add("sh-sec-locked");
+        fwd.setAttribute("aria-disabled", "true");
+        hint.className = "sh-sec-gate-hint show";
+        hint.textContent = "Review all " + state.n + " sections to continue — " + left + " left";
+      } else {
+        fwd.classList.remove("sh-sec-locked");
+        fwd.removeAttribute("aria-disabled");
+        hint.className = "sh-sec-gate-hint show done";
+        hint.textContent = "All " + state.n + " sections reviewed ✓ — you can continue";
+      }
+    }
+
     function paint() {
+      viewed[state.i] = true;
       track.style.transform = "translateX(" + (-state.i * 100) + "%)";
       chips.forEach(function (c, k) {
         c.classList.toggle("active", k === state.i);
-        c.classList.toggle("done", k < state.i);
+        c.classList.toggle("seen", !!viewed[k] && k !== state.i);
         c.setAttribute("aria-selected", k === state.i ? "true" : "false");
       });
       prev.disabled = state.i === 0;
       next.disabled = state.i === state.n - 1;
       count.textContent = (state.i + 1) + " of " + state.n;
+      updateGate();
       measure();
     }
     function go(i) {
@@ -214,6 +250,19 @@
 
     prev.addEventListener("click", function () { go(state.i - 1); });
     next.addEventListener("click", function () { go(state.i + 1); });
+
+    // Gate: intercept the wizard's forward button until all sections are viewed.
+    // Capture phase runs BEFORE the button's inline onclick, so we can block it.
+    if (gate) {
+      fwd.addEventListener("click", function (e) {
+        if (seenCount() < state.n) {
+          e.preventDefault(); e.stopImmediatePropagation();
+          var u = firstUnseen(); if (u > -1) go(u);
+          hint.classList.remove("nudge"); void hint.offsetWidth; hint.classList.add("nudge");
+          if (typeof window.toast === "function") { try { window.toast("info", "Please review all " + state.n + " sections before continuing."); } catch (er) {} }
+        }
+      }, true);
+    }
 
     // Arrow-key navigation while focus is inside this card's stepper/controls.
     head.addEventListener("keydown", onKey);
