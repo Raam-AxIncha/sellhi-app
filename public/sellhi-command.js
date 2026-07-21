@@ -331,41 +331,72 @@
   // Downstream (Contacted/Replied/Won) needs outreach, so we stop honestly at
   // meetings and flag what unlocks. `mc` = meetings count in the selected range.
   function funnelCard(m, mc) {
-    // A TRUE funnel: each stage is a subset of the one above it, so the bars taper.
-    // The live stages are Researched -> Strong fit (Tier-1 is a subset of researched).
-    // Downstream stages are the outreach journey — they don't exist until the Campaign
-    // Engine sends, so we show them LOCKED (never faked). Live signals + calendar
-    // meetings deliberately live in their own cards below: they aren't subsets of the
-    // target list, so putting them here is what broke the funnel shape and duplicated
-    // the stat row up top.
-    var live = [
-      { label: "Researched", n: m.total, sub: "companies in your ICP list", col: "#008080" },
-      { label: "Strong fit", n: m.tiers[1], sub: "Tier-1 (score 80+)", col: "#0a9a8c" },
+    // A TRUE tapering funnel (the smooth SVG shape): each stage is a subset of the
+    // one above it. Researched -> Strong fit are LIVE (real numbers now). The
+    // downstream outreach journey (Contacted -> Replied -> Meetings -> Won) is
+    // drawn in the funnel but muted — it OPENS UP with real numbers once the
+    // Campaign Engine starts sending. Never faked: a stage shows a number only
+    // when it has a real one (val != null).
+    var stages = [
+      { label: "Researched", val: m.total, live: true, sub: "companies in your ICP list" },
+      { label: "Strong fit", val: (m.tiers && m.tiers[1]) || 0, live: true, sub: "Tier-1 · score 80+" },
+      { label: "Contacted", val: null, live: false, sub: "opens when the Campaign Engine sends" },
+      { label: "Replied", val: null, live: false, sub: "opens when replies land" },
+      { label: "Meetings", val: null, live: false, sub: "booked from outreach" },
+      { label: "Won", val: null, live: false, sub: "closed-won" }
     ];
-    var locked = [
-      { label: "Contacted", sub: "unlocks with Campaign Engine", w: 46 },
-      { label: "Replied", sub: "unlocks with Campaign Engine", w: 37 },
-      { label: "Meetings", sub: "booked from outreach", w: 29 },
-      { label: "Won", sub: "closed-won", w: 22 },
-    ];
-    var max = Math.max(m.total, 1);
-    var rows = live.map(function (s) {
-      var pct = Math.min(100, Math.max(16, Math.round((s.n / max) * 100)));
-      return '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">' +
-        '<div style="width:96px;text-align:right;font-size:13px;color:var(--sh-ink);font-weight:500;">' + esc(s.label) + "</div>" +
-        '<div style="flex:1;min-width:0;"><div style="margin:0 auto;width:' + pct + '%;min-width:70px;max-width:100%;background:' + s.col + ';height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;box-shadow:0 2px 8px rgba(16,24,40,.12);">' + s.n + "</div>" +
-        '<div style="text-align:center;font-size:11px;color:var(--sh-ink2);margin-top:4px;">' + esc(s.sub) + "</div></div>" +
-        '<div style="width:40px;flex:0 0 auto;"></div></div>';
+
+    var N = stages.length, bandH = 38, gap = 13, topPad = 4;
+    var wMax = 336, wMin = 116;
+    var H = topPad + N * bandH + (N - 1) * gap;
+    function wAt(f) { return wMax - (wMax - wMin) * f; }
+    var fonts = [16, 15, 14, 13, 12, 11];
+
+    var polys = "";
+    for (var i = 0; i < N; i++) {
+      var s = stages[i];
+      var y = topPad + i * (bandH + gap);
+      var tw = wAt(i / N), bw = wAt((i + 1) / N);
+      var pts = (180 - tw / 2).toFixed(1) + "," + y + " " + (180 + tw / 2).toFixed(1) + "," + y +
+        " " + (180 + bw / 2).toFixed(1) + "," + (y + bandH) + " " + (180 - bw / 2).toFixed(1) + "," + (y + bandH);
+      var cy = y + bandH / 2 + 5;
+      var hasNum = s.live || s.val != null;
+      if (hasNum) {
+        polys += '<polygon points="' + pts + '" fill="url(#shfgLive)"/>' +
+          '<text x="180" y="' + cy + '" text-anchor="middle" fill="#fff" font-size="' + fonts[i] +
+          '" font-weight="700">' + esc(String(s.val)) + " " + esc(s.label) + "</text>";
+      } else {
+        polys += '<polygon points="' + pts + '" fill="rgba(125,154,154,0.12)" stroke="rgba(125,154,154,0.5)" ' +
+          'stroke-width="1.5" stroke-dasharray="4 3"/>' +
+          '<text x="180" y="' + cy + '" text-anchor="middle" fill="#7f9a9a" font-size="' + (fonts[i] - 1) +
+          '" font-weight="600">' + esc(s.label) + "</text>";
+      }
+    }
+    var svg = '<svg viewBox="0 0 360 ' + H + '" style="width:340px;max-width:100%;height:auto;flex-shrink:0;" role="img" aria-label="Pipeline funnel">' +
+      '<defs><linearGradient id="shfgLive" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#009e9e"/><stop offset="100%" stop-color="#006f6a"/></linearGradient></defs>' +
+      polys + "</svg>";
+
+    // Side breakdown (sits beside the funnel — narrower funnel, content alongside).
+    var list = stages.map(function (s) {
+      var hasNum = s.live || s.val != null;
+      return '<div style="margin-bottom:11px;">' +
+        '<div style="font-size:12px;font-weight:700;color:' + (hasNum ? "var(--sh-teal-ink)" : "var(--sh-ink2)") + ';">' +
+        esc(s.label) + (hasNum ? "" : " &#128274;") + "</div>" +
+        '<div style="font-size:20px;font-weight:800;color:var(--sh-ink);font-variant-numeric:tabular-nums;line-height:1.15;">' +
+        (hasNum ? esc(String(s.val)) : "&mdash;") + "</div>" +
+        '<div style="font-size:11px;color:var(--sh-ink2);">' + esc(s.sub) + "</div></div>";
     }).join("");
-    rows += locked.map(function (s) {
-      return '<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;opacity:.7;">' +
-        '<div style="width:96px;text-align:right;font-size:13px;color:var(--sh-ink2);font-weight:500;">' + esc(s.label) + "</div>" +
-        '<div style="flex:1;min-width:0;"><div style="margin:0 auto;width:' + s.w + '%;min-width:70px;height:36px;border-radius:9px;border:1.5px dashed var(--sh-line);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--sh-ink2);font-size:13px;">&#128274;</div>' +
-        '<div style="text-align:center;font-size:11px;color:var(--sh-ink2);margin-top:4px;">' + esc(s.sub) + "</div></div>" +
-        '<div style="width:40px;flex:0 0 auto;"></div></div>';
-    }).join("");
-    return '<div class="card" style="margin-bottom:16px;"><div class="card-title">Pipeline funnel</div>' + rows +
-      '<div style="font-size:11px;color:var(--sh-ink2);margin-top:6px;">Live: Researched &#8594; Strong fit. The rest unlock when the Campaign Engine starts sending — real numbers, no estimates.</div></div>';
+
+    return '<div class="card" style="margin-bottom:16px;"><div class="card-title">Pipeline funnel</div>' +
+      '<div style="display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;">' +
+        '<div>' + svg + "</div>" +
+        '<div style="flex:1;min-width:170px;">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--sh-ink2);margin-bottom:12px;">Stage breakdown</div>' +
+          list +
+        "</div>" +
+      "</div>" +
+      '<div style="font-size:11px;color:var(--sh-ink2);margin-top:8px;">Live now: Researched &#8594; Strong fit. Contacted &#8594; Replied &#8594; Meetings &#8594; Won open up with your real numbers once the Campaign Engine starts sending — never estimates.</div></div>';
   }
 
   function emptyPortfolioCard(phase) {
