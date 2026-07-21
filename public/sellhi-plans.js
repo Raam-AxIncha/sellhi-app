@@ -16,8 +16,11 @@
     var s = document.createElement("style");
     s.id = "sh-plans-style";
     s.textContent =
-      "#main-content{position:relative;}" +
-      "#sh-plans-view{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;" +
+      // Fixed overlay anchored (via JS) to the exact box of #main-content, so it
+      // reliably covers the content area — sidebar stays left, taskbar stays below.
+      // z-index above the sticky progress bar (62) but the taskbar (55) is outside
+      // this box, so it stays usable.
+      "#sh-plans-view{position:fixed;z-index:63;display:flex;flex-direction:column;overflow:hidden;" +
         "background:var(--sh-surface,#f6f8f9);}" +
       "body.dark #sh-plans-view{background:#0b1220;}" +
       "#sh-plans-head{display:flex;align-items:center;gap:12px;padding:12px 22px;flex:0 0 auto;" +
@@ -32,12 +35,22 @@
     document.head.appendChild(s);
   }
 
-  function openPlans() {
+  // Anchor the fixed overlay to the current on-screen box of the content area.
+  function place() {
+    var v = document.getElementById("sh-plans-view");
     var main = document.getElementById("main-content") || document.querySelector(".main");
-    if (!main) return;
+    if (!v || !main) return;
+    var r = main.getBoundingClientRect();
+    v.style.left = r.left + "px";
+    v.style.top = r.top + "px";
+    v.style.width = r.width + "px";
+    v.style.height = r.height + "px";
+  }
+
+  function openPlans() {
     style();
     var v = document.getElementById("sh-plans-view");
-    if (v) { v.style.display = "flex"; markNav(true); return; }
+    if (v) { v.style.display = "flex"; place(); markNav(true); return; }
     v = document.createElement("div");
     v.id = "sh-plans-view";
     v.setAttribute("role", "region");
@@ -48,7 +61,8 @@
         '<button id="sh-plans-close" type="button" title="Close Plans" aria-label="Close Plans">&times;</button>' +
       "</div>" +
       '<iframe id="sh-plans-frame" src="/connect?embed=1" title="Plans"></iframe>';
-    main.appendChild(v);
+    document.body.appendChild(v); // body-level so it can't be clipped by the scroller
+    place();
     var x = document.getElementById("sh-plans-close");
     if (x) x.addEventListener("click", closePlans);
     markNav(true);
@@ -86,4 +100,10 @@
     var nav = t.closest(".sidebar-nav .nav-item");
     if (nav && nav.id !== "sh-nav-connect") closePlans();
   }, true);
+
+  // Keep the overlay aligned to the content area as the window/sidebar changes.
+  window.addEventListener("resize", function () {
+    var v = document.getElementById("sh-plans-view");
+    if (v && v.style.display !== "none") place();
+  });
 })();
