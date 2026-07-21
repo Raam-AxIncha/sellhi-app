@@ -7,37 +7,44 @@
     var nav = document.querySelector(".sidebar-nav");
     if (!nav || !nav.firstElementChild) return false; // not ready yet -> retry
 
-    // "Plan & Connections" -> the two-dimensional Connect surface (/connect).
-    if (!document.getElementById("sh-nav-connect")) {
-      var cx = document.createElement("a");
-      cx.id = "sh-nav-connect";
-      cx.className = "nav-item";
-      cx.href = "/connect";
-      cx.setAttribute("role", "menuitem");
-      cx.style.textDecoration = "none";
-      cx.style.marginBottom = "8px";
-      cx.innerHTML =
-        '<span class="nav-icon" aria-hidden="true">&#128268;</span>' +
-        '<span class="nav-text"> Plan &amp; Connections</span>';
-      try { nav.insertBefore(cx, nav.firstElementChild); } catch (e) {}
+    // A bottom "Setup & Tools" group. Setup/utility surfaces belong OUT of the daily
+    // working-module flow (Identity -> Market -> Content -> Campaign -> Command
+    // Center). We move Integrations (the demo's p4 button) down here and add Meeting
+    // Prep + Plan & Connections, so the main nav reads as the job-to-be-done order.
+    var g = document.getElementById("sh-nav-tools");
+    if (!g) {
+      g = document.createElement("div");
+      g.id = "sh-nav-tools";
+      g.className = "nav-group";
+      g.setAttribute("role", "group");
+      g.setAttribute("aria-label", "Setup and tools");
+      var lbl = document.createElement("div");
+      lbl.className = "nav-label";
+      lbl.innerHTML = "Setup &amp; Tools";
+      g.appendChild(lbl);
+      nav.appendChild(g); // bottom of the nav list
     }
 
-    // "Meeting Prep" -> the standalone /meetings surface.
+    // Meeting Prep -> /meetings
     if (!document.getElementById("sh-nav-meetings")) {
       var a = document.createElement("a");
-      a.id = "sh-nav-meetings";
-      a.className = "nav-item";
-      a.href = "/meetings";
-      a.setAttribute("role", "menuitem");
-      a.style.textDecoration = "none";
-      a.style.marginBottom = "8px";
-      a.innerHTML =
-        '<span class="nav-icon" aria-hidden="true">&#128197;</span>' +
-        '<span class="nav-text"> Meeting Prep</span>';
-      // Insert at the very top so Meeting Prep sits above Plan & Connections.
-      try { nav.insertBefore(a, nav.firstElementChild); } catch (e) {}
+      a.id = "sh-nav-meetings"; a.className = "nav-item"; a.href = "/meetings";
+      a.setAttribute("role", "menuitem"); a.style.textDecoration = "none";
+      a.innerHTML = '<span class="nav-icon" aria-hidden="true">&#128197;</span><span class="nav-text"> Meeting Prep</span>';
+      g.appendChild(a);
     }
-    return !!(document.getElementById("sh-nav-meetings") && document.getElementById("sh-nav-connect"));
+    // Integrations = the demo's "Connected"/p4 button — relocate it into this group.
+    var p4 = document.querySelector('.sidebar-nav .nav-item[onclick*="p4"]');
+    if (p4 && p4.parentNode !== g) { try { g.appendChild(p4); } catch (e) {} }
+    // Plan & Connections -> /connect
+    if (!document.getElementById("sh-nav-connect")) {
+      var cx = document.createElement("a");
+      cx.id = "sh-nav-connect"; cx.className = "nav-item"; cx.href = "/connect";
+      cx.setAttribute("role", "menuitem"); cx.style.textDecoration = "none";
+      cx.innerHTML = '<span class="nav-icon" aria-hidden="true">&#128268;</span><span class="nav-text"> Plan &amp; Connections</span>';
+      g.appendChild(cx);
+    }
+    return !!(document.getElementById("sh-nav-tools") && document.getElementById("sh-nav-meetings") && document.getElementById("sh-nav-connect"));
   }
   // Sidebar footer: a discreet "Shortcuts (?)" button that opens the demo's
   // keyboard-shortcuts modal and visibly teaches the "?" key. Placed right after

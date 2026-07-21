@@ -36,7 +36,27 @@ export default function ResetPage() {
   return (
     <div style={styles.wrap}>
       <div style={styles.card}>
-        <div style={styles.brand}>SellHi</div>
+        <div style={styles.brandRow}>
+          <svg viewBox="0 0 100 100" style={styles.mark} aria-hidden="true">
+            <g fill="none" stroke="#178a8a" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17,86 L49,54" />
+              <path d="M49,54 L33,54 M49,54 L49,70" />
+            </g>
+            <g className="shWheel" fill="none" stroke="#F26A21" strokeWidth={6} strokeLinecap="round">
+              <circle cx={65} cy={35} r={12.5} />
+              <circle cx={65} cy={35} r={4.5} fill="#F26A21" stroke="none" />
+              <path d="M65,16.5 L65,8 M65,53.5 L65,62 M84.5,35 L93,35 M45.5,35 L37,35" strokeWidth={5} />
+            </g>
+          </svg>
+          <span style={styles.brand}>Sell<sup style={styles.hi} className="shHi">Hi</sup></span>
+        </div>
+        <style>{`
+          @keyframes shWheelSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+          .shWheel{transform-box:fill-box;transform-origin:center;animation:shWheelSpin 5.5s linear infinite}
+          @keyframes shHiTwinkle{0%,60%,100%{text-shadow:none;transform:scale(1)}74%{text-shadow:0 0 7px #F26A21,0 0 15px rgba(242,106,33,.75);transform:scale(1.1)}88%{text-shadow:none;transform:scale(1)}}
+          .shHi{display:inline-block;animation:shHiTwinkle 3.4s ease-in-out infinite}
+          @media(prefers-reduced-motion:reduce){.shWheel,.shHi{animation:none}}
+        `}</style>
         <p style={styles.sub}>Set a new password</p>
 
         {!ready ? (
@@ -87,6 +107,9 @@ const teal = "#008080";
 const styles: Record<string, React.CSSProperties> = {
   wrap: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb", padding: 20 },
   card: { width: "100%", maxWidth: 380, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "32px 28px", boxShadow: "0 10px 30px rgba(0,0,0,.06)" },
+  brandRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 4 },
+  mark: { width: 52, height: 52, overflow: "visible", display: "block" },
+  hi: { color: "#F26A21", fontSize: "0.5em", verticalAlign: "super", marginLeft: 1 },
   brand: { fontSize: 28, fontWeight: 800, color: teal, letterSpacing: -0.5 },
   sub: { margin: "4px 0 20px", color: "#6b7280", fontSize: 14 },
   dim: { color: "#9ca3af", fontSize: 14 },
