@@ -308,9 +308,11 @@
     Array.prototype.forEach.call(els, function (e) {
       if (e.children.length !== 0) return;
       var tx = (e.textContent || "").trim();
-      if (tx.toUpperCase() === "WIP") {
-        e.textContent = "Soon";
+      if (tx.toUpperCase() === "WIP" || tx === "Soon") {
+        e.textContent = "Pre-launch";
         e.style.textTransform = "none";
+        e.style.fontSize = "9px";
+        e.style.letterSpacing = ".2px";
         e.style.background = "#eef2f6";
         e.style.color = "#6b7a88";
         e.style.borderColor = "#e2e8ef";
@@ -323,4 +325,60 @@
   function boot() { var n = 0; var t = setInterval(function () { soften(); if (++n > 30) clearInterval(t); }, 200); }
   if (document.readyState === "complete") boot();
   else window.addEventListener("load", boot);
+})();
+
+/* --- User-resizable nav pane. Bumps the base width (via CSS) and adds a drag
+ * handle on the sidebar's right edge; the chosen width persists per device.
+ * Double-click resets. Desktop only (mobile/collapsed sidebars keep the demo's
+ * behaviour). demo.html stays pristine. --- */
+(function () {
+  var KEY = "sh_nav_w", MIN = 200, MAX = 460, DEF = 240;
+  function isDesktop() { try { return window.matchMedia("(min-width:1025px)").matches; } catch (e) { return true; } }
+  function apply(sb, w) { sb.style.width = w + "px"; sb.style.flex = "0 0 " + w + "px"; sb.style.minWidth = w + "px"; }
+  function boot() {
+    var sb = document.querySelector(".sidebar");
+    if (!sb) return false;
+    if (sb.getAttribute("data-sh-resize") === "1") return true;
+    if (!isDesktop()) return true; // don't wire on mobile; retry not needed
+    sb.setAttribute("data-sh-resize", "1");
+
+    var saved = 0;
+    try { saved = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+    if (saved >= MIN && saved <= MAX) apply(sb, saved);
+
+    var h = document.createElement("div");
+    h.className = "sh-nav-resize";
+    h.title = "Drag to resize · double-click to reset";
+    h.setAttribute("aria-hidden", "true");
+    sb.appendChild(h);
+
+    var dragging = false, startX = 0, startW = 0;
+    function onMove(e) {
+      if (!dragging) return;
+      var x = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      var w = Math.max(MIN, Math.min(MAX, Math.round(startW + (x - startX))));
+      apply(sb, w);
+    }
+    function onUp() {
+      if (!dragging) return;
+      dragging = false; h.classList.remove("sh-drag"); document.body.style.userSelect = "";
+      try { localStorage.setItem(KEY, String(Math.round(sb.getBoundingClientRect().width))); } catch (e) {}
+    }
+    function onDown(e) {
+      dragging = true; h.classList.add("sh-drag");
+      startX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      startW = sb.getBoundingClientRect().width;
+      document.body.style.userSelect = "none";
+      if (e.cancelable) e.preventDefault();
+    }
+    h.addEventListener("mousedown", onDown);
+    h.addEventListener("touchstart", onDown, { passive: false });
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("touchmove", onMove, { passive: false });
+    document.addEventListener("mouseup", onUp);
+    document.addEventListener("touchend", onUp);
+    h.addEventListener("dblclick", function () { apply(sb, DEF); try { localStorage.setItem(KEY, String(DEF)); } catch (e) {} });
+    return true;
+  }
+  var n = 0, t = setInterval(function () { if (boot() || ++n > 40) clearInterval(t); }, 200);
 })();

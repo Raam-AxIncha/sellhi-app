@@ -6,9 +6,10 @@
    ============================================================ */
 @media (min-width: 1025px) {
 
-  /* Slim left pane -> maximum real estate for the main workspace,
-     so the rest of the page never feels crowded. */
-  .sidebar { width: 210px; }
+  /* Left pane: a touch wider so the nav breathes; subscribers can drag-resize it
+     (handle injected by sellhi-nav.js, persisted per device). position:relative so
+     the resize handle can pin to the right edge. */
+  .sidebar { width: 240px; position: relative; }
 
   /* Generous side padding = capsules sit inset with equal breathing
      room on both edges (centered feel, not stretched edge-to-edge). */
@@ -141,4 +142,36 @@ body.dark .sidebar-logo .sh-brandword { color: #ffffff; }
 @media (prefers-reduced-motion: reduce) {
   .sh-mark .sh-wheel { animation: none; }
   .sh-brandhi { animation: none; }
+}
+
+/* ============================================================
+   Nav pane: user-resizable + more professional group headers.
+   ============================================================ */
+
+/* Drag handle on the sidebar's right edge (injected by sellhi-nav.js). */
+.sidebar { position: relative; }
+.sh-nav-resize {
+  position: absolute; top: 0; right: -2px; width: 7px; height: 100%;
+  cursor: col-resize; z-index: 30; touch-action: none;
+}
+.sh-nav-resize::after {
+  content: ""; position: absolute; top: 0; right: 2px; width: 2px; height: 100%;
+  background: transparent; transition: background .12s ease;
+}
+.sh-nav-resize:hover::after, .sh-nav-resize.sh-drag::after { background: rgba(0,128,128,.35); }
+
+/* Refined group headers (metaphor kept): a small teal accent bar + calmer type +
+   the "(Identity)" sub as a lighter, non-caps qualifier. Reads premium, not busy. */
+.sidebar-nav .nav-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--sh-ink2, #607471); padding: 0 10px; margin-top: 16px; margin-bottom: 7px;
+}
+.sidebar-nav .nav-group:first-child .nav-label { margin-top: 4px; }
+.sidebar-nav .nav-label::before {
+  content: ""; flex: 0 0 auto; width: 16px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--sh-teal, #008080), rgba(0,128,128,.25));
+}
+.sidebar-nav .nav-label .nav-sub {
+  font-weight: 500; letter-spacing: 0; text-transform: none; opacity: .7; margin-left: -2px;
 }
