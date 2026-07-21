@@ -57,6 +57,14 @@
         "#sh-tb-pin{background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:6px;border-radius:8px;" +
           "color:var(--sh-ink2,#5b6875);opacity:.7;transition:opacity .12s,background .12s;}" +
         "#sh-tb-pin:hover{opacity:1;background:var(--sh-teal-soft,#e1f5ee);}" +
+        "#sh-tb-pin{border:1px solid var(--sh-line,#e6edec)!important;opacity:.85;}" +
+        // Music -> compact orange (was a wide pink gradient).
+        "#sh-taskbar #music-maniacs-btn{background:linear-gradient(90deg,#F26A21,#F59B53)!important;" +
+          "box-shadow:0 2px 10px rgba(242,106,33,.32)!important;}" +
+        // Workspace -> just the mark + name (drop the 'Seller workspace' subline).
+        "#sh-taskbar .ws-type{display:none!important;}#sh-taskbar .ws-current br{display:none!important;}" +
+        // Lift the demo's save pill ABOVE the bar so it never covers Shortcuts/pin.
+        ".save-status{bottom:calc(" + BAR_H + "px + 14px)!important;z-index:53!important;}" +
         // Auto-hide mode: reclaim the bar's space; tuck sidebar + bar; reveal on hover.
         "body.sh-autohide .shell{height:100dvh!important;}" +
         "body.sh-autohide .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:45;" +
@@ -107,6 +115,7 @@
     var userBar = document.querySelector(".sidebar .user-bar") || document.querySelector(".user-bar");
     var ws = document.getElementById("wsSwitcher");
     var music = document.getElementById("music-maniacs-btn");
+    if (music) music.innerHTML = "&#127925; Demo"; // shorten "Demo for Music Maniacs"
     var diy = document.querySelector('button[onclick*="startWatchDemo"]');
     if (diy) diy.classList.add("sh-diy-btn");
     var shortcuts = document.getElementById("sh-nav-shortcuts");
@@ -183,6 +192,24 @@
     eB.addEventListener("mouseenter", openTb);
     bar.addEventListener("mouseenter", openTb);
     bar.addEventListener("mouseleave", closeTb);
+
+    // The demo's "All changes saved" pill is permanent by default. Show it briefly
+    // on each save, then fade it out (it no longer overlaps the bar either).
+    try {
+      var ss = document.getElementById("save-status");
+      if (ss) {
+        ss.style.transition = "opacity .4s ease";
+        var hideT;
+        var poke = function () {
+          ss.style.opacity = "1"; ss.style.visibility = "visible";
+          clearTimeout(hideT);
+          hideT = setTimeout(function () { ss.style.opacity = "0"; ss.style.visibility = "hidden"; }, 3000);
+        };
+        var mo = new MutationObserver(poke);
+        mo.observe(ss, { attributes: true, childList: true, subtree: true, characterData: true });
+        poke(); // hide the initial persistent one after 3s
+      }
+    } catch (e) {}
   }
 
   function boot() {
