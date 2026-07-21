@@ -59,8 +59,16 @@
         "#sh-tb-pin:hover{opacity:1;background:var(--sh-teal-soft,#e1f5ee);}" +
         "#sh-tb-pin{border:1px solid var(--sh-line,#e6edec)!important;opacity:.85;}" +
         // Music -> compact orange (was a wide pink gradient).
-        "#sh-taskbar #music-maniacs-btn{background:linear-gradient(90deg,#F26A21,#F59B53)!important;" +
-          "box-shadow:0 2px 10px rgba(242,106,33,.32)!important;}" +
+        "#sh-taskbar #music-maniacs-btn{background:linear-gradient(90deg,#FF6600,#FF8A3D)!important;" +
+          "box-shadow:0 2px 10px rgba(255,102,0,.32)!important;}" +
+        // Feedback capsule, relocated into the bar (was a floating FAB).
+        "#sh-taskbar #sh-fab{position:static!important;inset:auto!important;margin:0!important;" +
+          "box-shadow:none!important;font-size:12px!important;padding:6px 12px!important;height:auto!important;border-radius:9px!important;}" +
+        // Live opportunity-usage widget (the 'system tray' chip).
+        "#sh-tb-usage{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;white-space:nowrap;" +
+          "color:var(--sh-ink,#12302e);background:var(--sh-teal-soft,#e1f5ee);border:1px solid var(--sh-line,#e6edec);" +
+          "border-radius:9px;padding:4px 9px;}" +
+        "#sh-tb-usage b{color:var(--sh-teal-ink,#0f6e56);font-weight:800;}" +
         // Workspace -> just the mark + name (drop the 'Seller workspace' subline).
         "#sh-taskbar .ws-type{display:none!important;}#sh-taskbar .ws-current br{display:none!important;}" +
         // Lift the demo's save pill ABOVE the bar so it never covers Shortcuts/pin.
@@ -129,6 +137,31 @@
     var spacer = document.createElement("div");
     spacer.className = "sh-tb-spacer";
     bar.appendChild(spacer);
+
+    // Widget: live opportunity-usage chip (fed by /api/usage) — the first of the
+    // "system tray" widgets. Silent no-op if usage isn't available.
+    var wdg = document.createElement("div");
+    wdg.id = "sh-tb-usage";
+    wdg.title = "Opportunity usage this month";
+    wdg.innerHTML = '<span aria-hidden="true">&#9889;</span><span id="sh-tb-usage-txt">&hellip;</span>';
+    bar.appendChild(cell(wdg));
+    try {
+      fetch("/api/usage", { credentials: "include" })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j || !j.ok) { wdg.style.display = "none"; return; }
+          var cap = (j.cap == null) ? "∞" : j.cap;
+          var t = document.getElementById("sh-tb-usage-txt");
+          if (t) t.innerHTML = "<b>" + j.used + "</b>/" + cap;
+          wdg.title = "Opportunity usage: " + j.used + " of " + cap + " signal accounts this month" +
+            (j.state === "bench" ? " · Bench" : "");
+        })
+        .catch(function () { wdg.style.display = "none"; });
+    } catch (e) { wdg.style.display = "none"; }
+
+    // Feedback capsule -> into the bar.
+    var fab = document.getElementById("sh-fab");
+    if (fab) bar.appendChild(cell(fab));
 
     var dc = cell(unwrap(dark));
     if (dc) bar.appendChild(dc);

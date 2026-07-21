@@ -439,8 +439,16 @@
   function toast(msg){ toastEl.textContent=msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(function(){toastEl.classList.remove('show');},2400); }
 
   // ---- Persistence: /api/connect (RLS-protected connect_config, per user) ----
-  var saveEl=document.getElementById('saveState'), saveT, hydrating=true;
-  function setSave(txt,color){ if(saveEl){ saveEl.textContent=txt; saveEl.style.color=color||'var(--ink3)'; } }
+  var saveEl=document.getElementById('saveState'), saveT, hydrating=true, _saveFadeT;
+  function setSave(txt,color){
+    if(!saveEl) return;
+    saveEl.textContent=txt; saveEl.style.color=color||'var(--ink3)';
+    saveEl.style.transition='opacity .4s ease'; saveEl.style.opacity='1';
+    clearTimeout(_saveFadeT);
+    // "All changes saved ✓" shouldn't sit there forever — fade it a few seconds
+    // after a save; it reappears whenever the next change is saved.
+    if(/saved/i.test(txt)){ _saveFadeT=setTimeout(function(){ if(saveEl) saveEl.style.opacity='0'; }, 3000); }
+  }
   function payload(){ return { tier:state.tier, modes:state.mode, tools:state.tool, byoKey:state.byoKey }; }
   function saveNow(){
     setSave('Saving…');
