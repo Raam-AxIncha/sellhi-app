@@ -210,7 +210,7 @@
 
     // Account/settings affordance: reach the plan + channel setup from here too.
     html += '<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">' +
-      '<a href="/connect" class="btn btn-sm btn-outline">&#9881; Plan &amp; Connections &#8594;</a></div>';
+      '<a href="/connect" class="btn btn-sm btn-outline">&#9881; Plans &#8594;</a></div>';
 
     if (!m.total) {
       html += emptyPortfolioCard("p7");
