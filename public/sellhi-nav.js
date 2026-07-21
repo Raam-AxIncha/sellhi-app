@@ -267,7 +267,13 @@
         setTimeout(function () {
           try {
             document.body.classList.remove("sh-navmask");
-            document.documentElement.classList.remove("sh-prehide"); // reveal the pre-paint guard
+            // p7/p8 are re-rendered by the Command Center script, which lifts the
+            // pre-paint guard itself once OUR funnel is painted. Revealing here
+            // would flash the native mock-up funnel underneath — so for those
+            // phases we leave the guard to the dashboard (head timer is the safety).
+            if (init.ph !== "p7" && init.ph !== "p8") {
+              document.documentElement.classList.remove("sh-prehide");
+            }
           } catch (e) {}
         }, 140);
       };
