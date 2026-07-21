@@ -576,11 +576,19 @@
     // without ever leaving demo content on screen.
     var c = document.querySelector("#phase-" + phase + " .content");
     if (c) c.removeAttribute("data-sh-sig");
+    // Once OUR dashboard is painted, lift the nav's pre-paint guard so the reveal
+    // shows our Command Center, never the native demo funnel underneath it.
+    function reveal() {
+      try {
+        document.documentElement.classList.remove("sh-prehide");
+        document.body.classList.remove("sh-navmask");
+      } catch (e) {}
+    }
     // Paint instantly from cache so the funnel lands and STAYS (no blank flash),
     // then refresh in the background so a fresh Market Intel run is reflected. The
     // guarded loadData above won't clobber a good pipeline, so the rebuild is safe.
-    if (DATA.loaded) { try { build(); } catch (e) {} }
-    loadData(function () { try { build(); } catch (e) {} });
+    if (DATA.loaded) { try { build(); } catch (e) {} reveal(); }
+    loadData(function () { try { build(); } catch (e) {} reveal(); });
   }
   function wrapShowPhase() {
     if (window.__shCmdWrapped) return true;
@@ -594,12 +602,25 @@
     window.__shCmdWrapped = true;
     return true;
   }
+  function activePhase() {
+    try {
+      var el = document.querySelector(".phase-section.active");
+      return el ? el.id.replace("phase-", "") : null;
+    } catch (e) { return null; }
+  }
   function boot() {
     var tries = 0;
     var t = setInterval(function () {
       tries++;
-      if (wrapShowPhase() || tries > 60) clearInterval(t);
-    }, 150);
+      if (wrapShowPhase()) {
+        clearInterval(t);
+        // If the app already switched to p7/p8 BEFORE we hooked (a direct #p7
+        // load restores the phase before this script wraps showPhase), render it
+        // now so our dashboard wins over the native demo funnel.
+        var ap = activePhase();
+        if (ap === "p7" || ap === "p8") { try { render(ap); } catch (e) {} }
+      } else if (tries > 120) clearInterval(t);
+    }, 40);
   }
   if (document.readyState === "complete") boot();
   else window.addEventListener("load", boot);
