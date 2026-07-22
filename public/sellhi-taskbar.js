@@ -227,20 +227,25 @@
     bar.addEventListener("mouseleave", closeTb);
 
     // The demo's "All changes saved" pill is permanent by default. Show it briefly
-    // on each save, then fade it out (it no longer overlaps the bar either).
+    // on each save, then fade it out.
+    // BUG FIX: the observer must NOT watch `style` — poke() writes style.opacity,
+    // which re-triggered the observer in an endless loop that kept resetting the
+    // hide timer, so the pill never disappeared. Watch only class/text (what an
+    // actual save changes: 'save-status saving' -> 'save-status saved').
     try {
       var ss = document.getElementById("save-status");
-      if (ss) {
+      if (ss && !ss.__shPill) {
+        ss.__shPill = true;
         ss.style.transition = "opacity .4s ease";
         var hideT;
         var poke = function () {
           ss.style.opacity = "1"; ss.style.visibility = "visible";
           clearTimeout(hideT);
-          hideT = setTimeout(function () { ss.style.opacity = "0"; ss.style.visibility = "hidden"; }, 3000);
+          hideT = setTimeout(function () { ss.style.opacity = "0"; ss.style.visibility = "hidden"; }, 2200);
         };
         var mo = new MutationObserver(poke);
-        mo.observe(ss, { attributes: true, childList: true, subtree: true, characterData: true });
-        poke(); // hide the initial persistent one after 3s
+        mo.observe(ss, { attributes: true, attributeFilter: ["class"], childList: true, subtree: true, characterData: true });
+        poke(); // hide the initial persistent one shortly after load
       }
     } catch (e) {}
   }

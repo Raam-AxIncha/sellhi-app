@@ -138,7 +138,10 @@
       '<div id="sh-p6-audience-count" style="font-size:12px;color:var(--sh-ink2);"></div>' +
       '<button class="btn btn-sm btn-primary" id="sh-p6-stage">Stage campaign &#8594;</button></div></div>' +
       // Staged list
-      '<div class="card" style="margin-bottom:16px;"><div class="card-title">Staged campaigns</div><div id="sh-p6-staged"></div></div>';
+      '<div class="card" style="margin-bottom:16px;"><div class="card-title">Staged campaigns</div><div id="sh-p6-staged"></div></div>' +
+      // Progression: the dashboard no longer dead-ends — advance to Command Center.
+      '<div style="display:flex;justify-content:flex-end;margin-top:4px;margin-bottom:8px;">' +
+      '<button class="btn btn-primary" onclick="try{showPhase(\'p7\')}catch(e){}">Continue to Command Center &#8594;</button></div>';
     dash.insertBefore(wrap, dash.firstChild);
     hideP6Fakes(dash);
     gateTab("p6-aztesting", "A/Z subject-line testing",

@@ -12,6 +12,18 @@
  * latest Market Intel run.
  */
 (function () {
+  // Cross-link helper: jump to a phase AND light up its sidebar capsule. The demo's
+  // showPhase() only highlights the nav item when you CLICK it (it reads event.target);
+  // called from an in-page button it left the destination capsule un-highlighted.
+  window.shCmdGo = function (p) {
+    try { if (typeof showPhase === "function") showPhase(p); } catch (e) {}
+    try {
+      document.querySelectorAll(".sidebar-nav .nav-item").forEach(function (n) {
+        var oc = n.getAttribute("onclick") || "";
+        n.classList.toggle("active", oc.indexOf("showPhase('" + p + "')") > -1);
+      });
+    } catch (e) {}
+  };
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -260,7 +272,7 @@
             '<div class="action-sub">' + esc(c.why || "") + "</div></div>" +
             '<span class="badge ' + (TIER_BADGE[t] || "badge-gray") + '">Tier ' + t + "</span></div>";
         });
-        html += '<div style="margin-top:12px;"><button class="btn btn-sm btn-primary" onclick="try{showPhase(\'p5\')}catch(e){}">Draft outreach in Content Factory &#8594;</button></div>';
+        html += '<div style="margin-top:12px;"><button class="btn btn-sm btn-primary" onclick="try{shCmdGo(\'p5\')}catch(e){}">Draft outreach in Content Factory &#8594;</button></div>';
       } else {
         html += '<div style="font-size:13px;color:var(--sh-ink2);line-height:1.6;">No live signals yet. Re-run Market Intel to surface recent funding, hiring, or leadership changes.</div>';
       }
