@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   if (html.includes("</head>")) {
     html = html.replace(
       "</head>",
-      `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}"><link rel="stylesheet" href="/sellhi-sections.css${v}">` +
+      `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}"><link rel="stylesheet" href="/sellhi-sections.css${v}"><link rel="stylesheet" href="/sellhi-glance.css${v}">` +
         // Boot cover: shown from first paint, removed by JS the moment the app is
         // READY (enhanced logo present + correct phase active) so subscribers never
         // see the raw demo (old logo / Identity Engine) flash on a hard refresh.
@@ -91,6 +91,7 @@ export async function GET(request: Request) {
     `<script src="/sellhi-nav.js${v}"></script>` +
     `<script src="/sellhi-progress.js${v}"></script>` +
     `<script src="/sellhi-sections.js${v}"></script>` +
+    `<script src="/sellhi-glance.js${v}"></script>` +
     `<script src="/sellhi-preview-badges.js${v}"></script>` +
     `<script src="/sellhi-content.js${v}"></script>` +
     `<script src="/sellhi-command.js${v}"></script>` +

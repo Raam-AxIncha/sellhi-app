@@ -1,0 +1,81 @@
+/* ============================================================
+   SellHi — Landing "workspace at a glance" strip.
+   Layered ON TOP of the exact demo (demo.html untouched). Sits at the
+   top of the Identity Engine content column (#phase-p1 .content). Font
+   is Raleway app-wide; brand tokens used with safe fallbacks so text
+   stays legible in light + dark.
+   ============================================================ */
+
+#sh-glance {
+  margin: 2px 0 22px;
+  font-family: 'Raleway', system-ui, sans-serif;
+  animation: sh-gl-in .34s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes sh-gl-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { #sh-glance { animation: none; } }
+
+/* --- header row --- */
+.sh-gl-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 11px; }
+.sh-gl-title {
+  font-size: 12px; font-weight: 800; letter-spacing: .8px; text-transform: uppercase;
+  color: var(--sh-ink2, #5b6875);
+}
+.sh-gl-more {
+  margin-left: auto; background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 12.5px; font-weight: 700; color: var(--sh-teal-ink, #0f6e56);
+  padding: 2px 4px; border-radius: 6px; transition: color .12s, background .12s;
+}
+.sh-gl-more:hover { color: var(--sh-teal, #008080); background: var(--sh-teal-soft, #e1f5ee); }
+
+/* --- tile grid --- */
+.sh-gl-tiles {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+}
+.sh-gl-tile {
+  position: relative; overflow: hidden; text-align: left; cursor: pointer;
+  background: #fff; border: 1px solid var(--sh-line, #e6edec); border-radius: 14px;
+  padding: 13px 14px 12px; font-family: inherit;
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+}
+.sh-gl-tile:hover { transform: translateY(-2px); box-shadow: 0 9px 22px rgba(18,48,46,.09); border-color: rgba(0,128,128,.4); }
+.sh-gl-tile:focus-visible { outline: 2px solid var(--sh-teal, #008080); outline-offset: 2px; }
+.sh-gl-tile::after {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: var(--sh-teal, #008080); opacity: .9;
+}
+.sh-gl-tile.orange::after { background: var(--sh-orange, #FF6600); }
+
+.sh-gl-lbl {
+  font-size: 11.5px; font-weight: 600; color: var(--sh-ink2, #5b6875);
+  display: flex; align-items: center; gap: 6px; line-height: 1.2;
+}
+.sh-gl-ico { font-size: 13px; }
+.sh-gl-num {
+  font-size: 26px; font-weight: 800; line-height: 1.05; letter-spacing: -.4px;
+  color: var(--sh-ink, #12302e); margin: 7px 0 2px;
+}
+.sh-gl-delta { font-size: 11.5px; font-weight: 700; color: var(--sh-ink2, #5b6875); }
+.sh-gl-delta.up { color: var(--sh-teal-ink, #0f6e56); }
+.sh-gl-delta.down { color: var(--sh-orange, #FF6600); }
+
+/* --- guest / non-owner honest state (no fabricated numbers) --- */
+.sh-gl-guest {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--sh-teal-soft, #e1f5ee); border: 1px solid rgba(0,128,128,.18);
+  border-radius: 14px; padding: 13px 16px;
+  font-size: 13.5px; font-weight: 600; color: var(--sh-teal-ink, #0f6e56); line-height: 1.45;
+}
+.sh-gl-guest .sh-gl-ico { font-size: 17px; flex: 0 0 auto; }
+
+/* --- dark mode --- */
+body.dark .sh-gl-tile { background: #101a2b; border-color: rgba(255,255,255,.09); }
+body.dark .sh-gl-num { color: var(--sh-ink, #e8eef7); }
+body.dark .sh-gl-title, body.dark .sh-gl-lbl, body.dark .sh-gl-delta { color: #9fb0c4; }
+body.dark .sh-gl-delta.up { color: #34d3a6; }
+body.dark .sh-gl-guest { background: rgba(0,128,128,.14); border-color: rgba(0,128,128,.3); color: #7fe3cb; }
+
+/* --- responsive: wrap to 2-up on narrow columns --- */
+@media (max-width: 620px) {
+  .sh-gl-tiles { grid-template-columns: repeat(2, 1fr); }
+  .sh-gl-num { font-size: 23px; }
+}
