@@ -349,7 +349,7 @@
       if (e.children.length !== 0) return;
       var tx = (e.textContent || "").trim();
       if (tx.toUpperCase() === "WIP" || tx === "Soon") {
-        e.textContent = "Pre-launch";
+        e.textContent = "Beta";
         e.style.textTransform = "none";
         e.style.fontSize = "9px";
         e.style.letterSpacing = ".2px";
