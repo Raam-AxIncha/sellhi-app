@@ -117,8 +117,98 @@
     });
   }
 
+  // ── Editable "wait" between sequence stages, with best-practice defaults ──────
+  function waitStyle() {
+    if (document.getElementById("sh-wait-style")) return;
+    var s = document.createElement("style");
+    s.id = "sh-wait-style";
+    s.textContent =
+      ".sh-wait-ctl{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--sh-ink2,#5b6875);flex-wrap:wrap;}" +
+      ".sh-wait-btn{width:18px;height:18px;line-height:1;border:1px solid var(--sh-line,#e6edec);background:var(--sh-surface,#fff);" +
+        "border-radius:5px;cursor:pointer;color:var(--sh-ink2,#5b6875);font-size:12px;padding:0;display:inline-flex;align-items:center;justify-content:center;}" +
+      ".sh-wait-btn:hover{border-color:var(--sh-teal,#008080);color:var(--sh-teal-ink,#0f6e56);}" +
+      ".sh-wait-input{width:36px;text-align:center;font-size:11px;padding:2px 4px;border:1px solid var(--sh-line,#e6edec);" +
+        "border-radius:5px;background:var(--sh-surface,#fff);color:var(--sh-ink,#12302e);font-family:inherit;}" +
+      ".sh-wait-hint{color:var(--sh-teal-ink,#0f6e56);opacity:.9;}" +
+      "body.dark .sh-wait-btn,body.dark .sh-wait-input{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14);color:var(--sh-ink,#e8eef7);}" +
+      "@media(max-width:640px){.sh-wait-hint{display:none;}}";
+    document.head.appendChild(s);
+  }
+  // Indicative cold-outreach cadence: quick after the opener, steady between
+  // follow-ups, a longer beat before the final ask.
+  function bestPractice(i, total) {
+    if (i === 0) return "2–3 days after the first touch";
+    if (i >= total - 1) return "4–5 days before the final ask";
+    return "3–4 days between follow-ups";
+  }
+  function recomputeSeqDays(container) {
+    var day = 1;
+    Array.prototype.forEach.call(container.children, function (el) {
+      if (!el.classList) return;
+      if (el.classList.contains("seq-step")) {
+        var spans = el.querySelectorAll(".seq-meta span");
+        var last = spans[spans.length - 1];
+        if (last && /Day\s+\d+/i.test(last.textContent)) last.textContent = "Day " + day;
+      } else if (el.classList.contains("seq-delay")) {
+        var inp = el.querySelector(".sh-wait-input");
+        if (inp) day += Math.max(1, parseInt(inp.value, 10) || 1);
+      }
+    });
+  }
+  function ensureSeqWaits() {
+    var container = document.getElementById("seq-builder-steps");
+    if (!container) return;
+    waitStyle();
+    var delays = Array.prototype.slice.call(container.querySelectorAll(".seq-delay"));
+    delays.forEach(function (d, i) {
+      if (d.__shWait) return;
+      d.__shWait = true;
+      var m = (d.textContent || "").match(/(\d+)/);
+      var n = m ? parseInt(m[1], 10) : 2;
+      var line = d.querySelector(".seq-delay-line");
+      d.textContent = "";
+      if (line) d.appendChild(line);
+      var ctl = document.createElement("span");
+      ctl.className = "sh-wait-ctl";
+      ctl.innerHTML =
+        'Wait <button type="button" class="sh-wait-btn" data-d="-1" aria-label="Fewer days">&minus;</button>' +
+        '<input class="sh-wait-input" type="number" min="1" max="21" value="' + n + '" aria-label="Wait days">' +
+        '<button type="button" class="sh-wait-btn" data-d="1" aria-label="More days">+</button> days' +
+        '<span class="sh-wait-hint"> · best practice: ' + bestPractice(i, delays.length) + '</span>';
+      d.appendChild(ctl);
+      var inp = ctl.querySelector(".sh-wait-input");
+      Array.prototype.forEach.call(ctl.querySelectorAll(".sh-wait-btn"), function (b) {
+        b.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var delta = parseInt(b.getAttribute("data-d"), 10);
+          inp.value = Math.max(1, Math.min(21, (parseInt(inp.value, 10) || 1) + delta));
+          recomputeSeqDays(container);
+        });
+      });
+      inp.addEventListener("click", function (e) { e.stopPropagation(); });
+      inp.addEventListener("input", function () { recomputeSeqDays(container); });
+      inp.addEventListener("change", function () {
+        inp.value = Math.max(1, Math.min(21, parseInt(inp.value, 10) || 1));
+        recomputeSeqDays(container);
+      });
+    });
+    recomputeSeqDays(container);
+    // Re-flow when the demo reorders / adds / deletes steps (new delays get editable;
+    // Day labels re-total). Debounced so drag operations don't thrash.
+    if (!container.__shWaitObs) {
+      container.__shWaitObs = 1;
+      var pend = 0;
+      var obs = new MutationObserver(function () {
+        if (pend) return; pend = 1;
+        setTimeout(function () { pend = 0; try { ensureSeqWaits(); } catch (e) {} }, 60);
+      });
+      obs.observe(container, { childList: true });
+    }
+  }
+
   function buildP6() {
     var dash = document.getElementById("p6-dashboard");
+    try { ensureSeqWaits(); } catch (e) {}
     if (!dash || document.getElementById("sh-p6-builder")) { renderP6Dynamic(); return; }
     var wrap = document.createElement("div");
     wrap.id = "sh-p6-builder";
