@@ -12,17 +12,21 @@
  * latest Market Intel run.
  */
 (function () {
-  // Cross-link helper: jump to a phase AND light up its sidebar capsule. The demo's
-  // showPhase() only highlights the nav item when you CLICK it (it reads event.target);
-  // called from an in-page button it left the destination capsule un-highlighted.
-  window.shCmdGo = function (p) {
-    try { if (typeof showPhase === "function") showPhase(p); } catch (e) {}
+  // Sidebar capsule sync. The demo's showPhase() only highlights the nav item when
+  // you CLICK it (it reads event.target); called programmatically from an in-page
+  // button (Continue / cross-links) the destination capsule stayed un-highlighted.
+  // This lights the correct capsule for ANY phase change (see the showPhase wrap).
+  function syncNav(p) {
     try {
       document.querySelectorAll(".sidebar-nav .nav-item").forEach(function (n) {
         var oc = n.getAttribute("onclick") || "";
         n.classList.toggle("active", oc.indexOf("showPhase('" + p + "')") > -1);
       });
     } catch (e) {}
+  }
+  window.shCmdGo = function (p) {
+    try { if (typeof showPhase === "function") showPhase(p); } catch (e) {}
+    syncNav(p);
   };
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -608,6 +612,7 @@
     var orig = window.showPhase;
     window.showPhase = function (p) {
       var r = orig.apply(this, arguments);
+      syncNav(p); // light the destination capsule for EVERY navigation (incl. in-page buttons)
       if (p === "p7" || p === "p8") { try { render(p); } catch (e) {} }
       return r;
     };
