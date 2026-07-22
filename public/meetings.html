@@ -111,7 +111,7 @@
     <div style="display:flex;gap:10px;align-items:center;">
       <span id="who" class="sub"></span>
       <button class="btn btn-sm" id="darkToggle" title="Toggle dark mode" aria-label="Toggle dark mode">&#9790;</button>
-      <a class="btn btn-sm" href="/">&#8592; Back to workspace</a>
+      <a class="btn btn-sm" href="/" onclick="try{if(document.referrer&&document.referrer.indexOf(location.host)>-1){history.back();return false;}}catch(e){}">&#8592; Back to workspace</a>
     </div>
   </div>
 
