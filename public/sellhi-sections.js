@@ -231,6 +231,9 @@
     function paint() {
       viewed[state.i] = true;
       track.style.transform = "translateX(" + (-state.i * 100) + "%)";
+      // quick fade on the newly shown panel (re-trigger the animation)
+      var shown = track.children[state.i];
+      if (shown) { shown.classList.remove("sh-sec-shown"); void shown.offsetWidth; shown.classList.add("sh-sec-shown"); }
       chips.forEach(function (c, k) {
         c.classList.toggle("active", k === state.i);
         c.classList.toggle("seen", !!viewed[k] && k !== state.i);
@@ -316,15 +319,13 @@
   function activate(sub) {
     var e = ensure(sub);
     if (!e) return;
-    var vis = isVisible(sub);
-    // Reset to the first section ONLY on a genuine hidden -> visible entry — never
-    // when the step's `.active` class is merely re-asserted (the demo's p1Step()/
-    // updateWizard re-adds it, the user taps the current step dot, research.js
-    // repopulates, etc.). Otherwise the carousel would snap back to section 0
-    // out from under the user (the "revert to Practice" oscillation).
-    if (vis && !e._wasVisible) e.reset();
-    else e.layout();
-    e._wasVisible = vis;
+    // NEVER snap the carousel back. The demo's p1Step()/updateWizard removes and
+    // re-adds the step's `.active` class on autosave, research repopulate, tapping
+    // a step dot, etc. — any of which used to be read as a fresh entry and reset
+    // the view to the first section mid-use (the Practice <-> Your Seat bounce).
+    // We only ever re-measure the height at the CURRENT section; position is the
+    // user's to change, via the chips / Prev / Next.
+    e.layout();
     setTimeout(function () { if (isVisible(sub)) e.layout(); }, 140);
   }
 
@@ -344,11 +345,8 @@
     var obs = new MutationObserver(function (muts) {
       muts.forEach(function (m) {
         var t = m.target;
-        if (!(t.classList && t.classList.contains("sub-step") && PLANS[t.id])) return;
-        if (t.classList.contains("active")) {
-          activate(t);
-        } else {
-          var e = findEntry(t); if (e) e._wasVisible = false; // left the step; reset on next real entry
+        if (t.classList && t.classList.contains("sub-step") && t.classList.contains("active") && PLANS[t.id]) {
+          activate(t); // re-measure only; never repositions the carousel
         }
       });
     });

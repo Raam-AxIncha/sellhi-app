@@ -43,19 +43,21 @@
 
 /* ---- Viewport + horizontal track ---- */
 .sh-sec-viewport {
-  position: relative; overflow: hidden;
-  height: auto; transition: height .32s cubic-bezier(.2,.7,.2,1);
+  position: relative; overflow: hidden; height: auto;
 }
+/* Instant, tab-style section switching (no animated slide). An animated
+   translate could visibly bounce if the page re-rendered mid-transition, so
+   sections snap directly. A short opacity fade on the active panel keeps it
+   from feeling abrupt — opacity can never affect which section is shown. */
 .sh-sec-track {
-  display: flex; flex-wrap: nowrap; align-items: flex-start;
-  width: 100%;
-  transition: transform .34s cubic-bezier(.2,.7,.2,1);
-  will-change: transform;
+  display: flex; flex-wrap: nowrap; align-items: flex-start; width: 100%;
 }
 .sh-sec-panel {
   flex: 0 0 100%; width: 100%; min-width: 100%; box-sizing: border-box;
   padding: 2px; /* keeps focus rings/box-shadows from clipping at edges */
 }
+.sh-sec-panel.sh-sec-shown { animation: sh-sec-fade .2s ease; }
+@keyframes sh-sec-fade { from { opacity: .35; } to { opacity: 1; } }
 
 /* ---- Controls ---- */
 .sh-sec-controls {
@@ -121,6 +123,6 @@ body.dark .sh-sec-gate-hint.done { color: #37c3b4; }
 
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
-  .sh-sec-viewport, .sh-sec-track { transition: none; }
+  .sh-sec-panel.sh-sec-shown { animation: none; }
   .sh-sec-gate-hint.nudge { animation: none; }
 }
