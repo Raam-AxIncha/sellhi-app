@@ -59,22 +59,22 @@ export async function GET(request: Request) {
             `border:3px solid rgba(0,128,128,.22);border-top-color:#008080;border-radius:50%;z-index:100001;animation:sh-boot-spin .8s linear infinite;}` +
           `@keyframes sh-boot-spin{to{transform:rotate(360deg)}}` +
           `html.sh-booting{overflow:hidden;}</style>` +
+        // Adaptive to connection speed: reveal only when the NETWORK has gone idle
+        // (no fetch in flight AND no app script/css/api still loading) AND the DOM is
+        // quiet AND we're on the right, enhanced page. On a fast link this is ~1s; on
+        // a slow link it waits as long as the resources actually take (Chrome flags
+        // "slow network" here). Watches fetches + resource loads + DOM mutations, each
+        // resetting a short settle timer. Hard 8s cap so it can never hang.
         `<script>(function(){try{var d=document.documentElement;d.classList.add('sh-booting');` +
           `var h=(location.hash||'').replace('#','');var pending=0;` +
-          // Reveal only when: enhanced chrome (logo) is in + we're on the right phase
-          // + NO fetch is in flight + the DOM has been quiet for a beat. Tracking
-          // in-flight fetches is the key bit — pages like p4/p6/plans/billing pull
-          // their content over the network AFTER landing, and during that fetch the
-          // DOM is momentarily quiet, which used to reveal the raw page. Hard 6s cap.
           `try{var of=window.fetch;if(of){window.fetch=function(){pending++;bump();var p;try{p=of.apply(this,arguments);}catch(e){pending=Math.max(0,pending-1);throw e;}var dec=function(){pending=Math.max(0,pending-1);bump();};if(p&&p.then){p.then(dec,dec);}else{dec();}return p;};}}catch(e){}` +
           `function phaseOk(){if(!/^p[1-8]$/.test(h))return true;var a=document.querySelector('.phase-section.active');return !!a&&a.id==='phase-'+h;}` +
           `function chromeOk(){return !!document.querySelector('.sh-brandlogo');}` +
-          `var t0=Date.now(),MIN=1800,mo=null,st=null,iv=null;` +
-          `function done(){try{d.classList.remove('sh-booting');}catch(e){}try{if(mo)mo.disconnect();}catch(e){}if(iv)clearInterval(iv);if(st)clearTimeout(st);}` +
-          `function bump(){if(!mo)return;clearTimeout(st);st=setTimeout(function(){if(pending<=0&&(Date.now()-t0)>=MIN){done();}else{bump();}},450);}` +
-          `iv=setInterval(function(){if(Date.now()-t0>7000){done();return;}` +
-            `if(!mo&&chromeOk()&&phaseOk()){try{var tg=document.getElementById('main-content')||document.body;` +
-              `mo=new MutationObserver(bump);mo.observe(tg,{childList:true,subtree:true});bump();}catch(e){done();}}},70);` +
+          `var t0=Date.now(),MIN=900,mo=null,po=null,st=null,iv=null,armed=false;` +
+          `function done(){try{d.classList.remove('sh-booting');}catch(e){}try{if(mo)mo.disconnect();}catch(e){}try{if(po)po.disconnect();}catch(e){}if(iv)clearInterval(iv);if(st)clearTimeout(st);}` +
+          `function bump(){if(!armed)return;clearTimeout(st);st=setTimeout(function(){if(pending<=0&&(Date.now()-t0)>=MIN&&chromeOk()&&phaseOk()){done();}else{bump();}},450);}` +
+          `function arm(){if(armed)return;armed=true;try{var tg=document.getElementById('main-content')||document.body;mo=new MutationObserver(bump);mo.observe(tg,{childList:true,subtree:true});}catch(e){}try{if(window.PerformanceObserver){po=new PerformanceObserver(bump);po.observe({type:'resource',buffered:true});}}catch(e){}bump();}` +
+          `iv=setInterval(function(){if(Date.now()-t0>8000){done();return;}if(!armed&&chromeOk()){arm();}},70);` +
         `}catch(e){try{document.documentElement.classList.remove('sh-booting');}catch(x){}}})();</script>` +
         `</head>`
     );
