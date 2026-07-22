@@ -135,9 +135,22 @@
   // "Find more accounts": append a fresh batch (server excludes the ones you already
   // have) so the list grows past a single pass — raising the ceiling toward the plan
   // caps without one giant, timeout-prone request.
+  function findMoreStyle() {
+    if (document.getElementById("sh-find-more-style")) return;
+    var s = document.createElement("style");
+    s.id = "sh-find-more-style";
+    s.textContent =
+      ".sh-mini-spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,128,128,.25);" +
+      "border-top-color:var(--sh-teal,#008080);border-radius:50%;animation:sh-mini-spin .7s linear infinite;" +
+      "vertical-align:-2px;margin-right:7px;}" +
+      "@keyframes sh-mini-spin{to{transform:rotate(360deg);}}" +
+      "@media (prefers-reduced-motion: reduce){.sh-mini-spin{animation-duration:1.6s;}}";
+    document.head.appendChild(s);
+  }
   function ensureFindMore() {
     var list = document.getElementById("p2-company-list");
     if (!list || document.getElementById("sh-find-more-wrap")) return;
+    findMoreStyle();
     var wrap = document.createElement("div");
     wrap.id = "sh-find-more-wrap";
     wrap.style.cssText = "text-align:center;margin:14px 0 4px;";
@@ -152,7 +165,15 @@
   function findMore(btn) {
     if (!S.companies.length) return;
     var orig = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = "Finding more…";
+    // Visible wait state: spinner + a minimum on-screen time so the animation
+    // registers even when the server answers instantly (e.g. "no more companies").
+    var t0 = (window.performance && performance.now) ? performance.now() : 0;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="sh-mini-spin" aria-hidden="true"></span>Finding more…';
+    function done(fn) {
+      var elapsed = ((window.performance && performance.now) ? performance.now() : 0) - t0;
+      setTimeout(function () { btn.disabled = false; btn.innerHTML = orig; try { fn(); } catch (e) {} }, Math.max(0, 700 - elapsed));
+    }
     var crit = collectCriteria(); crit.append = true;
     fetch("/api/market", {
       method: "POST", headers: { "content-type": "application/json" },
@@ -160,7 +181,7 @@
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
-        btn.disabled = false; btn.innerHTML = orig;
+        done(function () {
         if (res.ok && res.j && Array.isArray(res.j.companies)) {
           S.companies = res.j.companies;
           S.counts = res.j.counts || S.counts;
@@ -175,8 +196,9 @@
         } else {
           try { toast("info", (res.j && res.j.error) || "Couldn’t fetch more right now."); } catch (e) {}
         }
+        });
       })
-      .catch(function () { btn.disabled = false; btn.innerHTML = orig; try { toast("info", "Couldn’t fetch more right now."); } catch (e) {} });
+      .catch(function () { done(function () { try { toast("info", "Couldn’t fetch more right now."); } catch (e) {} }); });
   }
 
   function updateStep3Counts() {
