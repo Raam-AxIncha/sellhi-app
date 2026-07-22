@@ -122,10 +122,22 @@
   }
 
   // ── real signals list (replaces the demo's mock signal cards) ───────────────
+  // Categorize each real company by its signal text so the Funding / Hiring /
+  // Leadership / Product filter chips work on YOUR data. Previously the real cards
+  // had no type, so clicking any of those chips hid every card -> the tabs looked empty.
+  function signalType(c) {
+    var s = ((c.why || "") + " " + (c.signal || "") + " " +
+      (Array.isArray(c.signals) ? c.signals.join(" ") : "")).toLowerCase();
+    if (/rais|funding|series\s|seed|round|\$\s?\d|invest/.test(s)) return "funding";
+    if (/hir|open role|\brole\b|\bjob\b|\bae\b|\bsdr\b|recruit|headcount|talent/.test(s)) return "hiring";
+    if (/\bvp\b|chief|\bc[a-z]o\b|\bceo\b|\bcro\b|\bcmo\b|\bcoo\b|leader|appointed|depart|joined as|new head|promot/.test(s)) return "leadership";
+    if (/launch|new product|\bfeature\b|\bapi\b|release|ships|unveil|rollout|\bga\b/.test(s)) return "product";
+    return "other";
+  }
   function signalCardHTML(c) {
     var why = c.why || [c.industry, c.stage].filter(Boolean).join(" · ");
     return (
-      '<div class="signal-card" data-company="' + esc(c.name) + '">' +
+      '<div class="signal-card" data-signal-type="' + signalType(c) + '" data-company="' + esc(c.name) + '">' +
       '<div class="signal-dot" style="background:var(--primary);"></div>' +
       '<div class="signal-body"><div class="signal-title">' + esc(c.name) + "</div>" +
       '<div class="signal-sub">' + esc(why) + "</div></div>" +
@@ -168,11 +180,43 @@
       .catch(function () { cb && cb(); });
   }
 
+  // Honest empty-state: when a category filter matches none of YOUR signals, say so
+  // instead of leaving a blank panel. Wraps the demo's global filterP5Signals.
+  function wrapSignalFilter() {
+    if (window.__shSignalFilterWrapped) return;
+    if (typeof window.filterP5Signals !== "function") return;
+    window.__shSignalFilterWrapped = true;
+    var LABEL = { funding: "funding", hiring: "hiring", leadership: "leadership-change", product: "product" };
+    var orig = window.filterP5Signals;
+    window.filterP5Signals = function (type) {
+      try { orig.apply(this, arguments); } catch (e) {}
+      try {
+        var panel = document.getElementById("p5-signals");
+        if (!panel) return;
+        var empty = document.getElementById("sh-signal-empty");
+        if (!empty) {
+          empty = document.createElement("div");
+          empty.id = "sh-signal-empty";
+          empty.style.cssText = "display:none;font-size:13px;color:var(--sh-ink2,#5b6875);line-height:1.6;padding:14px 4px;";
+          panel.appendChild(empty);
+        }
+        var visible = $all(".signal-card", panel).filter(function (n) { return n.style.display !== "none"; }).length;
+        if (visible === 0 && type && type !== "all") {
+          empty.textContent = "No " + (LABEL[type] || type) + " signals in your current list yet — re-run Market Intel or broaden your ICP to surface more.";
+          empty.style.display = "block";
+        } else {
+          empty.style.display = "none";
+        }
+      } catch (e) {}
+    };
+  }
+
   function boot() {
     var tries = 0;
     var t = setInterval(function () {
       tries++;
       var ready = overrideGenerate();
+      wrapSignalFilter();
       if (ready || tries > 40) clearInterval(t);
     }, 150);
     loadCompanies(function () { try { populateSignals(); } catch (e) {} });
@@ -181,7 +225,7 @@
       var orig = window.showPhase;
       window.showPhase = function (p) {
         var r = orig.apply(this, arguments);
-        if (p === "p5") { try { overrideGenerate(); populateSignals(); } catch (e) {} }
+        if (p === "p5") { try { overrideGenerate(); populateSignals(); wrapSignalFilter(); } catch (e) {} }
         return r;
       };
       window.__smContentPhase = true;

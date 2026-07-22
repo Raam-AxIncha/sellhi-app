@@ -24,9 +24,14 @@ export async function GET(request: Request) {
     .single();
 
   const meta = user.user_metadata || {};
+  // Owner / admin accounts are fully unrestricted across the app. Keep this list in
+  // sync with OWNER_EMAILS in src/app/api/usage/route.ts.
+  const OWNER_EMAILS = ["raam@axincha.com"];
+  const admin = !!(user.email && OWNER_EMAILS.includes(user.email.toLowerCase()));
   const identity = {
     signedIn: true,
     email: user.email,
+    admin,
     fullName: profile?.full_name || meta.full_name || meta.name || (user.email ?? "").split("@")[0],
     title: profile?.title || meta.title || "Fractional CXO",
     company: profile?.company || meta.company || "",

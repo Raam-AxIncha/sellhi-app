@@ -12,6 +12,15 @@ const CAP: Record<string, number> = {
   scout: 0, seed: 25, growth: 100, scale: 300, scaleManaged: 300, enterprise: Number.POSITIVE_INFINITY,
 };
 
+// Owner / admin accounts: fully unrestricted (unlimited usage, treated as enterprise).
+// Add SellHi-owned logins here as they come (Sales-as-a-Service, SellHi Exchange, ...).
+const OWNER_EMAILS = new Set<string>([
+  "raam@axincha.com",
+]);
+function isOwner(email?: string | null): boolean {
+  return !!email && OWNER_EMAILS.has(email.toLowerCase());
+}
+
 // Bench (keep-warm) cap = 10% of the Hunting cap, clamped to [5, 15]. A small,
 // fair "stay visible while booked" allowance that's clearly not a full hunt.
 // Scout (0) can never Bench; unlimited tiers get the ceiling.
@@ -47,6 +56,9 @@ export async function GET() {
     if (cc && typeof cc.tier === "string" && CAP[cc.tier] !== undefined) tier = cc.tier;
     if (cc && cc.state === "bench") state = "bench";
   } catch { /* default seed / hunting */ }
+
+  // Owner / admin: unlimited, never benched — overrides whatever tier is configured.
+  if (isOwner(user.email)) { tier = "enterprise"; state = "hunting"; }
 
   // Used = ledger rows for this month (best-effort; 0 if the table isn't there yet).
   let used = 0;
