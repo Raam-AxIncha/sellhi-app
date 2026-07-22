@@ -1,20 +1,19 @@
 /*
- * SellHi — SECTIONS: one-section-at-a-time, side-to-side panels
+ * SellHi — SECTIONS: one-section-at-a-time, tab-style panels
  * ------------------------------------------------------------------
- * App-layer module (demo.html stays byte-for-byte pristine). It takes a
- * long, vertically-scrolling wizard sub-step and re-flows its content into
- * a horizontal stepper: the reader sees ONE section at a time and advances
- * left-to-right (Prev / Next + clickable chips) instead of scrolling a wall.
+ * App-layer module (demo.html stays byte-for-byte pristine). It takes a long,
+ * vertically-scrolling wizard sub-step and re-flows its content into a
+ * horizontal stepper: the reader sees ONE section at a time and moves between
+ * them with clickable chips + Prev/Next — no long scroll.
  *
- * Design goals
- *   • Reusable  — driven by a declarative PLANS map, keyed by sub-step id.
- *                 Adding a page in #9 = adding one entry, no engine changes.
- *   • Reversible — it only MOVES existing DOM nodes into wrappers and can put
- *                 them all back in original order (window.__shSections.disable()).
- *                 No node is created inside, cloned from, or written to demo.html.
- *   • Resilient — sections are matched by class/text signals (not child index),
- *                 so a stale/older demo.html still segments correctly, and any
- *                 section it can't find is simply skipped (never throws).
+ * Switching is plain show/hide (display:none / block) — NOT a sliding transform
+ * track. A translate carousel proved fragile (clicks landing on the wrong chip,
+ * fractional-DPR hit-test drift, mid-render repositioning). Show/hide has none
+ * of that: exactly one panel is in the DOM flow at a time.
+ *
+ * Reusable  — driven by the PLANS map, keyed by sub-step id (add a page = add an entry).
+ * Reversible — only MOVES existing nodes into wrappers; window.__shSections.disable() restores.
+ * Resilient  — sections matched by class/text signals (not index); missing ones are skipped.
  *
  * Prototype scope (#8): Identity Engine steps 2/3/4 -> #p1-s1, #p1-s2, #p1-s3.
  */
@@ -22,7 +21,7 @@
   if (window.__SH_SECTIONS__) return;
   window.__SH_SECTIONS__ = true;
 
-  /* ---------- small helpers ---------- */
+  /* ---------- helpers ---------- */
   function el(tag, cls) { var n = document.createElement(tag); if (cls) n.className = cls; return n; }
   function txt(n) { return (n && n.textContent ? n.textContent : "").replace(/\s+/g, " ").trim(); }
   function hasField(node, sub) {
@@ -38,13 +37,7 @@
   function hasClass(node, cls) { return node.classList && node.classList.contains(cls); }
   function cardTitleHas(node, sub) { return hasClass(node, "card-title") && contains(node, sub); }
 
-  /* ---------- declarative segmentation plans ----------
-   * Each section's `start(node)` tests whether a DIRECT child of the card
-   * BEGINS that section. Nodes are scanned in order with a forward-only
-   * pointer: everything before the first matched start is the intro; the
-   * trailing nav row (the child that holds the wizard .btn buttons) is the
-   * pinned footer; everything else is grouped under the section it follows.
-   */
+  /* ---------- declarative segmentation plans ---------- */
   var PLANS = {
     "p1-s1": {
       label: "Your Dossier",
@@ -83,44 +76,34 @@
   function directChildren(card) {
     return Array.prototype.filter.call(card.children, function (n) {
       return n.nodeType === 1 &&
-        !n.classList.contains("loading-overlay") &&   // keep the absolute overlay in place
+        !n.classList.contains("loading-overlay") &&
         !n.classList.contains("sh-sec-head") &&
-        !n.classList.contains("sh-sec-viewport") &&
+        !n.classList.contains("sh-sec-body") &&
         !n.classList.contains("sh-sec-controls");
     });
   }
 
   function segment(card, plan) {
     var kids = directChildren(card);
-
-    // Footer = last child that holds a wizard button (Back / Continue row).
     var footer = null;
     for (var i = kids.length - 1; i >= 0; i--) {
       if (kids[i].querySelector && kids[i].querySelector(".btn")) { footer = kids[i]; break; }
     }
     var body = kids.filter(function (n) { return n !== footer; });
-
     var intro = [], sections = [], current = null, ptr = 0;
     body.forEach(function (node) {
-      // Forward scan from the current pointer so sections stay in order and a
-      // missing one is skipped rather than mis-matched by a later node.
       var matchedIdx = -1;
       for (var k = ptr; k < plan.sections.length; k++) {
         if (plan.sections[k].start(node)) { matchedIdx = k; break; }
       }
-      if (matchedIdx > -1) {
-        current = { def: plan.sections[matchedIdx], nodes: [] };
-        sections.push(current);
-        ptr = matchedIdx + 1;
-      }
+      if (matchedIdx > -1) { current = { def: plan.sections[matchedIdx], nodes: [] }; sections.push(current); ptr = matchedIdx + 1; }
       if (current) current.nodes.push(node);
       else intro.push(node);
     });
-
     return { intro: intro, sections: sections, footer: footer };
   }
 
-  /* ---------- registry (for reversible teardown) ---------- */
+  /* ---------- registry (reversible teardown) ---------- */
   var registry = [];
 
   function transform(sub) {
@@ -130,12 +113,11 @@
     if (!card || card.getAttribute("data-sh-sections") === "on") return null;
 
     var seg = segment(card, plan);
-    if (seg.sections.length < 2) return null; // not worth panelizing
+    if (seg.sections.length < 2) return null;
 
-    // Snapshot original child order for a clean, exact restore.
     var orig = Array.prototype.slice.call(card.children);
 
-    /* build header (intro + horizontal stepper) */
+    /* header: intro + horizontal chip stepper */
     var head = el("div", "sh-sec-head");
     var intro = el("div", "sh-sec-intro");
     seg.intro.forEach(function (n) { intro.appendChild(n); });
@@ -143,31 +125,25 @@
     head.appendChild(intro);
     head.appendChild(steps);
 
-    /* build viewport + horizontal track of panels */
-    var viewport = el("div", "sh-sec-viewport");
-    var track = el("div", "sh-sec-track");
-    viewport.appendChild(track);
-
-    var chips = [];
+    /* body: all panels stacked; only the active one is displayed */
+    var body = el("div", "sh-sec-body");
+    var panels = [], chips = [];
     seg.sections.forEach(function (s, idx) {
       var panel = el("div", "sh-sec-panel");
       panel.setAttribute("role", "tabpanel");
       panel.setAttribute("aria-label", s.def.label);
       s.nodes.forEach(function (n) { panel.appendChild(n); });
-      track.appendChild(panel);
+      body.appendChild(panel);
+      panels.push(panel);
 
       var chip = el("button", "sh-sec-chip");
       chip.type = "button";
       chip.setAttribute("role", "tab");
-      chip.innerHTML = '<span class="sh-sec-chip-n">' + (idx + 1) + '</span>' +
-                       '<span class="sh-sec-chip-l"></span>';
-      chip.querySelector(".sh-sec-chip-l").textContent = s.def.label; // safe text
-      chip.addEventListener("click", function () { go(idx); });
+      chip.innerHTML = '<span class="sh-sec-chip-n">' + (idx + 1) + '</span><span class="sh-sec-chip-l"></span>';
+      chip.querySelector(".sh-sec-chip-l").textContent = s.def.label;
+      chip.addEventListener("click", function (e) { e.preventDefault(); go(idx); });
       steps.appendChild(chip);
       chips.push(chip);
-      if (idx < seg.sections.length - 1) {
-        var sep = el("span", "sh-sec-sep"); sep.setAttribute("aria-hidden", "true"); steps.appendChild(sep);
-      }
     });
 
     /* controls */
@@ -177,20 +153,17 @@
     var next = el("button", "sh-sec-btn sh-sec-primary sh-sec-next"); next.type = "button"; next.innerHTML = "Next &#8594;";
     controls.appendChild(prev); controls.appendChild(count); controls.appendChild(next);
 
-    /* review-gate hint line (sits between the controls and the wizard footer) */
     var hint = el("div", "sh-sec-gate-hint"); hint.setAttribute("role", "status"); hint.setAttribute("aria-live", "polite");
 
-    /* assemble: [overlay stays] head -> viewport -> controls -> hint -> footer(last) */
+    /* assemble: [overlay stays] head -> body -> controls -> hint -> footer(last) */
     card.appendChild(head);
-    card.appendChild(viewport);
+    card.appendChild(body);
     card.appendChild(controls);
     card.appendChild(hint);
     if (seg.footer) card.appendChild(seg.footer);
     card.setAttribute("data-sh-sections", "on");
 
-    /* The wizard's own forward button (the primary one, NOT "Back"): it stays
-       exactly where it is and keeps its original onclick, but we GATE it until
-       every section has been viewed. Set `gate:false` on a plan to opt out. */
+    /* wizard's own forward button (gated) */
     var fwd = null;
     if (seg.footer) {
       fwd = seg.footer.querySelector(".btn-primary");
@@ -198,17 +171,9 @@
     }
     var gate = plan.gate !== false && seg.sections.length > 1 && !!fwd;
 
-    /* ---- state + behaviour ---- */
     var state = { i: 0, n: seg.sections.length };
-    var viewed = {}; // section index -> true once shown (persists across resets)
+    var viewed = {};
 
-    function measure() {
-      var panel = track.children[state.i];
-      if (!panel) return;
-      // Only meaningful when visible; guarded by caller.
-      var h = panel.scrollHeight;
-      if (h > 0) viewport.style.height = h + "px";
-    }
     function seenCount() { var c = 0; for (var k = 0; k < state.n; k++) if (viewed[k]) c++; return c; }
     function firstUnseen() { for (var k = 0; k < state.n; k++) if (!viewed[k]) return k; return -1; }
 
@@ -216,13 +181,11 @@
       if (!gate) return;
       var left = state.n - seenCount();
       if (left > 0) {
-        fwd.classList.add("sh-sec-locked");
-        fwd.setAttribute("aria-disabled", "true");
+        fwd.classList.add("sh-sec-locked"); fwd.setAttribute("aria-disabled", "true");
         hint.className = "sh-sec-gate-hint show";
         hint.textContent = "Review all " + state.n + " sections to continue — " + left + " left";
       } else {
-        fwd.classList.remove("sh-sec-locked");
-        fwd.removeAttribute("aria-disabled");
+        fwd.classList.remove("sh-sec-locked"); fwd.removeAttribute("aria-disabled");
         hint.className = "sh-sec-gate-hint show done";
         hint.textContent = "All " + state.n + " sections reviewed ✓ — you can continue";
       }
@@ -230,10 +193,8 @@
 
     function paint() {
       viewed[state.i] = true;
-      track.style.transform = "translateX(" + (-state.i * 100) + "%)";
-      // quick fade on the newly shown panel (re-trigger the animation)
-      var shown = track.children[state.i];
-      if (shown) { shown.classList.remove("sh-sec-shown"); void shown.offsetWidth; shown.classList.add("sh-sec-shown"); }
+      // show ONLY the active panel
+      for (var k = 0; k < panels.length; k++) { panels[k].classList.toggle("sh-sec-on", k === state.i); }
       chips.forEach(function (c, k) {
         c.classList.toggle("active", k === state.i);
         c.classList.toggle("seen", !!viewed[k] && k !== state.i);
@@ -243,19 +204,12 @@
       next.disabled = state.i === state.n - 1;
       count.textContent = (state.i + 1) + " of " + state.n;
       updateGate();
-      measure();
     }
-    function go(i) {
-      state.i = Math.max(0, Math.min(state.n - 1, i));
-      paint();
-    }
-    function layout() { paint(); setTimeout(measure, 60); } // re-measure after fonts/reflow
+    function go(i) { state.i = Math.max(0, Math.min(state.n - 1, i)); paint(); }
 
-    prev.addEventListener("click", function () { go(state.i - 1); });
-    next.addEventListener("click", function () { go(state.i + 1); });
+    prev.addEventListener("click", function (e) { e.preventDefault(); go(state.i - 1); });
+    next.addEventListener("click", function (e) { e.preventDefault(); go(state.i + 1); });
 
-    // Gate: intercept the wizard's forward button until all sections are viewed.
-    // Capture phase runs BEFORE the button's inline onclick, so we can block it.
     if (gate) {
       fwd.addEventListener("click", function (e) {
         if (seenCount() < state.n) {
@@ -267,23 +221,9 @@
       }, true);
     }
 
-    // Arrow-key navigation while focus is inside this card's stepper/controls.
-    head.addEventListener("keydown", onKey);
-    controls.addEventListener("keydown", onKey);
-    function onKey(e) {
-      if (e.key === "ArrowRight") { e.preventDefault(); go(state.i + 1); }
-      else if (e.key === "ArrowLeft") { e.preventDefault(); go(state.i - 1); }
-    }
+    paint(); // show section 1
 
-    // Keep the viewport height fitted when a panel's content changes size after
-    // transform — e.g. sellhi-research.js populate() fills the dossier, fields
-    // become contentEditable, chips re-render. Prevents clipping/overflow later.
-    if (typeof ResizeObserver === "function") {
-      var ro = new ResizeObserver(function () { if (isVisible(sub)) measure(); });
-      Array.prototype.forEach.call(track.children, function (p) { ro.observe(p); });
-    }
-
-    var entry = { sub: sub, card: card, orig: orig, layout: layout, reset: function () { state.i = 0; layout(); }, _wasVisible: false };
+    var entry = { sub: sub, card: card, orig: orig, layout: paint, reset: function () { state.i = 0; paint(); } };
     registry.push(entry);
     return entry;
   }
@@ -291,79 +231,48 @@
   /* ---------- reversible teardown ---------- */
   function restore(entry) {
     var card = entry.card;
-    entry.orig.forEach(function (n) { card.appendChild(n); }); // re-append in original order
-    ["sh-sec-head", "sh-sec-viewport", "sh-sec-controls"].forEach(function (cls) {
-      var w = card.querySelector(":scope > ." + cls);
-      // fall back if :scope unsupported
-      if (!w) { var all = card.getElementsByClassName(cls); w = all && all[0]; }
-      if (w && w.parentNode === card) card.removeChild(w);
+    entry.orig.forEach(function (n) { card.appendChild(n); });
+    ["sh-sec-head", "sh-sec-body", "sh-sec-controls", "sh-sec-gate-hint"].forEach(function (cls) {
+      var all = card.getElementsByClassName(cls);
+      while (all.length) { var w = all[0]; if (w.parentNode === card) card.removeChild(w); else break; }
     });
     card.removeAttribute("data-sh-sections");
   }
   window.__shSections = {
     disable: function () { registry.slice().forEach(restore); registry.length = 0; },
-    relayout: function () { registry.forEach(function (e) { if (isVisible(e.sub)) e.layout(); }); }
+    relayout: function () { registry.forEach(function (e) { e.layout(); }); }
   };
 
   /* ---------- activation plumbing ---------- */
   function isVisible(node) { return !!(node && node.offsetParent !== null); }
-
   function findEntry(sub) { for (var i = 0; i < registry.length; i++) if (registry[i].sub === sub) return registry[i]; return null; }
-
-  function ensure(sub) {
-    var e = findEntry(sub);
-    if (!e) e = transform(sub);
-    return e;
-  }
-
+  function ensure(sub) { var e = findEntry(sub); if (!e) e = transform(sub); return e; }
   function activate(sub) {
-    var e = ensure(sub);
-    if (!e) return;
-    // NEVER snap the carousel back. The demo's p1Step()/updateWizard removes and
-    // re-adds the step's `.active` class on autosave, research repopulate, tapping
-    // a step dot, etc. — any of which used to be read as a fresh entry and reset
-    // the view to the first section mid-use (the Practice <-> Your Seat bounce).
-    // We only ever re-measure the height at the CURRENT section; position is the
-    // user's to change, via the chips / Prev / Next.
-    e.layout();
-    setTimeout(function () { if (isVisible(sub)) e.layout(); }, 140);
+    // Only ensures the transform exists + repaints the CURRENT section. Never
+    // repositions — the demo re-asserting `.active` (autosave, step dots, etc.)
+    // must not move the user's place.
+    var e = ensure(sub); if (e) e.layout();
   }
 
   function boot() {
     var ids = Object.keys(PLANS);
     var subs = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
     if (!subs.length) return false;
-
-    // Pre-transform now (content is in the DOM even while hidden); first paint
-    // happens when a step becomes visible.
-    subs.forEach(function (sub) {
-      ensure(sub);
-      if (isVisible(sub)) activate(sub);
-    });
-
-    // Re-flow the active step whenever a target sub-step gains ".active".
+    subs.forEach(function (sub) { ensure(sub); });
     var obs = new MutationObserver(function (muts) {
       muts.forEach(function (m) {
         var t = m.target;
-        if (t.classList && t.classList.contains("sub-step") && t.classList.contains("active") && PLANS[t.id]) {
-          activate(t); // re-measure only; never repositions the carousel
-        }
+        if (t.classList && t.classList.contains("sub-step") && t.classList.contains("active") && PLANS[t.id]) activate(t);
       });
     });
     subs.forEach(function (sub) { obs.observe(sub, { attributes: true, attributeFilter: ["class"] }); });
-
-    // Re-measure on resize (width handled by % translate; height can change).
-    var rt;
-    window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { window.__shSections.relayout(); }, 150); });
     return true;
   }
 
   function start() {
     var tries = 0;
     var t = setInterval(function () {
-      if (document.getElementById("main-content") || document.querySelector(".main")) {
-        if (boot()) clearInterval(t);
-      }
+      if (document.getElementById("main-content") || document.querySelector(".main")) { if (boot()) clearInterval(t); }
       if (++tries > 50) clearInterval(t);
     }, 200);
   }
