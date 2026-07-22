@@ -31,6 +31,11 @@
       "#sh-plans-close{margin-left:auto;background:none;border:none;font-size:22px;line-height:1;cursor:pointer;" +
         "color:var(--sh-ink2,#5b6875);padding:2px 9px;border-radius:8px;transition:background .12s,color .12s;}" +
       "#sh-plans-close:hover{background:var(--sh-teal-soft,#e1f5ee);color:var(--sh-ink,#12302e);}" +
+      "#sh-plans-back{background:none;border:1px solid var(--sh-line,#e6edec);border-radius:8px;cursor:pointer;" +
+        "font-family:inherit;font-size:13px;font-weight:700;color:var(--sh-ink,#12302e);padding:6px 12px;" +
+        "display:inline-flex;align-items:center;gap:5px;transition:border-color .12s,background .12s,color .12s;}" +
+      "#sh-plans-back:hover{border-color:var(--sh-teal,#008080);color:var(--sh-teal-ink,#0f6e56);background:var(--sh-teal-soft,#e1f5ee);}" +
+      "body.dark #sh-plans-back{color:var(--sh-ink,#e8eef7);border-color:rgba(255,255,255,.14);}" +
       "#sh-plans-frame{flex:1 1 auto;width:100%;border:none;display:block;}";
     document.head.appendChild(s);
   }
@@ -47,16 +52,23 @@
     v.style.height = r.height + "px";
   }
 
+  var histPushed = false;
+  function pushHist() {
+    if (histPushed) return;
+    try { history.pushState({ shPlans: 1 }, ""); histPushed = true; } catch (e) {}
+  }
+
   function openPlans() {
     style();
     var v = document.getElementById("sh-plans-view");
-    if (v) { v.style.display = "flex"; place(); markNav(true); return; }
+    if (v) { v.style.display = "flex"; place(); markNav(true); pushHist(); return; }
     v = document.createElement("div");
     v.id = "sh-plans-view";
     v.setAttribute("role", "region");
     v.setAttribute("aria-label", "Plans");
     v.innerHTML =
       '<div id="sh-plans-head">' +
+        '<button id="sh-plans-back" type="button">&#8592; Back to app</button>' +
         '<div class="sh-plans-title">Plans</div>' +
         '<button id="sh-plans-close" type="button" title="Close Plans" aria-label="Close Plans">&times;</button>' +
       "</div>" +
@@ -64,15 +76,41 @@
     document.body.appendChild(v); // body-level so it can't be clipped by the scroller
     place();
     var x = document.getElementById("sh-plans-close");
-    if (x) x.addEventListener("click", closePlans);
+    if (x) x.addEventListener("click", function () { closePlans(); });
+    var bk = document.getElementById("sh-plans-back");
+    if (bk) bk.addEventListener("click", function () { closePlans(); });
+    // Hide the embedded page's own SellHi logo lockup so it doesn't look like a
+    // second, duplicate app header inside the panel (same-origin, so this is allowed).
+    var frame = document.getElementById("sh-plans-frame");
+    if (frame) frame.addEventListener("load", function () {
+      try {
+        var d = frame.contentDocument;
+        if (d && d.head && !d.getElementById("sh-embed-style")) {
+          var st = d.createElement("style"); st.id = "sh-embed-style";
+          st.textContent = ".sh-logolock{display:none!important}";
+          d.head.appendChild(st);
+        }
+      } catch (e) {}
+    });
     markNav(true);
+    pushHist();
   }
 
-  function closePlans() {
+  function closePlans(fromPop) {
     var v = document.getElementById("sh-plans-view");
     if (v) v.style.display = "none";
     markNav(false);
+    // Pop our history entry on a user-initiated close so browser Back stays clean;
+    // skip when the close was itself triggered by Back (popstate).
+    if (histPushed && fromPop !== true) { histPushed = false; try { history.back(); } catch (e) {} }
+    else { histPushed = false; }
   }
+
+  // Browser Back closes the Plans panel (instead of doing nothing / leaving the app).
+  window.addEventListener("popstate", function () {
+    var v = document.getElementById("sh-plans-view");
+    if (v && v.style.display !== "none") { histPushed = false; closePlans(true); }
+  });
 
   function markNav(on) {
     var link = document.getElementById("sh-nav-connect");

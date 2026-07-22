@@ -591,7 +591,15 @@
     // the redundant background-refresh rebuild — that's what kills the funnel flicker
     // without ever leaving demo content on screen.
     var c = document.querySelector("#phase-" + phase + " .content");
-    if (c) c.removeAttribute("data-sh-sig");
+    if (c) {
+      c.removeAttribute("data-sh-sig");
+      // Hide the phase content the instant we start rendering, so the native demo
+      // funnel (mock numbers) can never flash while OUR data loads. Revealed the
+      // moment the real dashboard is painted. Works no matter how we got here
+      // (nav click, Continue button, deep-link) — doesn't depend on an external mask.
+      c.style.transition = "opacity .18s ease";
+      c.style.opacity = "0";
+    }
     // Once OUR dashboard is painted, lift the nav's pre-paint guard so the reveal
     // shows our Command Center, never the native demo funnel underneath it.
     function reveal() {
@@ -599,6 +607,7 @@
         document.documentElement.classList.remove("sh-prehide");
         document.body.classList.remove("sh-navmask");
       } catch (e) {}
+      if (c) c.style.opacity = "";
     }
     // Paint instantly from cache so the funnel lands and STAYS (no blank flash),
     // then refresh in the background so a fresh Market Intel run is reflected. The
