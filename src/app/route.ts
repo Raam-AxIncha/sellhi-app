@@ -60,20 +60,21 @@ export async function GET(request: Request) {
           `@keyframes sh-boot-spin{to{transform:rotate(360deg)}}` +
           `html.sh-booting{overflow:hidden;}</style>` +
         `<script>(function(){try{var d=document.documentElement;d.classList.add('sh-booting');` +
-          `var h=(location.hash||'').replace('#','');` +
-          // Reveal only once the chrome is enhanced (logo), we're on the right phase,
-          // AND the page's DOM has gone QUIET for a beat — i.e. every app-layer
-          // transform (Identity tabs, content rewrites, dashboards) has finished.
-          // A fixed delay flashed on pages that re-arrange after landing; watching
-          // for DOM-settle covers all of them. Hard 4.5s cap so it can't stick.
+          `var h=(location.hash||'').replace('#','');var pending=0;` +
+          // Reveal only when: enhanced chrome (logo) is in + we're on the right phase
+          // + NO fetch is in flight + the DOM has been quiet for a beat. Tracking
+          // in-flight fetches is the key bit — pages like p4/p6/plans/billing pull
+          // their content over the network AFTER landing, and during that fetch the
+          // DOM is momentarily quiet, which used to reveal the raw page. Hard 6s cap.
+          `try{var of=window.fetch;if(of){window.fetch=function(){pending++;bump();var p;try{p=of.apply(this,arguments);}catch(e){pending=Math.max(0,pending-1);throw e;}var dec=function(){pending=Math.max(0,pending-1);bump();};if(p&&p.then){p.then(dec,dec);}else{dec();}return p;};}}catch(e){}` +
           `function phaseOk(){if(!/^p[1-8]$/.test(h))return true;var a=document.querySelector('.phase-section.active');return !!a&&a.id==='phase-'+h;}` +
           `function chromeOk(){return !!document.querySelector('.sh-brandlogo');}` +
-          `var t0=Date.now(),mo=null,st=null,iv=null;` +
-          `function done(){try{d.classList.remove('sh-booting');}catch(e){}try{if(mo)mo.disconnect();}catch(e){}if(iv)clearInterval(iv);}` +
-          `function settle(){clearTimeout(st);st=setTimeout(done,320);}` +
-          `iv=setInterval(function(){if(Date.now()-t0>4500){done();return;}` +
-            `if(chromeOk()&&phaseOk()&&!mo){try{var tg=document.getElementById('main-content')||document.body;` +
-              `mo=new MutationObserver(settle);mo.observe(tg,{childList:true,subtree:true});settle();}catch(e){done();}}},70);` +
+          `var t0=Date.now(),MIN=700,mo=null,st=null,iv=null;` +
+          `function done(){try{d.classList.remove('sh-booting');}catch(e){}try{if(mo)mo.disconnect();}catch(e){}if(iv)clearInterval(iv);if(st)clearTimeout(st);}` +
+          `function bump(){if(!mo)return;clearTimeout(st);st=setTimeout(function(){if(pending<=0&&(Date.now()-t0)>=MIN){done();}else{bump();}},350);}` +
+          `iv=setInterval(function(){if(Date.now()-t0>6000){done();return;}` +
+            `if(!mo&&chromeOk()&&phaseOk()){try{var tg=document.getElementById('main-content')||document.body;` +
+              `mo=new MutationObserver(bump);mo.observe(tg,{childList:true,subtree:true});bump();}catch(e){done();}}},70);` +
         `}catch(e){try{document.documentElement.classList.remove('sh-booting');}catch(x){}}})();</script>` +
         `</head>`
     );
