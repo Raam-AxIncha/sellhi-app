@@ -61,11 +61,19 @@ export async function GET(request: Request) {
           `html.sh-booting{overflow:hidden;}</style>` +
         `<script>(function(){try{var d=document.documentElement;d.classList.add('sh-booting');` +
           `var h=(location.hash||'').replace('#','');` +
-          `function ready(){try{var logo=document.querySelector('.sh-brandlogo');var okp=true;` +
-            `if(/^p[1-8]$/.test(h)){var a=document.querySelector('.phase-section.active');okp=!!a&&a.id==='phase-'+h;}` +
-            `return !!logo&&okp;}catch(e){return true;}}` +
-          `var t0=Date.now();var iv=setInterval(function(){if(ready()||(Date.now()-t0)>4500){clearInterval(iv);` +
-            `setTimeout(function(){d.classList.remove('sh-booting');},120);}},70);` +
+          // Reveal only once the chrome is enhanced (logo), we're on the right phase,
+          // AND the page's DOM has gone QUIET for a beat — i.e. every app-layer
+          // transform (Identity tabs, content rewrites, dashboards) has finished.
+          // A fixed delay flashed on pages that re-arrange after landing; watching
+          // for DOM-settle covers all of them. Hard 4.5s cap so it can't stick.
+          `function phaseOk(){if(!/^p[1-8]$/.test(h))return true;var a=document.querySelector('.phase-section.active');return !!a&&a.id==='phase-'+h;}` +
+          `function chromeOk(){return !!document.querySelector('.sh-brandlogo');}` +
+          `var t0=Date.now(),mo=null,st=null,iv=null;` +
+          `function done(){try{d.classList.remove('sh-booting');}catch(e){}try{if(mo)mo.disconnect();}catch(e){}if(iv)clearInterval(iv);}` +
+          `function settle(){clearTimeout(st);st=setTimeout(done,320);}` +
+          `iv=setInterval(function(){if(Date.now()-t0>4500){done();return;}` +
+            `if(chromeOk()&&phaseOk()&&!mo){try{var tg=document.getElementById('main-content')||document.body;` +
+              `mo=new MutationObserver(settle);mo.observe(tg,{childList:true,subtree:true});settle();}catch(e){done();}}},70);` +
         `}catch(e){try{document.documentElement.classList.remove('sh-booting');}catch(x){}}})();</script>` +
         `</head>`
     );
