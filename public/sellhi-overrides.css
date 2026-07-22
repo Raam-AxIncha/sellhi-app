@@ -177,26 +177,18 @@ body.dark .sidebar-logo .sh-brandword { color: #ffffff; }
 }
 
 /* ============================================================
-   BOOT SPLASH — hides the brief "assembling" flash on a hard reload.
-   On a full reload the raw demo paints first, then the app-layer JS
-   transforms it (taskbar, funnel, etc.) a moment later — so you'd see the
-   "before" version flash. A branded cover + spinner sits on top from the
-   first paint and AUTO-FADES after ~1.4s. Pure CSS (no JS), so it can never
-   get stuck. Only runs on a full page load/refresh, not in-app navigation.
+   BOOT SPLASH — hides the raw-demo flash on a hard reload.
+   On a full reload the raw demo paints first (old logo, Identity Engine,
+   un-transformed nav), then the app-layer JS transforms the chrome + restores
+   the right page a moment later. The cover below sits on top from the first
+   paint and is now removed by JS the instant the app is READY (enhanced logo
+   present + the correct phase active), with a hard safety cap — so subscribers
+   never see the "before" version, and it can't stay stuck.
+   The `sh-booting` class is added + removed by the inline boot script in
+   src/app/route.ts (critical cover CSS is inlined there too so it covers before
+   this file loads). This block styles the fade-out.
    ============================================================ */
-html::before {
-  content: ""; position: fixed; inset: 0; z-index: 100000; background: #f6f8f9;
-  animation: sh-boot-hide 1.4s ease forwards;
-}
-html:has(body.dark)::before { background: #0b1220; }
-html::after {
-  content: ""; position: fixed; top: 50%; left: 50%; width: 34px; height: 34px;
-  margin: -17px 0 0 -17px; border: 3px solid rgba(0,128,128,.22); border-top-color: #008080;
-  border-radius: 50%; z-index: 100001;
-  animation: sh-boot-spin .8s linear infinite, sh-boot-hide 1.4s ease forwards;
-}
+html.sh-booting { overflow: hidden; }
+html.sh-booting::before,
+html.sh-booting::after { transition: opacity .28s ease; }
 @keyframes sh-boot-spin { to { transform: rotate(360deg); } }
-@keyframes sh-boot-hide { 0%, 64% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-@media (prefers-reduced-motion: reduce) {
-  html::after { animation: sh-boot-hide 1.4s ease forwards; }
-}

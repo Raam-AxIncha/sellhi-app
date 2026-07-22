@@ -49,8 +49,24 @@ export async function GET(request: Request) {
     html = html.replace(
       "</head>",
       `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}"><link rel="stylesheet" href="/sellhi-sections.css${v}">` +
-        `<style>html.sh-prehide #main-content{opacity:0!important}#main-content{transition:opacity .16s ease}</style>` +
-        `<script>try{if(/^#p[2-8]/.test(location.hash)){document.documentElement.classList.add('sh-prehide');setTimeout(function(){document.documentElement.classList.remove('sh-prehide');},2600);}}catch(e){}</script>` +
+        // Boot cover: shown from first paint, removed by JS the moment the app is
+        // READY (enhanced logo present + correct phase active) so subscribers never
+        // see the raw demo (old logo / Identity Engine) flash on a hard refresh.
+        // Critical cover CSS is inlined here so it covers before the stylesheet loads.
+        `<style>html.sh-booting::before{content:"";position:fixed;inset:0;z-index:100000;background:#f6f8f9;}` +
+          `html.sh-booting:has(body.dark)::before{background:#0b1220;}` +
+          `html.sh-booting::after{content:"";position:fixed;top:50%;left:50%;width:34px;height:34px;margin:-17px 0 0 -17px;` +
+            `border:3px solid rgba(0,128,128,.22);border-top-color:#008080;border-radius:50%;z-index:100001;animation:sh-boot-spin .8s linear infinite;}` +
+          `@keyframes sh-boot-spin{to{transform:rotate(360deg)}}` +
+          `html.sh-booting{overflow:hidden;}</style>` +
+        `<script>(function(){try{var d=document.documentElement;d.classList.add('sh-booting');` +
+          `var h=(location.hash||'').replace('#','');` +
+          `function ready(){try{var logo=document.querySelector('.sh-brandlogo');var okp=true;` +
+            `if(/^p[1-8]$/.test(h)){var a=document.querySelector('.phase-section.active');okp=!!a&&a.id==='phase-'+h;}` +
+            `return !!logo&&okp;}catch(e){return true;}}` +
+          `var t0=Date.now();var iv=setInterval(function(){if(ready()||(Date.now()-t0)>4500){clearInterval(iv);` +
+            `setTimeout(function(){d.classList.remove('sh-booting');},120);}},70);` +
+        `}catch(e){try{document.documentElement.classList.remove('sh-booting');}catch(x){}}})();</script>` +
         `</head>`
     );
   }
