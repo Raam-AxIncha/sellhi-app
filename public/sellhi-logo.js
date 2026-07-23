@@ -37,9 +37,28 @@
     return true;
   }
 
+  // Swap the demo's "Guided concept demo" welcome card logo (old favicon PNG) for
+  // the new animated mark, so the post-login welcome matches the brand. demo.html
+  // stays pristine.
+  function injectWelcome() {
+    var card = document.getElementById("sh-welcome-card");
+    if (!card) return false;
+    if (card.getAttribute("data-sh-logo") === "1") return true;
+    var img = card.querySelector("img");
+    if (!img) { card.setAttribute("data-sh-logo", "1"); return true; }
+    card.setAttribute("data-sh-logo", "1");
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "width:56px;height:56px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;";
+    wrap.innerHTML = mark();
+    var svg = wrap.querySelector(".sh-mark");
+    if (svg) { svg.style.width = "56px"; svg.style.height = "56px"; }
+    img.parentNode.replaceChild(wrap, img);
+    return true;
+  }
+
   function boot() {
     var n = 0;
-    var t = setInterval(function () { if (injectSidebar() || ++n > 40) clearInterval(t); }, 150);
+    var t = setInterval(function () { var a = injectSidebar(), b = injectWelcome(); if ((a && b) || ++n > 60) clearInterval(t); }, 150);
   }
   if (document.readyState === "complete") boot();
   else window.addEventListener("load", boot);
