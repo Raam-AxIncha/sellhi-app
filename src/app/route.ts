@@ -49,6 +49,8 @@ export async function GET(request: Request) {
     html = html.replace(
       "</head>",
       `<link rel="stylesheet" href="/sellhi-overrides.css${v}"><link rel="stylesheet" href="/sellhi-premium.css${v}"><link rel="stylesheet" href="/sellhi-sections.css${v}"><link rel="stylesheet" href="/sellhi-glance.css${v}">` +
+        `<style>#sh-auth{display:none!important}</style>` +
+        `<script>try{localStorage.setItem('sellhi_auth','1');}catch(e){}</script>` +
         // Boot cover: shown from first paint, removed by JS the moment the app is
         // READY (enhanced logo present + correct phase active) so subscribers never
         // see the raw demo (old logo / Identity Engine) flash on a hard refresh.
@@ -106,6 +108,6 @@ export async function GET(request: Request) {
     : html + bootstrap;
 
   return new NextResponse(html, {
-    headers: { "content-type": "text/html; charset=utf-8" },
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
   });
 }
