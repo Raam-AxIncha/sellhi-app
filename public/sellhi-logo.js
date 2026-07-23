@@ -20,7 +20,7 @@
       '<g class="sh-wheel" fill="none" stroke="' + ORANGE + '" stroke-width="6" stroke-linecap="round">' +
         '<circle cx="65" cy="35" r="12.5"/>' +
         '<circle cx="65" cy="35" r="4.5" fill="' + ORANGE + '" stroke="none"/>' +
-        '<path d="M65,16.5 L65,8 M65,53.5 L65,62 M84.5,35 L93,35 M45.5,35 L37,35" stroke-width="5"/>' +
+        '<path d="M65,16.5 L65,7.5 M81,25.8 L88.8,21.3 M81,44.3 L88.8,48.8 M65,53.5 L65,62.5 M49,44.3 L41.2,48.8 M49,25.8 L41.2,21.3" stroke-width="5"/>' +
       '</g>' +
     '</svg>';
   }

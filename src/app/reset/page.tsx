@@ -45,7 +45,7 @@ export default function ResetPage() {
             <g className="shWheel" fill="none" stroke="#F26A21" strokeWidth={6} strokeLinecap="round">
               <circle cx={65} cy={35} r={12.5} />
               <circle cx={65} cy={35} r={4.5} fill="#F26A21" stroke="none" />
-              <path d="M65,16.5 L65,8 M65,53.5 L65,62 M84.5,35 L93,35 M45.5,35 L37,35" strokeWidth={5} />
+              <path d="M65,16.5 L65,7.5 M81,25.8 L88.8,21.3 M81,44.3 L88.8,48.8 M65,53.5 L65,62.5 M49,44.3 L41.2,48.8 M49,25.8 L41.2,21.3" strokeWidth={5} />
             </g>
           </svg>
           <span style={styles.brand}>Sell<sup style={styles.hi} className="shHi">Hi</sup></span>
