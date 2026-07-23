@@ -149,7 +149,6 @@ body.dark .sidebar-logo .sh-brandword { color: #ffffff; }
    ============================================================ */
 
 /* Drag handle on the sidebar's right edge (injected by sellhi-nav.js). */
-.sidebar { position: relative; }
 .sh-nav-resize {
   position: absolute; top: 0; right: -2px; width: 7px; height: 100%;
   cursor: col-resize; z-index: 30; touch-action: none;

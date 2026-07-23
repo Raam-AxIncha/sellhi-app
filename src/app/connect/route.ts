@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   let html = await readFile(filePath, "utf8");
 
   const v = "?v=" + (process.env.VERCEL_GIT_COMMIT_SHA || String(Date.now())).slice(0, 8);
-  html = html.replace(/(\/connect\.js|\/connect\.css)(?=")/g, `$1${v}`);
+  html = html.replace(/(\/connect\.js|\/connect\.css|\/connect-billing\.js)(?=")/g, `$1${v}`);
 
   return new NextResponse(html, {
     headers: { "content-type": "text/html; charset=utf-8" },

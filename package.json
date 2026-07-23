@@ -13,7 +13,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "@supabase/supabase-js": "^2.58.0",
-    "@supabase/ssr": "^0.7.0"
+    "@supabase/ssr": "^0.7.0",
+    "stripe": "^22.3.2"
   },
   "devDependencies": {
     "@types/node": "^20",
