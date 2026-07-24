@@ -9,7 +9,7 @@ const raleway = Raleway({
 });
 
 export const metadata: Metadata = {
-  title: "SellHi — Fractional CXO Platform",
+  title: "SellHi — Fractional Pro Platform",
   description: "Your SellHi workspace",
 };
 

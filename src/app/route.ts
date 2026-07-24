@@ -40,6 +40,9 @@ export async function GET(request: Request) {
   const filePath = path.join(process.cwd(), "public", "demo.html");
   let html = await readFile(filePath, "utf8");
 
+  // App-root browser title (demo.html stays pristine).
+  html = html.replace("SellHi — Module 1: Fractional CXO Platform", "SellHi — Fractional Pro Platform");
+
   // Cache-buster: changes on every deploy (Vercel commit SHA), so browsers fetch
   // the newest app-layer CSS/JS immediately without a manual hard refresh.
   const v = "?v=" + (process.env.VERCEL_GIT_COMMIT_SHA || String(Date.now())).slice(0, 8);
